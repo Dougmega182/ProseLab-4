@@ -1,6 +1,8 @@
 .env
 proselab/.env
 novels/
+archieve/
+icon/
 *.lnk
 client_secret*.json
 node_modules/
