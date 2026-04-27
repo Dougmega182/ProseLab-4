@@ -1,0 +1,2151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRE-PRODUCTION KIT — Novel Ops System</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;500;600&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090f;
+  --surface: #0d1119;
+  --surface2: #121824;
+  --surface3: #1a2232;
+  --border: #1e2d42;
+  --border2: #253448;
+  --blue: #3d8ef0;
+  --blue-dim: #1e4a8a;
+  --amber: #e8a020;
+  --amber-dim: #7a5010;
+  --green: #27ae60;
+  --red: #c0392b;
+  --purple: #8b5cf6;
+  --text: #c8d6e8;
+  --text-dim: #5a7090;
+  --text-bright: #e8f0fa;
+  --mono: 'JetBrains Mono', monospace;
+  --serif: 'Crimson Pro', Georgia, serif;
+  --display: 'Bebas Neue', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 14px; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scanline effect */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============ HEADER ============ */
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.logo-main {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  letter-spacing: 0.12em;
+  color: var(--blue);
+}
+
+.logo-sub {
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  display: inline-block;
+  margin-right: 6px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.save-indicator {
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--green);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.save-indicator.show { opacity: 1; }
+
+/* ============ TAB NAV ============ */
+.tab-nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  padding: 0 28px;
+  gap: 2px;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 12px 18px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+.tab-num {
+  color: var(--text-dim);
+  margin-right: 6px;
+  font-size: 0.6rem;
+}
+.tab-btn.active .tab-num { color: var(--blue); opacity: 0.6; }
+
+/* ============ MAIN CONTENT ============ */
+.main { padding: 32px 28px; max-width: 1200px; margin: 0 auto; }
+
+.tab-panel { display: none; animation: fadeIn 0.3s ease; }
+.tab-panel.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ SECTION HEADERS ============ */
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-title {
+  font-family: var(--display);
+  font-size: 2.2rem;
+  letter-spacing: 0.1em;
+  color: var(--text-bright);
+  line-height: 1;
+}
+
+.section-title span { color: var(--blue); }
+
+.section-meta {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+/* ============ FIELD GROUPS ============ */
+.field-group {
+  margin-bottom: 20px;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  color: var(--amber);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.field-input, .field-textarea, .field-select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-bright);
+  font-family: var(--serif);
+  font-size: 1rem;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  border-radius: 2px;
+}
+
+.field-input:focus, .field-textarea:focus, .field-select:focus {
+  border-color: var(--blue);
+}
+
+.field-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+}
+
+.field-select {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+
+option { background: var(--surface2); }
+
+/* ============ GRID LAYOUTS ============ */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+
+@media (max-width: 800px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+}
+
+/* ============ CARDS ============ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 20px 22px;
+  border-radius: 2px;
+  transition: border-color 0.2s;
+}
+
+.card:hover { border-color: var(--border2); }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.card-title {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: var(--text-bright);
+}
+
+.card-tag {
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 1px;
+}
+
+.tag-blue { background: rgba(61,142,240,0.15); color: var(--blue); border: 1px solid rgba(61,142,240,0.3); }
+.tag-amber { background: rgba(232,160,32,0.15); color: var(--amber); border: 1px solid rgba(232,160,32,0.3); }
+.tag-green { background: rgba(39,174,96,0.15); color: var(--green); border: 1px solid rgba(39,174,96,0.3); }
+.tag-red { background: rgba(192,57,43,0.15); color: var(--red); border: 1px solid rgba(192,57,43,0.3); }
+.tag-purple { background: rgba(139,92,246,0.15); color: var(--purple); border: 1px solid rgba(139,92,246,0.3); }
+
+/* ============ BUTTONS ============ */
+.btn {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 9px 20px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+.btn-primary:hover { background: #5a9ff5; }
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--border2);
+  color: var(--text-dim);
+}
+.btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+
+.btn-amber {
+  background: transparent;
+  border-color: var(--amber);
+  color: var(--amber);
+}
+.btn-amber:hover { background: rgba(232,160,32,0.1); }
+
+.btn-danger {
+  background: transparent;
+  border-color: var(--red);
+  color: var(--red);
+}
+.btn-danger:hover { background: rgba(192,57,43,0.1); }
+
+.btn-sm { padding: 5px 12px; font-size: 0.6rem; }
+.btn-icon { padding: 6px 10px; }
+
+/* ============ DIVIDER ============ */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, var(--blue-dim), transparent);
+  margin: 28px 0;
+}
+
+/* ============ WORLD RULES ============ */
+.rule-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--blue);
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 16px;
+  align-items: start;
+  border-radius: 1px;
+  transition: border-color 0.2s;
+}
+
+.rule-item:hover { border-color: var(--border2); }
+
+.rule-field-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.rule-field-val {
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ============ CHARACTER CARDS ============ */
+.char-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.char-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.char-card.protagonist::before { background: var(--blue); }
+.char-card.antagonist::before { background: var(--red); }
+.char-card.supporting::before { background: var(--amber); }
+.char-card.secondary::before { background: var(--purple); }
+
+.char-card:hover {
+  border-color: var(--border2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.char-name {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  letter-spacing: 0.08em;
+  color: var(--text-bright);
+  margin-bottom: 4px;
+}
+
+.char-role {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+.char-field {
+  margin-bottom: 10px;
+}
+
+.char-field-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 3px;
+}
+
+.char-field-val {
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ============ ACT BEAT MAP ============ */
+.act-section {
+  margin-bottom: 32px;
+}
+
+.act-label {
+  font-family: var(--display);
+  font-size: 1.8rem;
+  letter-spacing: 0.12em;
+  color: var(--text-bright);
+  margin-bottom: 4px;
+}
+
+.act-wc {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+.beat-row {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 14px 18px;
+  margin-bottom: 8px;
+  display: grid;
+  grid-template-columns: 40px 1fr auto auto auto;
+  gap: 16px;
+  align-items: center;
+  border-radius: 1px;
+  transition: border-color 0.2s;
+}
+
+.beat-row:hover { border-color: var(--border2); }
+
+.beat-pct {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  color: var(--blue);
+  letter-spacing: 0.05em;
+}
+
+.beat-title {
+  font-size: 0.85rem;
+  color: var(--text-bright);
+  font-family: var(--serif);
+}
+
+.beat-desc {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-family: var(--serif);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.wc-input {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text-bright);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 5px 8px;
+  width: 80px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s;
+  border-radius: 1px;
+}
+
+.wc-input:focus { border-color: var(--blue); }
+
+.progress-bar-wrap {
+  background: var(--surface3);
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  width: 100px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--blue);
+  transition: width 0.3s;
+  border-radius: 2px;
+}
+
+/* ============ SCENE INVENTORY ============ */
+.scene-table-wrap {
+  overflow-x: auto;
+}
+
+.scene-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.scene-table th {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--amber);
+  white-space: nowrap;
+}
+
+.scene-table td {
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  vertical-align: top;
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.scene-table tr:hover td { background: rgba(61,142,240,0.04); }
+
+.scene-table .ch-num {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  color: var(--blue);
+  text-align: center;
+}
+
+.causality-badge {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  padding: 2px 7px;
+  border-radius: 1px;
+  white-space: nowrap;
+}
+
+.status-badge {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  padding: 2px 7px;
+  border-radius: 1px;
+  white-space: nowrap;
+}
+
+/* ============ PREFLIGHT BRIEF ============ */
+.preflight-select-bar {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 18px 22px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.preflight-doc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 40px 44px;
+  font-family: var(--serif);
+  position: relative;
+}
+
+.preflight-doc::before {
+  content: 'CLASSIFIED — PREFLIGHT BRIEF';
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.25em;
+  color: var(--red);
+  opacity: 0.6;
+}
+
+.brief-header {
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+}
+
+.brief-title {
+  font-family: var(--display);
+  font-size: 2rem;
+  letter-spacing: 0.1em;
+  color: var(--text-bright);
+  margin-bottom: 6px;
+}
+
+.brief-meta {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.brief-meta span { color: var(--blue); }
+
+.brief-section {
+  margin-bottom: 24px;
+}
+
+.brief-section-title {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--amber-dim);
+}
+
+.brief-content {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.brief-checklist {
+  list-style: none;
+}
+
+.brief-checklist li {
+  padding: 5px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.brief-checklist li::before {
+  content: '□';
+  color: var(--blue);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.brief-inventory-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(30,45,66,0.5);
+  font-size: 0.9rem;
+}
+
+.brief-inv-label { color: var(--text-dim); font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; }
+.brief-inv-val { color: var(--text-bright); font-style: italic; }
+
+.brief-warning {
+  background: rgba(192,57,43,0.08);
+  border: 1px solid rgba(192,57,43,0.3);
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  color: #e57373;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+
+.brief-output {
+  background: rgba(61,142,240,0.06);
+  border: 1px solid rgba(61,142,240,0.2);
+  padding: 14px 18px;
+  margin-top: 8px;
+}
+
+.brief-output p {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text);
+  font-style: italic;
+}
+
+/* ============ MODAL ============ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s;
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px 36px;
+  transform: translateY(20px);
+  transition: transform 0.25s;
+  border-radius: 2px;
+}
+
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  letter-spacing: 0.1em;
+  color: var(--text-bright);
+}
+
+.modal-close {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.modal-close:hover { border-color: var(--red); color: var(--red); }
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ============ EMPTY STATE ============ */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-dim);
+}
+
+.empty-state-icon {
+  font-size: 2rem;
+  margin-bottom: 12px;
+  opacity: 0.3;
+}
+
+.empty-state p {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 20px;
+}
+
+/* ============ METRIC BOXES ============ */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 700px) { .metrics-row { grid-template-columns: 1fr 1fr; } }
+
+.metric-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 16px 18px;
+  border-radius: 2px;
+}
+
+.metric-val {
+  font-family: var(--display);
+  font-size: 2rem;
+  letter-spacing: 0.05em;
+  color: var(--blue);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* ============ COPY TOAST ============ */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: var(--green);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  padding: 10px 20px;
+  border-radius: 1px;
+  z-index: 2000;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.3s;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ============ TAGS ROW ============ */
+.tags-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.inline-tag {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  padding: 3px 9px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 1px;
+}
+
+/* Objects list in scene table */
+.obj-pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  background: rgba(139,92,246,0.12);
+  border: 1px solid rgba(139,92,246,0.25);
+  color: var(--purple);
+  border-radius: 1px;
+  margin: 2px 2px 2px 0;
+}
+
+/* ============ RULE NUMBER ============ */
+.rule-num {
+  font-family: var(--display);
+  font-size: 1.8rem;
+  color: rgba(61,142,240,0.2);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+/* ============ SCROLLBAR ============ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+/* ============ ADD RULE FORM ============ */
+.add-rule-form {
+  background: var(--surface2);
+  border: 1px dashed var(--border2);
+  padding: 20px;
+  margin-top: 16px;
+  display: none;
+  border-radius: 1px;
+}
+.add-rule-form.open { display: block; }
+
+/* PREFLIGHT EMPTY */
+.preflight-empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<div class="app-header">
+  <div class="logo">
+    <div class="logo-main">NOVEL OPS</div>
+    <div class="logo-sub">Pre-Production Kit v1.0</div>
+  </div>
+  <div class="header-status">
+    <div><span class="status-dot"></span>SYSTEM LIVE</div>
+    <div id="save-indicator" class="save-indicator">✓ SAVED</div>
+  </div>
+</div>
+
+<!-- ============ TAB NAV ============ -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('core')"><span class="tab-num">01</span>CORE LOCK</button>
+  <button class="tab-btn" onclick="switchTab('rules')"><span class="tab-num">02</span>WORLD RULES</button>
+  <button class="tab-btn" onclick="switchTab('chars')"><span class="tab-num">03</span>CHARACTERS</button>
+  <button class="tab-btn" onclick="switchTab('beats')"><span class="tab-num">04</span>ACT BEAT MAP</button>
+  <button class="tab-btn" onclick="switchTab('scenes')"><span class="tab-num">05</span>SCENE INVENTORY</button>
+  <button class="tab-btn" onclick="switchTab('preflight')"><span class="tab-num">06</span>PREFLIGHT BRIEF</button>
+</div>
+
+<div class="main">
+
+  <!-- ============================== -->
+  <!-- TAB 01: CORE LOCK             -->
+  <!-- ============================== -->
+  <div class="tab-panel active" id="tab-core">
+    <div class="section-header">
+      <div>
+        <div class="section-meta">Module 01 · Foundation</div>
+        <div class="section-title">CORE <span>LOCK</span></div>
+      </div>
+      <div class="section-meta">Lock before anything else is drafted.</div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:20px;">
+      <div class="field-group">
+        <label class="field-label">Project Title</label>
+        <input class="field-input" id="core-title" placeholder="e.g. Quantum Shadows" oninput="saveCore()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Subtitle / Book Number</label>
+        <input class="field-input" id="core-subtitle" placeholder="e.g. Book 1: Entangled" oninput="saveCore()">
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-bottom:20px;">
+      <div class="field-group">
+        <label class="field-label">Genre</label>
+        <input class="field-input" id="core-genre" placeholder="e.g. Quantum Noir / Sci-Fi Thriller" oninput="saveCore()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Target Word Count</label>
+        <input class="field-input" id="core-wc" type="number" placeholder="e.g. 90000" oninput="saveCore()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Current Word Count</label>
+        <input class="field-input" id="core-wc-current" type="number" placeholder="e.g. 34000" oninput="saveCore()">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="card" style="margin-bottom:16px; border-left:3px solid var(--red);">
+      <div class="card-header">
+        <div class="card-title">MECHANICAL CONSTRAINT</div>
+        <div class="card-tag tag-red">STEP 01 — BEFORE CHARACTER</div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">The Single Physical Rule That Makes This World Impossible To Fake</label>
+        <textarea class="field-textarea" id="core-constraint" placeholder="e.g. The PQ genotype degrades under Quantum load — every jump costs biological integrity. A dormant carrier experiences 3x–4x the Bleed multiplier of an active carrier. This is not metaphor. It is physiology." oninput="saveCore()" style="min-height:90px;"></textarea>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px; border-left:3px solid var(--amber);">
+      <div class="card-header">
+        <div class="card-title">THEMATIC ARCHITECTURE</div>
+        <div class="card-tag tag-amber">STEP 02</div>
+      </div>
+      <div class="grid-2">
+        <div class="field-group">
+          <label class="field-label">What Is The Book Actually About? (One sentence, beneath the plot)</label>
+          <textarea class="field-textarea" id="core-theme" placeholder="e.g. The cost of living in the truth when everyone around you has chosen a comfortable lie." oninput="saveCore()" style="min-height:80px;"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">The Central Argument The Story Makes</label>
+          <textarea class="field-textarea" id="core-argument" placeholder="e.g. Identity is not fixed — but choosing fixity in a fluid world is an act of defiance, not weakness." oninput="saveCore()" style="min-height:80px;"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">The False Belief (World / Protagonist At Start)</label>
+          <textarea class="field-textarea" id="core-false-belief" placeholder="e.g. Identity is fixed. A man is defined by his consistency, not his choices." oninput="saveCore()" style="min-height:70px;"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">The True Belief (Earned By The End)</label>
+          <textarea class="field-textarea" id="core-true-belief" placeholder="e.g. Identity is fluid — but the version of you that chooses to stay is the only one that matters." oninput="saveCore()" style="min-height:70px;"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--blue);">
+      <div class="card-header">
+        <div class="card-title">STRUCTURAL ARCHITECTURE</div>
+        <div class="card-tag tag-blue">STEP 03</div>
+      </div>
+      <div class="grid-2">
+        <div class="field-group">
+          <label class="field-label">Structural Concept / Framework</label>
+          <textarea class="field-textarea" id="core-structure" placeholder='e.g. "Mirror Hunt" — the protagonist eventually realizes he is hunting a version of himself. The investigation is the internal journey externalised.' oninput="saveCore()" style="min-height:80px;"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">The World Hook (One-Line Elevator Pitch)</label>
+          <textarea class="field-textarea" id="core-hook" placeholder="e.g. A dying detective with a quantum-sensitive genetic mutation is hired to catch criminals who aren't just using technology — they're replacing people with perfect quantum copies." oninput="saveCore()" style="min-height:80px;"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">The Midpoint Reversal</label>
+          <textarea class="field-textarea" id="core-midpoint" placeholder="e.g. Kain discovers that Hayden — the man he's been hunting — is his own quantum shadow. He has been hunting the version of himself that said yes." oninput="saveCore()" style="min-height:70px;"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">The Ending Condition (What Constitutes Resolution)</label>
+          <textarea class="field-textarea" id="core-ending" placeholder="e.g. Kain must choose between collapsing the Replacement Network — and himself — or allowing a false version of the world to persist." oninput="saveCore()" style="min-height:70px;"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- TAB 02: WORLD RULES           -->
+  <!-- ============================== -->
+  <div class="tab-panel" id="tab-rules">
+    <div class="section-header">
+      <div>
+        <div class="section-meta">Module 02 · Physics & Constraints</div>
+        <div class="section-title">WORLD <span>RULES</span></div>
+      </div>
+      <button class="btn btn-primary" onclick="toggleAddRule()">+ ADD RULE</button>
+    </div>
+
+    <div id="add-rule-form" class="add-rule-form">
+      <div class="grid-3" style="margin-bottom:12px;">
+        <div class="field-group" style="margin-bottom:0">
+          <label class="field-label">The Rule</label>
+          <input class="field-input" id="new-rule" placeholder="e.g. Quantum Sphere displaces space, not time">
+        </div>
+        <div class="field-group" style="margin-bottom:0">
+          <label class="field-label">The Cost</label>
+          <input class="field-input" id="new-cost" placeholder="e.g. 3x–4x Bleed multiplier for dormant carriers">
+        </div>
+        <div class="field-group" style="margin-bottom:0">
+          <label class="field-label">The Limit</label>
+          <input class="field-input" id="new-limit" placeholder="e.g. Max 54 wire corrections per cycle">
+        </div>
+      </div>
+      <div class="field-group" style="margin-bottom:12px;">
+        <label class="field-label">Consequence If Violated</label>
+        <input class="field-input" id="new-consequence" placeholder="e.g. Identity Coherence Score collapses; replacement becomes undetectable">
+      </div>
+      <div class="field-group" style="margin-bottom:12px;">
+        <label class="field-label">Category</label>
+        <select class="field-select" id="new-rule-cat">
+          <option value="physics">Physics / Technology</option>
+          <option value="biology">Biology / Medical</option>
+          <option value="social">Social / Political</option>
+          <option value="narrative">Narrative / Structural</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-primary" onclick="addRule()">SAVE RULE</button>
+        <button class="btn btn-outline" onclick="toggleAddRule()">CANCEL</button>
+      </div>
+    </div>
+
+    <div id="rules-list"></div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- TAB 03: CHARACTERS            -->
+  <!-- ============================== -->
+  <div class="tab-panel" id="tab-chars">
+    <div class="section-header">
+      <div>
+        <div class="section-meta">Module 03 · Architecture</div>
+        <div class="section-title">CHARACTER <span>DOSSIERS</span></div>
+      </div>
+      <button class="btn btn-primary" onclick="openCharModal()">+ ADD CHARACTER</button>
+    </div>
+
+    <div class="grid-3" id="chars-grid"></div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- TAB 04: ACT BEAT MAP          -->
+  <!-- ============================== -->
+  <div class="tab-panel" id="tab-beats">
+    <div class="section-header">
+      <div>
+        <div class="section-meta">Module 04 · Structure</div>
+        <div class="section-title">ACT BEAT <span>MAP</span></div>
+      </div>
+      <button class="btn btn-amber" onclick="addCustomBeat()">+ ADD BEAT</button>
+    </div>
+
+    <div class="metrics-row" id="beats-metrics">
+      <div class="metric-box">
+        <div class="metric-val" id="metric-total-target">—</div>
+        <div class="metric-label">Target Words</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-val" id="metric-total-actual">—</div>
+        <div class="metric-label">Current Words</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-val" id="metric-pct">—</div>
+        <div class="metric-label">% Complete</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-val" id="metric-remaining">—</div>
+        <div class="metric-label">Words Remaining</div>
+      </div>
+    </div>
+
+    <div id="beats-container"></div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- TAB 05: SCENE INVENTORY       -->
+  <!-- ============================== -->
+  <div class="tab-panel" id="tab-scenes">
+    <div class="section-header">
+      <div>
+        <div class="section-meta">Module 05 · The Most Commonly Skipped Step</div>
+        <div class="section-title">SCENE <span>INVENTORY</span></div>
+      </div>
+      <button class="btn btn-primary" onclick="openSceneModal()">+ ADD SCENE</button>
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric-box">
+        <div class="metric-val" id="metric-scenes">0</div>
+        <div class="metric-label">Scenes Logged</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-val" id="metric-locked">0</div>
+        <div class="metric-label">Locked</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-val" id="metric-draft">0</div>
+        <div class="metric-label">Draft</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-val" id="metric-pending">0</div>
+        <div class="metric-label">Pending</div>
+      </div>
+    </div>
+
+    <div class="scene-table-wrap">
+      <table class="scene-table">
+        <thead>
+          <tr>
+            <th style="width:40px;">CH</th>
+            <th>SCENE TITLE</th>
+            <th>LOCATION</th>
+            <th>TIME</th>
+            <th>CHARACTERS</th>
+            <th>CARRIED OBJECTS</th>
+            <th>CAUSALITY</th>
+            <th>STATUS</th>
+            <th style="width:100px;">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="scenes-tbody"></tbody>
+      </table>
+    </div>
+
+    <div id="scenes-empty" class="empty-state" style="display:none;">
+      <div class="empty-state-icon">◈</div>
+      <p>NO SCENES LOGGED. Every scene that exists without an inventory entry is a causality bomb waiting to detonate.</p>
+      <button class="btn btn-primary" onclick="openSceneModal()">LOG FIRST SCENE</button>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- TAB 06: PREFLIGHT BRIEF       -->
+  <!-- ============================== -->
+  <div class="tab-panel" id="tab-preflight">
+    <div class="section-header">
+      <div>
+        <div class="section-meta">Module 06 · The Highest Compound-Effect Habit</div>
+        <div class="section-title">PREFLIGHT <span>BRIEF</span></div>
+      </div>
+    </div>
+
+    <div class="preflight-select-bar">
+      <div class="field-label" style="margin:0; white-space:nowrap;">SELECT SCENE →</div>
+      <select class="field-select" id="preflight-scene-select" style="flex:1; max-width:400px;" onchange="generatePreflight()">
+        <option value="">— Choose a scene from inventory —</option>
+      </select>
+      <button class="btn btn-amber" onclick="copyPreflight()">COPY BRIEF</button>
+    </div>
+
+    <div id="preflight-output">
+      <div class="preflight-empty">
+        <div style="font-size:2rem; margin-bottom:12px; opacity:0.15;">⬡</div>
+        SELECT A SCENE TO GENERATE THE PREFLIGHT BRIEF<br>
+        <span style="opacity:0.5; font-size:0.65rem;">No scene is drafted until this brief is locked.</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .main -->
+
+<!-- ============================== -->
+<!-- CHARACTER MODAL               -->
+<!-- ============================== -->
+<div class="modal-overlay" id="char-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="char-modal-title">ADD CHARACTER</div>
+      <button class="modal-close" onclick="closeCharModal()">× CLOSE</button>
+    </div>
+
+    <input type="hidden" id="char-edit-id" value="">
+
+    <div class="grid-2">
+      <div class="field-group">
+        <label class="field-label">Full Name</label>
+        <input class="field-input" id="char-name" placeholder="e.g. Nolan Kain">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Role</label>
+        <select class="field-select" id="char-role">
+          <option value="protagonist">Protagonist</option>
+          <option value="antagonist">Antagonist</option>
+          <option value="supporting">Supporting</option>
+          <option value="secondary">Secondary</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Function — Why Can Only This Character Do This Job?</label>
+      <textarea class="field-textarea" id="char-function" placeholder='e.g. Kain reads "negative space" — the psychological logic of habits that replacements cannot replicate. No QSA scanner can do this. Only a Norm detective with his specific behavioural training can detect the absence of authentic psychology.' style="min-height:80px;"></textarea>
+    </div>
+
+    <div class="grid-2">
+      <div class="field-group">
+        <label class="field-label">The Wound</label>
+        <textarea class="field-textarea" id="char-wound" placeholder="e.g. Lost his partner to a Replacement event he failed to detect. Has been hunting replacements as penance ever since." style="min-height:70px;"></textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label">The Lie The Character Believes</label>
+        <textarea class="field-textarea" id="char-false" placeholder="e.g. If he can catch enough replacements, he can make the original loss mean something." style="min-height:70px;"></textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label">The Truth Earned By The End</label>
+        <textarea class="field-textarea" id="char-true" placeholder="e.g. The original loss was not his failure — but refusing to choose himself was." style="min-height:70px;"></textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Arc Direction</label>
+        <textarea class="field-textarea" id="char-arc" placeholder="e.g. From a man defined by duty and denial → to a man who chooses biological reality over institutional loyalty." style="min-height:70px;"></textarea>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Standing Carried Objects (Always On Their Person)</label>
+      <input class="field-input" id="char-objects" placeholder="e.g. broken lighter, QSA badge, suppressed Glock 19, ICS monitor patch on left wrist">
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Physical / Biological Constraints</label>
+      <textarea class="field-textarea" id="char-constraints" placeholder="e.g. PQ genotype — dormant carrier. Every Bleed event accelerates neurological decay. 40-second hard limit before neurological lockout. Degradation is cumulative and irreversible." style="min-height:70px;"></textarea>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Notes</label>
+      <textarea class="field-textarea" id="char-notes" placeholder="Additional notes, relationships, timeline events..."></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeCharModal()">CANCEL</button>
+      <button class="btn btn-danger btn-sm" id="char-delete-btn" onclick="deleteChar()" style="display:none;">DELETE</button>
+      <button class="btn btn-primary" onclick="saveChar()">SAVE CHARACTER</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- SCENE MODAL                   -->
+<!-- ============================== -->
+<div class="modal-overlay" id="scene-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="scene-modal-title">ADD SCENE</div>
+      <button class="modal-close" onclick="closeSceneModal()">× CLOSE</button>
+    </div>
+
+    <input type="hidden" id="scene-edit-id" value="">
+
+    <div class="grid-3">
+      <div class="field-group">
+        <label class="field-label">Chapter #</label>
+        <input class="field-input" id="scene-chapter" type="text" placeholder="e.g. 6.5">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Scene Title</label>
+        <input class="field-input" id="scene-title" placeholder="e.g. The Alfred Hospital — Exit">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Preflight Status</label>
+        <select class="field-select" id="scene-status">
+          <option value="pending">Pending</option>
+          <option value="draft">Draft</option>
+          <option value="locked">Locked</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="divider" style="margin:16px 0;"></div>
+    <div style="font-size:0.6rem; letter-spacing:0.2em; color:var(--amber); margin-bottom:14px; text-transform:uppercase;">Physical Reality Lock</div>
+
+    <div class="grid-2">
+      <div class="field-group">
+        <label class="field-label">Location (Exact — No Compression)</label>
+        <input class="field-input" id="scene-location" placeholder="e.g. Alfred Hospital — Emergency Exit, Prahran. Ground floor, east wing.">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Story Date / Time</label>
+        <input class="field-input" id="scene-time" placeholder="e.g. Day 4 — 23:14. 40 mins after Ch.6 exit.">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Scene Duration (Elapsed Story Time)</label>
+        <input class="field-input" id="scene-duration" placeholder="e.g. ~12 minutes real-time action">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Word Count Target</label>
+        <input class="field-input" id="scene-wc-target" type="number" placeholder="e.g. 2200">
+      </div>
+    </div>
+
+    <div class="divider" style="margin:16px 0;"></div>
+    <div style="font-size:0.6rem; letter-spacing:0.2em; color:var(--amber); margin-bottom:14px; text-transform:uppercase;">Characters & Inventory</div>
+
+    <div class="field-group">
+      <label class="field-label">Characters Present (comma-separated)</label>
+      <input class="field-input" id="scene-chars" placeholder="e.g. Kain, Bell, Hayden (offsite comms)">
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Carried Objects — Every Item That Matters (comma-separated)</label>
+      <input class="field-input" id="scene-objects" placeholder="e.g. broken lighter, QSA badge, Glock 19 (7 rounds remaining), ICS monitor — 34% coherence">
+    </div>
+
+    <div class="divider" style="margin:16px 0;"></div>
+    <div style="font-size:0.6rem; letter-spacing:0.2em; color:var(--amber); margin-bottom:14px; text-transform:uppercase;">Causality Architecture</div>
+
+    <div class="grid-2">
+      <div class="field-group">
+        <label class="field-label">Causality Function</label>
+        <select class="field-select" id="scene-causality-type">
+          <option value="revelation">Revelation — Information that reframes everything prior</option>
+          <option value="decision">Decision — Character makes a choice with consequences</option>
+          <option value="confrontation">Confrontation — Two forces collide directly</option>
+          <option value="escalation">Escalation — Stakes are raised</option>
+          <option value="transition">Transition — Logistical bridge (justify every second)</option>
+          <option value="setup">Setup — Plants a payoff required later</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Stakes</label>
+        <input class="field-input" id="scene-stakes" placeholder="e.g. If Kain is wrong about the ICS reading, Bell dies.">
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Causality Statement — What Changes Because This Scene Exists?</label>
+      <textarea class="field-textarea" id="scene-causality" placeholder="e.g. Kain discovers the replacement network uses the Alfred as a staging ground — which means the QSA's own facilities are compromised. Every prior assumption about institutional safety collapses." style="min-height:80px;"></textarea>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Required Output — What Must This Scene Produce?</label>
+      <textarea class="field-textarea" id="scene-output" placeholder="e.g. 1) Kain must exit the hospital with the lighter confirmed working. 2) The Flinders Lane Bleed must be seeded as incoming. 3) Bell's location must be established as unknown." style="min-height:80px;"></textarea>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Applicable World Rules (reference rule numbers or names)</label>
+      <input class="field-input" id="scene-rules" placeholder="e.g. PQ Bleed multiplier; 40-second window; ICS threshold for detection">
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Notes / Watch Points</label>
+      <textarea class="field-textarea" id="scene-notes" placeholder="Continuity flags, retroactive plant requirements, things to check before drafting..."></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeSceneModal()">CANCEL</button>
+      <button class="btn btn-danger btn-sm" id="scene-delete-btn" onclick="deleteScene()" style="display:none;">DELETE</button>
+      <button class="btn btn-primary" onclick="saveScene()">SAVE SCENE</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STORAGE ENGINE
+// ============================================================
+const KEYS = {
+  core: 'novel-ops-core',
+  rules: 'novel-ops-rules',
+  chars: 'novel-ops-chars',
+  beats: 'novel-ops-beats',
+  scenes: 'novel-ops-scenes'
+};
+
+const mem = { core:{}, rules:[], chars:[], beats:[], scenes:[] };
+
+async function loadAll() {
+  try {
+    for (const [k, storageKey] of Object.entries(KEYS)) {
+      try {
+        const res = await window.storage.get(storageKey);
+        if (res && res.value) mem[k] = JSON.parse(res.value);
+      } catch(e) {}
+    }
+  } catch(e) {}
+  applyCore();
+  renderRules();
+  renderChars();
+  renderBeats();
+  renderScenes();
+  updatePreflightSelect();
+}
+
+async function saveKey(k) {
+  try {
+    await window.storage.set(KEYS[k], JSON.stringify(mem[k]));
+    flashSave();
+  } catch(e) {}
+}
+
+function flashSave() {
+  const el = document.getElementById('save-indicator');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function switchTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'preflight') updatePreflightSelect();
+  if (id === 'beats') renderBeats();
+}
+
+// ============================================================
+// CORE LOCK
+// ============================================================
+function saveCore() {
+  mem.core = {
+    title: v('core-title'),
+    subtitle: v('core-subtitle'),
+    genre: v('core-genre'),
+    wc: v('core-wc'),
+    wcCurrent: v('core-wc-current'),
+    constraint: v('core-constraint'),
+    theme: v('core-theme'),
+    argument: v('core-argument'),
+    falseBelief: v('core-false-belief'),
+    trueBelief: v('core-true-belief'),
+    structure: v('core-structure'),
+    hook: v('core-hook'),
+    midpoint: v('core-midpoint'),
+    ending: v('core-ending')
+  };
+  saveKey('core');
+}
+
+function applyCore() {
+  const c = mem.core;
+  if (!c || !c.title) return;
+  setV('core-title', c.title);
+  setV('core-subtitle', c.subtitle);
+  setV('core-genre', c.genre);
+  setV('core-wc', c.wc);
+  setV('core-wc-current', c.wcCurrent);
+  setV('core-constraint', c.constraint);
+  setV('core-theme', c.theme);
+  setV('core-argument', c.argument);
+  setV('core-false-belief', c.falseBelief);
+  setV('core-true-belief', c.trueBelief);
+  setV('core-structure', c.structure);
+  setV('core-hook', c.hook);
+  setV('core-midpoint', c.midpoint);
+  setV('core-ending', c.ending);
+}
+
+// ============================================================
+// WORLD RULES
+// ============================================================
+let addRuleOpen = false;
+
+function toggleAddRule() {
+  addRuleOpen = !addRuleOpen;
+  document.getElementById('add-rule-form').classList.toggle('open', addRuleOpen);
+}
+
+const CAT_COLORS = {
+  physics: 'blue', biology: 'red', social: 'amber', narrative: 'purple'
+};
+
+function addRule() {
+  const rule = v('new-rule');
+  if (!rule.trim()) return;
+  mem.rules.push({
+    id: Date.now(),
+    rule,
+    cost: v('new-cost'),
+    limit: v('new-limit'),
+    consequence: v('new-consequence'),
+    category: v('new-rule-cat')
+  });
+  ['new-rule','new-cost','new-limit','new-consequence'].forEach(id => setV(id, ''));
+  setV('new-rule-cat', 'physics');
+  toggleAddRule();
+  saveKey('rules');
+  renderRules();
+  showToast('✓ RULE LOGGED');
+}
+
+function deleteRule(id) {
+  mem.rules = mem.rules.filter(r => r.id !== id);
+  saveKey('rules');
+  renderRules();
+}
+
+function renderRules() {
+  const el = document.getElementById('rules-list');
+  if (!mem.rules.length) {
+    el.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">⬡</div>
+      <p>NO WORLD RULES DEFINED. This is how "imaginary magic" happens.</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML = mem.rules.map((r, i) => `
+    <div class="rule-item">
+      <div>
+        <div class="rule-num">R${String(i+1).padStart(2,'0')}</div>
+        <div class="rule-field-label">THE RULE</div>
+        <div class="rule-field-val">${esc(r.rule)}</div>
+        <div style="margin-top:6px;"><span class="card-tag tag-${CAT_COLORS[r.category]||'blue'}">${esc(r.category)}</span></div>
+      </div>
+      <div>
+        <div class="rule-field-label">THE COST</div>
+        <div class="rule-field-val">${esc(r.cost||'—')}</div>
+      </div>
+      <div>
+        <div class="rule-field-label">THE LIMIT</div>
+        <div class="rule-field-val">${esc(r.limit||'—')}</div>
+        ${r.consequence ? `<div class="rule-field-label" style="margin-top:10px;">CONSEQUENCE IF VIOLATED</div><div class="rule-field-val" style="color:var(--red);">${esc(r.consequence)}</div>` : ''}
+      </div>
+      <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+        <button class="btn btn-danger btn-sm" onclick="deleteRule(${r.id})">DELETE</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// CHARACTERS
+// ============================================================
+let editingCharId = null;
+
+function openCharModal(id = null) {
+  editingCharId = id;
+  const modal = document.getElementById('char-modal');
+  const deleteBtn = document.getElementById('char-delete-btn');
+
+  if (id) {
+    const c = mem.chars.find(c => c.id === id);
+    document.getElementById('char-modal-title').textContent = 'EDIT CHARACTER';
+    setV('char-name', c.name);
+    setV('char-role', c.role);
+    setV('char-function', c.function);
+    setV('char-wound', c.wound);
+    setV('char-false', c.falseBelief);
+    setV('char-true', c.trueBelief);
+    setV('char-arc', c.arc);
+    setV('char-objects', c.objects);
+    setV('char-constraints', c.constraints);
+    setV('char-notes', c.notes);
+    deleteBtn.style.display = 'inline-flex';
+  } else {
+    document.getElementById('char-modal-title').textContent = 'ADD CHARACTER';
+    ['char-name','char-function','char-wound','char-false','char-true','char-arc','char-objects','char-constraints','char-notes'].forEach(id => setV(id, ''));
+    setV('char-role', 'protagonist');
+    deleteBtn.style.display = 'none';
+  }
+  modal.classList.add('open');
+}
+
+function closeCharModal() {
+  document.getElementById('char-modal').classList.remove('open');
+  editingCharId = null;
+}
+
+function saveChar() {
+  const char = {
+    id: editingCharId || Date.now(),
+    name: v('char-name'),
+    role: v('char-role'),
+    function: v('char-function'),
+    wound: v('char-wound'),
+    falseBelief: v('char-false'),
+    trueBelief: v('char-true'),
+    arc: v('char-arc'),
+    objects: v('char-objects'),
+    constraints: v('char-constraints'),
+    notes: v('char-notes')
+  };
+  if (!char.name.trim()) return;
+  if (editingCharId) {
+    mem.chars = mem.chars.map(c => c.id === editingCharId ? char : c);
+  } else {
+    mem.chars.push(char);
+  }
+  saveKey('chars');
+  renderChars();
+  closeCharModal();
+  showToast('✓ CHARACTER SAVED');
+}
+
+function deleteChar() {
+  if (!editingCharId) return;
+  mem.chars = mem.chars.filter(c => c.id !== editingCharId);
+  saveKey('chars');
+  renderChars();
+  closeCharModal();
+  showToast('CHARACTER DELETED');
+}
+
+function renderChars() {
+  const grid = document.getElementById('chars-grid');
+  if (!mem.chars.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <div class="empty-state-icon">◈</div>
+      <p>NO CHARACTERS DEFINED. Architecture before prose.</p>
+      <button class="btn btn-primary" onclick="openCharModal()">ADD FIRST CHARACTER</button>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = mem.chars.map(c => `
+    <div class="char-card ${esc(c.role)}" onclick="openCharModal(${c.id})">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+        <div>
+          <div class="char-name">${esc(c.name)}</div>
+          <div class="char-role">${esc(c.role)}</div>
+        </div>
+        <div class="card-tag tag-${c.role==='protagonist'?'blue':c.role==='antagonist'?'red':c.role==='supporting'?'amber':'purple'}">${esc(c.role).toUpperCase()}</div>
+      </div>
+      ${c.function ? `<div class="char-field"><div class="char-field-label">Function</div><div class="char-field-val">${esc(c.function).substring(0,100)}${c.function.length>100?'…':''}</div></div>` : ''}
+      ${c.wound ? `<div class="char-field"><div class="char-field-label">Wound</div><div class="char-field-val">${esc(c.wound).substring(0,80)}${c.wound.length>80?'…':''}</div></div>` : ''}
+      ${c.falseBelief ? `<div class="char-field"><div class="char-field-label">False Belief</div><div class="char-field-val" style="color:var(--red); opacity:0.8;">${esc(c.falseBelief).substring(0,80)}${c.falseBelief.length>80?'…':''}</div></div>` : ''}
+      ${c.objects ? `<div class="tags-row">${c.objects.split(',').map(o=>`<span class="obj-pill">${esc(o.trim())}</span>`).join('')}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// ACT BEAT MAP — DEFAULT BEATS
+// ============================================================
+const DEFAULT_BEATS = [
+  { act:'ACT ONE', pct:'0%', title:'Opening Image / World Established', desc:'The mechanical constraint and physical world are demonstrated before they are explained.', target:0, actual:0 },
+  { act:'ACT ONE', pct:'10%', title:'Inciting Incident', desc:'The event that makes the protagonist\'s current equilibrium impossible to maintain.', target:0, actual:0 },
+  { act:'ACT ONE', pct:'25%', title:'Act One Break — Lock-In', desc:'The protagonist commits. There is no returning to the pre-story world.', target:0, actual:0 },
+  { act:'ACT TWO', pct:'37%', title:'First Pinch / Rising Stakes', desc:'The antagonist\'s power is demonstrated. The protagonist is outmatched.', target:0, actual:0 },
+  { act:'ACT TWO', pct:'50%', title:'MIDPOINT REVERSAL', desc:'The core assumption of the story is inverted. The detective becomes the hunted. The map is wrong.', target:0, actual:0 },
+  { act:'ACT TWO', pct:'62%', title:'Second Pinch / Dark Turn', desc:'A trusted element betrays or collapses. The protagonist\'s tools fail.', target:0, actual:0 },
+  { act:'ACT TWO', pct:'75%', title:'Act Two Break — All Is Lost', desc:'The protagonist\'s false belief costs them everything. The darkest moment before recommitment.', target:0, actual:0 },
+  { act:'ACT THREE', pct:'80%', title:'Recommitment / New Plan', desc:'Armed with the true belief, the protagonist makes a final choice.', target:0, actual:0 },
+  { act:'ACT THREE', pct:'90%', title:'Climax', desc:'The mechanical constraint is tested to its absolute limit. All planted objects are detonated.', target:0, actual:0 },
+  { act:'ACT THREE', pct:'100%', title:'Resolution / Closing Image', desc:'Mirrors the opening image. Demonstrates how the world — or the protagonist — has changed.', target:0, actual:0 },
+];
+
+function addCustomBeat() {
+  mem.beats.push({ id: Date.now(), act:'ACT TWO', pct:'?', title:'Custom Beat', desc:'', target:0, actual:0 });
+  saveKey('beats');
+  renderBeats();
+}
+
+function renderBeats() {
+  const container = document.getElementById('beats-container');
+  const beats = mem.beats.length ? mem.beats : DEFAULT_BEATS.map((b,i) => ({...b, id:i+1}));
+  if (!mem.beats.length) mem.beats = beats;
+
+  const acts = ['ACT ONE','ACT TWO','ACT THREE'];
+  let totalTarget = 0, totalActual = 0;
+
+  container.innerHTML = acts.map(act => {
+    const actBeats = beats.filter(b => b.act === act);
+    if (!actBeats.length) return '';
+    const actTarget = actBeats.reduce((s,b) => s + (parseInt(b.target)||0), 0);
+    const actActual = actBeats.reduce((s,b) => s + (parseInt(b.actual)||0), 0);
+    totalTarget += actTarget;
+    totalActual += actActual;
+
+    return `
+      <div class="act-section">
+        <div style="display:flex; align-items:baseline; gap:16px;">
+          <div class="act-label">${act}</div>
+          ${actTarget ? `<div class="act-wc">Target: ${actTarget.toLocaleString()} words · Written: ${actActual.toLocaleString()}</div>` : ''}
+        </div>
+        ${actBeats.map(b => `
+          <div class="beat-row">
+            <div class="beat-pct">${b.pct}</div>
+            <div>
+              <div class="beat-title">${esc(b.title)}</div>
+              <div class="beat-desc">${esc(b.desc)}</div>
+            </div>
+            <div>
+              <div class="rule-field-label">TARGET WC</div>
+              <input class="wc-input" type="number" value="${b.target||''}" placeholder="0" onchange="updateBeatWC(${b.id}, 'target', this.value)">
+            </div>
+            <div>
+              <div class="rule-field-label">ACTUAL WC</div>
+              <input class="wc-input" type="number" value="${b.actual||''}" placeholder="0" onchange="updateBeatWC(${b.id}, 'actual', this.value)">
+            </div>
+            <div>
+              <div class="rule-field-label">PROGRESS</div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar" style="width:${b.target ? Math.min(100, Math.round((b.actual||0)/b.target*100)) : 0}%"></div>
+              </div>
+              <div style="font-size:0.6rem; color:var(--text-dim); margin-top:3px; text-align:right;">
+                ${b.target ? Math.min(100, Math.round((b.actual||0)/b.target*100)) + '%' : '—'}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }).join('');
+
+  // Update metrics
+  const target = parseInt(mem.core?.wc) || totalTarget;
+  const actual = parseInt(mem.core?.wcCurrent) || totalActual;
+  const pct = target ? Math.round(actual/target*100) : 0;
+  document.getElementById('metric-total-target').textContent = target ? target.toLocaleString() : '—';
+  document.getElementById('metric-total-actual').textContent = actual ? actual.toLocaleString() : '—';
+  document.getElementById('metric-pct').textContent = target ? pct + '%' : '—';
+  document.getElementById('metric-remaining').textContent = target && actual ? (target - actual).toLocaleString() : '—';
+}
+
+function updateBeatWC(id, field, val) {
+  const beat = mem.beats.find(b => b.id === id);
+  if (beat) {
+    beat[field] = parseInt(val) || 0;
+    saveKey('beats');
+    renderBeats();
+  }
+}
+
+// ============================================================
+// SCENE INVENTORY
+// ============================================================
+let editingSceneId = null;
+
+const CAUSALITY_COLORS = {
+  revelation:'blue', decision:'amber', confrontation:'red',
+  escalation:'red', transition:'purple', setup:'green'
+};
+
+const STATUS_COLORS = {
+  locked:'green', draft:'amber', pending:'red'
+};
+
+function openSceneModal(id = null) {
+  editingSceneId = id;
+  const modal = document.getElementById('scene-modal');
+  const deleteBtn = document.getElementById('scene-delete-btn');
+
+  if (id) {
+    const s = mem.scenes.find(s => s.id === id);
+    document.getElementById('scene-modal-title').textContent = 'EDIT SCENE';
+    setV('scene-chapter', s.chapter);
+    setV('scene-title', s.title);
+    setV('scene-status', s.status);
+    setV('scene-location', s.location);
+    setV('scene-time', s.time);
+    setV('scene-duration', s.duration);
+    setV('scene-wc-target', s.wcTarget);
+    setV('scene-chars', s.chars);
+    setV('scene-objects', s.objects);
+    setV('scene-causality-type', s.causalityType);
+    setV('scene-stakes', s.stakes);
+    setV('scene-causality', s.causality);
+    setV('scene-output', s.output);
+    setV('scene-rules', s.rules);
+    setV('scene-notes', s.notes);
+    deleteBtn.style.display = 'inline-flex';
+  } else {
+    document.getElementById('scene-modal-title').textContent = 'ADD SCENE';
+    ['scene-chapter','scene-title','scene-location','scene-time','scene-duration','scene-wc-target',
+     'scene-chars','scene-objects','scene-stakes','scene-causality','scene-output','scene-rules','scene-notes'].forEach(id => setV(id, ''));
+    setV('scene-status', 'pending');
+    setV('scene-causality-type', 'revelation');
+    deleteBtn.style.display = 'none';
+  }
+  modal.classList.add('open');
+}
+
+function closeSceneModal() {
+  document.getElementById('scene-modal').classList.remove('open');
+  editingSceneId = null;
+}
+
+function saveScene() {
+  const scene = {
+    id: editingSceneId || Date.now(),
+    chapter: v('scene-chapter'),
+    title: v('scene-title'),
+    status: v('scene-status'),
+    location: v('scene-location'),
+    time: v('scene-time'),
+    duration: v('scene-duration'),
+    wcTarget: v('scene-wc-target'),
+    chars: v('scene-chars'),
+    objects: v('scene-objects'),
+    causalityType: v('scene-causality-type'),
+    stakes: v('scene-stakes'),
+    causality: v('scene-causality'),
+    output: v('scene-output'),
+    rules: v('scene-rules'),
+    notes: v('scene-notes')
+  };
+  if (!scene.title.trim()) return;
+  if (editingSceneId) {
+    mem.scenes = mem.scenes.map(s => s.id === editingSceneId ? scene : s);
+  } else {
+    mem.scenes.push(scene);
+  }
+  // Sort by chapter
+  mem.scenes.sort((a,b) => parseFloat(a.chapter)||0 - parseFloat(b.chapter)||0);
+  saveKey('scenes');
+  renderScenes();
+  updatePreflightSelect();
+  closeSceneModal();
+  showToast('✓ SCENE LOGGED');
+}
+
+function deleteScene() {
+  if (!editingSceneId) return;
+  mem.scenes = mem.scenes.filter(s => s.id !== editingSceneId);
+  saveKey('scenes');
+  renderScenes();
+  updatePreflightSelect();
+  closeSceneModal();
+  showToast('SCENE DELETED');
+}
+
+function renderScenes() {
+  const tbody = document.getElementById('scenes-tbody');
+  const empty = document.getElementById('scenes-empty');
+  const metrics = {
+    scenes: mem.scenes.length,
+    locked: mem.scenes.filter(s=>s.status==='locked').length,
+    draft: mem.scenes.filter(s=>s.status==='draft').length,
+    pending: mem.scenes.filter(s=>s.status==='pending').length
+  };
+  document.getElementById('metric-scenes').textContent = metrics.scenes;
+  document.getElementById('metric-locked').textContent = metrics.locked;
+  document.getElementById('metric-draft').textContent = metrics.draft;
+  document.getElementById('metric-pending').textContent = metrics.pending;
+
+  if (!mem.scenes.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = mem.scenes.map(s => `
+    <tr>
+      <td class="ch-num">${esc(s.chapter||'—')}</td>
+      <td>
+        <strong style="color:var(--text-bright); font-family:var(--serif);">${esc(s.title)}</strong>
+        ${s.stakes ? `<div style="font-size:0.75rem; color:var(--red); margin-top:3px; font-style:italic;">${esc(s.stakes)}</div>` : ''}
+      </td>
+      <td style="max-width:160px; font-size:0.8rem;">${esc(s.location||'—')}</td>
+      <td style="white-space:nowrap; font-family:var(--mono); font-size:0.7rem; color:var(--text-dim);">${esc(s.time||'—')}</td>
+      <td style="max-width:140px;">${s.chars ? s.chars.split(',').map(c=>`<span class="inline-tag">${esc(c.trim())}</span>`).join(' ') : '<span style="color:var(--text-dim);">—</span>'}</td>
+      <td style="max-width:180px;">${s.objects ? s.objects.split(',').map(o=>`<span class="obj-pill">${esc(o.trim())}</span>`).join('') : '<span style="color:var(--text-dim);">—</span>'}</td>
+      <td><span class="causality-badge tag-${CAUSALITY_COLORS[s.causalityType]||'blue'}">${esc(s.causalityType||'—').toUpperCase()}</span></td>
+      <td><span class="status-badge tag-${STATUS_COLORS[s.status]||'amber'}">${esc(s.status||'—').toUpperCase()}</span></td>
+      <td>
+        <div style="display:flex; gap:4px; flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="openSceneModal(${s.id})">EDIT</button>
+          <button class="btn btn-amber btn-sm" onclick="selectAndGeneratePreflight(${s.id})">BRIEF</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ============================================================
+// PREFLIGHT BRIEF
+// ============================================================
+function updatePreflightSelect() {
+  const sel = document.getElementById('preflight-scene-select');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Choose a scene from inventory —</option>';
+  mem.scenes.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = `Ch.${s.chapter} — ${s.title}`;
+    sel.appendChild(opt);
+  });
+  if (cur) sel.value = cur;
+}
+
+function selectAndGeneratePreflight(id) {
+  // Switch to preflight tab
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-preflight').classList.add('active');
+  document.querySelectorAll('.tab-btn')[5].classList.add('active');
+  updatePreflightSelect();
+  document.getElementById('preflight-scene-select').value = id;
+  generatePreflight();
+}
+
+function generatePreflight() {
+  const sel = document.getElementById('preflight-scene-select');
+  const id = parseInt(sel.value);
+  const out = document.getElementById('preflight-output');
+
+  if (!id) {
+    out.innerHTML = `<div class="preflight-empty"><div style="font-size:2rem; margin-bottom:12px; opacity:0.15;">⬡</div>SELECT A SCENE TO GENERATE THE PREFLIGHT BRIEF<br><span style="opacity:0.5; font-size:0.65rem;">No scene is drafted until this brief is locked.</span></div>`;
+    return;
+  }
+
+  const s = mem.scenes.find(sc => sc.id === id);
+  if (!s) return;
+
+  const proj = mem.core?.title || 'UNTITLED PROJECT';
+  const warnings = [];
+  if (!s.location) warnings.push('LOCATION NOT LOCKED — Physical space is undefined. Do not draft.');
+  if (!s.time) warnings.push('STORY TIME NOT LOCKED — Timeline continuity cannot be verified.');
+  if (!s.objects) warnings.push('CARRIED OBJECTS UNDEFINED — Any object used in this scene will be an unplanted prop.');
+  if (!s.causality) warnings.push('CAUSALITY STATEMENT MISSING — This scene has no defined function. It is dead weight until this is filled.');
+  if (!s.output) warnings.push('REQUIRED OUTPUT UNDEFINED — No scene should be drafted without knowing exactly what it must produce.');
+
+  const relChars = s.chars ? s.chars.split(',').map(n => {
+    const name = n.trim().toLowerCase();
+    return mem.chars.find(c => c.name.toLowerCase().includes(name));
+  }).filter(Boolean) : [];
+
+  out.innerHTML = `
+    <div class="preflight-doc" id="preflight-doc-content">
+      <div class="brief-header">
+        <div class="brief-title">Ch.${esc(s.chapter||'?')} — ${esc(s.title)}</div>
+        <div class="brief-meta">
+          <div>PROJECT <span>${esc(proj)}</span></div>
+          <div>STATUS <span class="card-tag tag-${STATUS_COLORS[s.status]||'amber'}" style="margin:0 4px;">${esc((s.status||'pending').toUpperCase())}</span></div>
+          <div>FUNCTION <span>${esc((s.causalityType||'—').toUpperCase())}</span></div>
+          ${s.wcTarget ? `<div>TARGET <span>${parseInt(s.wcTarget).toLocaleString()} words</span></div>` : ''}
+        </div>
+      </div>
+
+      ${warnings.length ? `
+        <div class="brief-section">
+          <div class="brief-section-title">⚠ COMPLIANCE WARNINGS — RESOLVE BEFORE DRAFTING</div>
+          ${warnings.map(w => `<div class="brief-warning">⚠ ${esc(w)}</div>`).join('')}
+        </div>
+      ` : `
+        <div style="background:rgba(39,174,96,0.08); border:1px solid rgba(39,174,96,0.3); padding:10px 16px; margin-bottom:20px; font-family:var(--mono); font-size:0.7rem; letter-spacing:0.1em; color:var(--green);">
+          ✓ PREFLIGHT COMPLETE — ALL CRITICAL FIELDS POPULATED. CLEARED FOR DRAFTING.
+        </div>
+      `}
+
+      <div class="brief-section">
+        <div class="brief-section-title">Physical Reality Lock</div>
+        <div class="brief-inventory-item"><div class="brief-inv-label">LOCATION</div><div class="brief-inv-val">${esc(s.location||'⚠ UNDEFINED')}</div></div>
+        <div class="brief-inventory-item"><div class="brief-inv-label">STORY TIME</div><div class="brief-inv-val">${esc(s.time||'⚠ UNDEFINED')}</div></div>
+        <div class="brief-inventory-item"><div class="brief-inv-label">ELAPSED DURATION</div><div class="brief-inv-val">${esc(s.duration||'⚠ UNDEFINED')}</div></div>
+      </div>
+
+      <div class="brief-section">
+        <div class="brief-section-title">Inventory Manifest — Characters Present</div>
+        ${s.chars ? s.chars.split(',').map(n => {
+          const nm = n.trim();
+          const char = mem.chars.find(c => c.name.toLowerCase().includes(nm.toLowerCase()));
+          return `
+            <div style="padding:10px 0; border-bottom:1px solid var(--border);">
+              <div style="font-family:var(--display); font-size:1.1rem; letter-spacing:0.06em; color:var(--text-bright); margin-bottom:4px;">${esc(nm)}</div>
+              ${char ? `
+                ${char.constraints ? `<div><span class="brief-inv-label">CONSTRAINTS: </span><span style="color:var(--red); font-size:0.85rem; font-family:var(--serif);">${esc(char.constraints)}</span></div>` : ''}
+                ${char.objects ? `<div style="margin-top:4px;"><span class="brief-inv-label">STANDING INVENTORY: </span>${char.objects.split(',').map(o=>`<span class="obj-pill">${esc(o.trim())}</span>`).join('')}</div>` : ''}
+              ` : '<div style="font-size:0.7rem; color:var(--text-dim); font-style:italic;">Character not in dossier — add to Characters module.</div>'}
+            </div>
+          `;
+        }).join('') : '<div class="brief-inv-val" style="color:var(--red);">⚠ NO CHARACTERS DEFINED</div>'}
+      </div>
+
+      <div class="brief-section">
+        <div class="brief-section-title">Scene Inventory — Carried Objects</div>
+        ${s.objects ? `
+          <div class="tags-row" style="margin-bottom:10px;">
+            ${s.objects.split(',').map(o => `<span class="obj-pill" style="font-size:0.7rem; padding:4px 12px;">${esc(o.trim())}</span>`).join('')}
+          </div>
+        ` : '<div style="color:var(--red); font-family:var(--mono); font-size:0.75rem;">⚠ NO OBJECTS DEFINED — Any object used in this scene will be retroactively planted. Fix this.</div>'}
+      </div>
+
+      <div class="brief-section">
+        <div class="brief-section-title">Causality Architecture</div>
+        <div class="brief-inventory-item" style="margin-bottom:12px;"><div class="brief-inv-label">FUNCTION TYPE</div><div><span class="causality-badge tag-${CAUSALITY_COLORS[s.causalityType]||'blue'}">${esc((s.causalityType||'—').toUpperCase())}</span></div></div>
+        ${s.stakes ? `
+          <div style="background:rgba(192,57,43,0.06); border:1px solid rgba(192,57,43,0.2); padding:12px 16px; margin-bottom:12px;">
+            <div class="brief-inv-label" style="color:var(--red); margin-bottom:4px;">STAKES — IF THIS SCENE FAILS:</div>
+            <div class="brief-content" style="font-style:italic; color:var(--red); opacity:0.9;">${esc(s.stakes)}</div>
+          </div>
+        ` : ''}
+        ${s.causality ? `
+          <div class="brief-section-title" style="border-color:transparent; margin-bottom:4px;">CAUSALITY STATEMENT</div>
+          <div class="brief-output"><p>${esc(s.causality)}</p></div>
+        ` : ''}
+      </div>
+
+      ${s.output ? `
+        <div class="brief-section">
+          <div class="brief-section-title">Required Output — This Scene Must Produce</div>
+          <ul class="brief-checklist">
+            ${s.output.split(/\n|\d+\)/).filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('')}
+          </ul>
+        </div>
+      ` : ''}
+
+      ${s.rules ? `
+        <div class="brief-section">
+          <div class="brief-section-title">Applicable World Rules</div>
+          <div class="brief-content" style="font-family:var(--mono); font-size:0.8rem; color:var(--blue);">${esc(s.rules)}</div>
+        </div>
+      ` : ''}
+
+      ${mem.rules.length ? `
+        <div class="brief-section">
+          <div class="brief-section-title">World Rules Reference — Active Constraints</div>
+          ${mem.rules.map(r => `
+            <div class="brief-inventory-item">
+              <div>
+                <div class="brief-inv-label">${esc(r.rule)}</div>
+                ${r.cost ? `<div style="font-size:0.8rem; color:var(--text-dim); font-family:var(--serif); font-style:italic;">Cost: ${esc(r.cost)}</div>` : ''}
+              </div>
+              ${r.limit ? `<div class="brief-inv-val" style="text-align:right; font-size:0.8rem;">Limit: ${esc(r.limit)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${s.notes ? `
+        <div class="brief-section">
+          <div class="brief-section-title">Watch Points & Continuity Flags</div>
+          <div class="brief-content" style="background:rgba(232,160,32,0.05); border:1px solid rgba(232,160,32,0.2); padding:14px 18px; font-size:0.9rem; line-height:1.7;">${esc(s.notes).replace(/\n/g,'<br>')}</div>
+        </div>
+      ` : ''}
+
+      <div style="margin-top:28px; padding-top:16px; border-top:1px solid var(--border); font-family:var(--mono); font-size:0.6rem; letter-spacing:0.15em; color:var(--text-dim); display:flex; justify-content:space-between;">
+        <span>NOVEL OPS — PREFLIGHT BRIEF</span>
+        <span>Generated: ${new Date().toLocaleString()}</span>
+      </div>
+    </div>
+  `;
+}
+
+function copyPreflight() {
+  const el = document.getElementById('preflight-doc-content');
+  if (!el) return;
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).then(() => showToast('✓ PREFLIGHT BRIEF COPIED'));
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function setV(id, val) { const el = document.getElementById(id); if (el) el.value = val||''; }
+function esc(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Close modals on overlay click
+document.getElementById('char-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeCharModal();
+});
+document.getElementById('scene-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeSceneModal();
+});
+
+// ============================================================
+// INIT
+// ============================================================
+loadAll();
+</script>
+</body>
+</html>

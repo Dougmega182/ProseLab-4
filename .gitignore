@@ -1,0 +1,6 @@
+.env
+proselab/.env
+novels/
+*.lnk
+client_secret*.json
+node_modules/
