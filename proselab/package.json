@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "critic:5": "node scripts/run-five-rewrite-cycles.mjs",
     "dev": "vite",
     "build": "vite build",
     "critic:cycle": "node scripts/run-single-rewrite-cycle.mjs",

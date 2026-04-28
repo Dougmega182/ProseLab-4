@@ -14,7 +14,6 @@ import {
 // ENV-based API keys (Vite exposes VITE_ prefixed vars)
 const ENV_KEYS = {
   openai: import.meta.env.VITE_OPENAI_KEY || "",
-  gemini: import.meta.env.VITE_GEMINI_KEY || "",
   model: import.meta.env.VITE_OLLAMA_MODEL || "llama3",
 };
 
@@ -50,7 +49,6 @@ function logTokenUsage(provider, inputTokens, outputTokens) {
 // Rough cost estimates per 1K tokens
 const COST_RATES = {
   "openai::gpt-4o-mini": { input: 0.00015, output: 0.0006 },
-  "gemini::gemini-pro": { input: 0.000125, output: 0.000375 },
   "ollama": { input: 0, output: 0 },
 };
 
@@ -220,18 +218,6 @@ async function callOpenAI(key, prompt) {
   return d.choices?.[0]?.message?.content || "";
 }
 
-async function callGemini(key, prompt) {
-  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-  });
-  const d = await r.json();
-  const text = d.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  logTokenUsage("gemini::gemini-pro", estimateTokens(prompt), estimateTokens(text));
-  return text;
-}
-
 async function callOllama(model, prompt) {
   const r = await fetch("http://localhost:11434/api/generate", {
     method: "POST",
@@ -247,17 +233,32 @@ async function callOllama(model, prompt) {
   return d.response;
 }
 
+import { callCritic } from "./engine/critic.js";
+import { 
+  generateRewrite, 
+  estimateSimilarity, 
+  mapVoiceToPromptSpec 
+} from "./engine/rewrite.js";
+
 // =============================
-// PIPELINE (FULLY CACHED)
+// PIPELINE (MULTI-PASS CRITIC LOOP)
 // =============================
-async function runPipeline({ text, keys, model, onStage, onUpdate }) {
+async function runPipeline({ 
+  text, 
+  keys, 
+  model, 
+  onStage, 
+  onUpdate,
+  sceneContext = null,
+}) {
+  const SIMILARITY_THRESHOLD = 0.75;
+  const MAX_ATTEMPTS = 3;
+
   onStage("analysis");
   const analysis = await cachedInference({
     name: "analysis",
     input: text,
-    context: {
-      version: INFERENCE_CACHE_CONTEXT_VERSION,
-    },
+    context: { version: INFERENCE_CACHE_CONTEXT_VERSION },
     fn: async () => analyze(text),
     enabled: shouldCacheInference("analysis"),
   });
@@ -267,36 +268,74 @@ async function runPipeline({ text, keys, model, onStage, onUpdate }) {
   const delta = await cachedInference({
     name: "delta",
     input: JSON.stringify(analysis),
-    context: {
-      version: INFERENCE_CACHE_CONTEXT_VERSION,
-    },
+    context: { version: INFERENCE_CACHE_CONTEXT_VERSION },
     fn: async () => buildDelta(analysis),
     enabled: shouldCacheInference("delta"),
   });
   if (onUpdate) onUpdate({ delta });
 
-  const instruction = normalize(`Rewrite this paragraph with these constraints:\n${delta.join("\n")}\n\n${text}`);
+  const initialInstruction = normalize(`Rewrite this paragraph with these constraints:\n${delta.join("\n")}\n\n${text}`);
 
   onStage("ollama");
-  const draft = await callOllama(model, instruction);
-  const safeDraft = draft?.trim() ? draft : text;
+  const draft1 = await callOllama(model, initialInstruction);
+  const safeDraft1 = draft1?.trim() ? draft1 : text;
 
-  onStage("openai");
-  const voiceConstraints = `
-STRICT NEGATIVE CONSTRAINTS:
-- DO NOT remove sentence fragments.
-- DO NOT normalize unusual rhythm or deliberate stutters.
-- DO NOT replace specific, concrete imagery with generic phrasing.
-- DO NOT add explanatory transitions or 'AI-logic' bridges.
-- DO NOT expand concise, punchy sentences.
+  let currentDraft = safeDraft1;
+  let attempts = 0;
+  let finalCritique = null;
+  let traces = [];
 
-ONLY fix clarity where the meaning is physically broken or grammar obscures the intended emotional beat.
-`;
-  const refined = await callOpenAI(keys.openai, `LIGHT REFINEMENT ONLY. Preserve the specific voice and rhythmic quirks of the author.\n${voiceConstraints}\n\nTEXT:\n${safeDraft}`);
-  const safeRefined = refined?.trim() ? refined : safeDraft;
+  while (attempts < MAX_ATTEMPTS) {
+    attempts++;
+    onStage(`critic-p${attempts}`);
+    
+    const critique = await callCritic({
+      text: currentDraft,
+      keys,
+      sceneContext
+    });
+    
+    finalCritique = critique;
+    traces.push({ draft: currentDraft, critique });
+
+    if (critique.verdict === "APPROVE") break;
+    if (attempts === MAX_ATTEMPTS) break;
+
+    onStage(`rewrite-p${attempts + 1}`);
+    const similarityToOriginal = estimateSimilarity(text, currentDraft);
+    const previousTrace = traces.length >= 2 ? traces[traces.length - 2] : null;
+    const similarityToPrevious = previousTrace 
+      ? estimateSimilarity(previousTrace.draft, currentDraft) 
+      : 0;
+    const tooSimilar = similarityToOriginal > SIMILARITY_THRESHOLD || similarityToPrevious > SIMILARITY_THRESHOLD;
+
+    const rewriteResult = await generateRewrite({
+      original: text,
+      instructions: critique.rewrite.instructions,
+      voiceSpec,
+      sceneContext,
+      key: keys.openai,
+      temperature: tooSimilar ? 0.85 : 0.75,
+      similarityRejection: tooSimilar,
+      rejectedDraft: tooSimilar ? currentDraft : null
+    });
+
+    if (rewriteResult.ok) {
+      currentDraft = rewriteResult.text;
+    } else {
+      break;
+    }
+  }
 
   onStage("done");
-  return { analysis, delta, draft, refined, final: safeRefined };
+  return { 
+    analysis, 
+    delta, 
+    final: currentDraft,
+    critique: finalCritique,
+    attempts,
+    traces
+  };
 }
 
 // =============================
@@ -489,20 +528,16 @@ function MetricBar({ label, value, max = 1 }) {
 }
 
 function PipelineTracker({ currentStage }) {
-  const stages = ["analysis", "delta", "ollama", "openai", "gemini", "margaret", "rafael", "james", "yuki", "saoirse", "victor", "margaret-rewrite", "done"];
+  const stages = ["analysis", "delta", "ollama", "critic-p1", "rewrite-p2", "critic-p2", "rewrite-p3", "critic-p3", "done"];
   const labels = {
     analysis: "Analysis",
     delta: "Constraints",
     ollama: "Ollama",
-    openai: "OpenAI",
-    gemini: "Gemini",
-    margaret: "Margaret",
-    rafael: "Rafael",
-    james: "James",
-    yuki: "Yuki",
-    saoirse: "Saoirse",
-    victor: "Victor",
-    "margaret-rewrite": "Rewrite",
+    "critic-p1": "Critic 1",
+    "rewrite-p2": "Rewrite 2",
+    "critic-p2": "Critic 2",
+    "rewrite-p3": "Rewrite 3",
+    "critic-p3": "Critic 3",
     done: "Done"
   };
 
@@ -547,14 +582,15 @@ export default function ProseLabV4() {
   const [modeFeedback, setModeFeedback] = useState({ ANALYSE: {}, ENGINEER: {}, MARKET: {}, VERDICT: {} });
   const [analysis, setAnalysis] = useState(null);
   const [delta, setDelta] = useState([]);
+  const [createModeCritique, setCreateModeCritique] = useState(null);
   const [preproduction, setPreproduction] = useState({
     core: { title: "", subtitle: "", genre: "", wc: "", wcCurrent: "", constraint: "", theme: "", argument: "", falseBelief: "", trueBelief: "", structure: "", hook: "", midpoint: "", ending: "" },
-    voice: { length: "mixed", fragments: "medium", metaphor: "medium", dialogue: "natural" },
+    voice: { length: "mixed", fragments: "medium", metaphor: "medium", dialogue: "natural", banned: ["very", "suddenly", "felt"] },
     rules: [],
     chars: [],
     beats: DEFAULT_BEATS,
     scenes: [],
-    settings: { ollamaModel: ENV_KEYS.model, openaiModel: "gpt-4o-mini", useGemini: true }
+    settings: { ollamaModel: ENV_KEYS.model, openaiModel: "gpt-4o-mini" }
   });
   const [lastAnalyzedText, setLastAnalyzedText] = useState("");
   const [preTab, setPreTab] = useState("core");
@@ -565,6 +601,7 @@ export default function ProseLabV4() {
   const [stage, setStage] = useState(null);
   const [cacheStats, setCacheStats] = useState(getCacheStats());
   const [costStats, setCostStats] = useState(getTodayStats());
+  const [envStatus, setEnvStatus] = useState({ ollamaReachable: false });
   const [now, setNow] = useState(new Date());
   const outputRef = useRef(null);
 
@@ -595,20 +632,38 @@ export default function ProseLabV4() {
     return () => clearInterval(t);
   }, []);
 
-  const envStatus = {
+  const checkOllamaReachability = async (modelName) => {
+    if (!modelName) return false;
+    try {
+      const res = await fetch("http://localhost:11434/api/tags");
+      if (!res.ok) return false;
+      const data = await res.json();
+      return data.models?.some(m => m.name === modelName || m.name.startsWith(modelName + ":"));
+    } catch {
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    checkOllamaReachability(preproduction.settings.ollamaModel).then(isReachable => {
+      setEnvStatus(prev => ({ ...prev, ollamaReachable: isReachable }));
+    });
+  }, [preproduction.settings.ollamaModel]);
+
+  const envStatusState = {
     openai: ENV_KEYS.openai && ENV_KEYS.openai !== "your_openai_key_here",
-    gemini: ENV_KEYS.gemini && ENV_KEYS.gemini !== "your_gemini_key_here",
     ollamaModel: Boolean(preproduction.settings.ollamaModel?.trim()),
+    ollamaReachable: envStatus?.ollamaReachable ?? false,
   };
 
   const getModeConfigWarnings = (mode) => {
     const warnings = [];
     if (mode === "CREATE") {
-      if (!envStatus.ollamaModel) warnings.push("Create mode needs an Ollama model name in Settings.");
-      if (!envStatus.openai) warnings.push("Create mode needs `VITE_OPENAI_KEY` in `proselab/.env`.");
-      if (preproduction.settings.useGemini && !envStatus.gemini) warnings.push("Gemini polish is enabled in Settings, but `VITE_GEMINI_KEY` is missing.");
+      if (!envStatusState.ollamaModel) warnings.push("Create mode needs an Ollama model name in Settings.");
+      if (envStatusState.ollamaModel && !envStatusState.ollamaReachable) warnings.push("Ollama model is set, but the server is unreachable or the model is not installed.");
+      if (!envStatusState.openai) warnings.push("Create mode needs `VITE_OPENAI_KEY` in `proselab/.env`.");
     }
-    if (["ANALYSE", "ENGINEER", "MARKET", "VERDICT"].includes(mode) && !envStatus.openai) {
+    if (["ANALYSE", "ENGINEER", "MARKET", "VERDICT"].includes(mode) && !envStatusState.openai) {
       warnings.push(`${mode} mode needs \`VITE_OPENAI_KEY\` in \`proselab/.env\`.`);
     }
     return warnings;
@@ -693,29 +748,30 @@ Midpoint: ${preproduction.core.midpoint}
 `;
     }
 
-    const fullPrompt = `CONTEXT:\n${context}\n${voiceProfile}\n\nUSER PROSE:\n${text}`;
-
     try {
       const res = await runPipeline({
-        text: fullPrompt,
-        keys: { openai: ENV_KEYS.openai, gemini: ENV_KEYS.gemini },
+        text: text, // Use the actual user text as input
+        keys: { openai: ENV_KEYS.openai },
         model: preproduction.settings.ollamaModel,
         onStage: setStage,
         onUpdate: (data) => {
           if (data.analysis) setAnalysis(data.analysis);
           if (data.delta) setDelta(data.delta);
-        }
+        },
+        sceneContext: context,
+        voiceSpec: mapVoiceToPromptSpec(preproduction.voice, delta)
       });
 
       console.log("PIPELINE TRACE", {
-        draftLength: res.draft?.length || 0,
-        refinedLength: res.refined?.length || 0,
-        finalLength: res.final?.length || 0,
+        attempts: res.attempts,
+        finalVerdict: res.critique?.verdict,
+        finalScore: res.critique?.score?.overall,
       });
 
       setAnalysis(res.analysis);
       setDelta(res.delta);
-      setStages({ draft: res.draft, refined: res.refined, final: res.final });
+      setStages({ draft: res.traces?.[0]?.draft || "", refined: "", final: res.final });
+      setCreateModeCritique(res.critique);
       setOutput(res.final);
       setCacheStats(getCacheStats());
       setCostStats(getTodayStats());
@@ -926,16 +982,12 @@ ${text}`;
       {/* ENV STATUS BAR */}
       <div className="env-status">
         <div className="env-item">
-          <div className={`env-dot ${envStatus.openai ? "connected" : "missing"}`} />
-          <span>OpenAI {envStatus.openai ? "Configured" : "Missing `VITE_OPENAI_KEY`"}</span>
+          <div className={`env-dot ${envStatusState.openai ? "connected" : "missing"}`} />
+          <span>OpenAI {envStatusState.openai ? "Configured" : "Missing `VITE_OPENAI_KEY`"}</span>
         </div>
         <div className="env-item">
-          <div className={`env-dot ${envStatus.gemini ? "connected" : "missing"}`} />
-          <span>Gemini {envStatus.gemini ? "Configured" : "Missing `VITE_GEMINI_KEY`"}</span>
-        </div>
-        <div className="env-item">
-          <div className={`env-dot ${envStatus.ollamaModel ? "connected" : "missing"}`} />
-          <span>Ollama {envStatus.ollamaModel ? `Model set: ${preproduction.settings.ollamaModel}` : "Missing model in Settings"}</span>
+          <div className={`env-dot ${envStatusState.ollamaReachable ? "connected" : "missing"}`} />
+          <span>Ollama {envStatusState.ollamaReachable ? `Model connected: ${preproduction.settings.ollamaModel}` : "Unreachable or Missing"}</span>
         </div>
         <div className="env-item env-note">
           <div className="env-dot info" />
@@ -1223,12 +1275,9 @@ ${text}`;
                       <option value="gpt-4o">gpt-4o</option>
                     </select>
                   </div>
-                  <div className="field-group">
-                    <label className="field-label">Gemini Final Stage</label>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px" }}>
-                      <input type="checkbox" checked={preproduction.settings.useGemini} onChange={e => updatePre("settings", "useGemini", e.target.checked)} />
-                      <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Enable Gemini Polish</span>
-                    </div>
+                  <div className="field-group" style={{ gridColumn: "1 / -1" }}>
+                    <label className="field-label">Banned Words (Comma Separated)</label>
+                    <input className="field-input" value={preproduction.voice.banned.join(", ")} onChange={e => updatePre("voice", "banned", e.target.value.split(",").map(w => w.trim()))} />
                   </div>
                 </div>
               </div>
@@ -1293,7 +1342,7 @@ ${text}`;
                     {running ? "Running Mode..." : `Start ${activeMode} Mode`}
                   </button>
                   <div style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-muted)", maxWidth: "300px", textAlign: "right" }}>
-                    {activeMode === "CREATE" && "Ollama → OpenAI → Gemini"}
+                    {activeMode === "CREATE" && "Ollama → Critic → OpenAI"}
                     {activeMode === "ANALYSE" && "Margaret (Prose) + Rafael (Character)"}
                     {activeMode === "ENGINEER" && "James (Structure) + Yuki (World)"}
                     {activeMode === "MARKET" && "Saoirse (Market Check)"}
@@ -1317,19 +1366,19 @@ ${text}`;
                   </div>
                 </div>
                 <div className="analysis-card">
-                  <div className="analysis-card-title">Emotion</div>
-                  <MetricBar label="Physical Ratio" value={analysis.emotion.physicalRatio} />
+                  <div className="analysis-card-title">Physical Grounding</div>
+                  <MetricBar label="Physical Grounding" value={createModeCritique?.score?.physical_grounding || 0} max={10} />
                   <div className="analysis-metric">
                     <span className="analysis-metric-label">Target</span>
-                    <span className="analysis-metric-value">{TARGET.emotion.physicalRatio}</span>
+                    <span className="analysis-metric-value">7.00</span>
                   </div>
                 </div>
                 <div className="analysis-card">
                   <div className="analysis-card-title">Specificity</div>
-                  <MetricBar label="Concrete Ratio" value={analysis.specificity.concreteRatio} />
+                  <MetricBar label="Specificity" value={createModeCritique?.score?.specificity || 0} max={10} />
                   <div className="analysis-metric">
                     <span className="analysis-metric-label">Target</span>
-                    <span className="analysis-metric-value">{TARGET.specificity.concreteRatio}</span>
+                    <span className="analysis-metric-value">7.00</span>
                   </div>
                 </div>
               </div>
@@ -1358,8 +1407,13 @@ ${text}`;
               <>
                 <div className="panel" style={{ marginBottom: "24px" }}>
                   <div className="panel-header">
-                    <span className="panel-title">Final Output (Ollama + Light OpenAI)</span>
-                    <div style={{ display: "flex", gap: "8px" }}>
+                    <span className="panel-title">Final Output (Pipeline Attempt {stages.final ? (createModeCritique?.attempts || "Complete") : "—"})</span>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      {createModeCritique && (
+                        <div className={`status-badge tag-${createModeCritique.verdict === "APPROVE" ? "locked" : "pending"}`} style={{ fontSize: 10 }}>
+                          CRITIC: {createModeCritique.verdict} ({createModeCritique.score?.overall}/10)
+                        </div>
+                      )}
                       <button className="btn btn-ghost" onClick={() => copyToEditor(stages.final)} style={{ padding: "4px 10px", fontSize: 11 }}>Copy to Editor & Revise</button>
                       <button className="btn btn-ghost" onClick={() => navigator.clipboard.writeText(stages.final)} style={{ padding: "4px 10px", fontSize: 11 }}>Copy Text</button>
                     </div>
@@ -1374,13 +1428,19 @@ ${text}`;
                 <div className="content-grid">
                   <div className="panel">
                     <div className="panel-header">
-                      <span className="panel-title">Refined (OpenAI)</span>
+                      <span className="panel-title">Critique Summary</span>
                     </div>
-                    <div className="output-content" style={{ fontSize: "14px", opacity: 0.9 }}>{stages.refined || "—"}</div>
+                    {createModeCritique ? (
+                      <div className="output-content" style={{ fontSize: "12px", fontFamily: "var(--font-mono)", opacity: 0.9, whiteSpace: "pre-wrap" }}>
+                        {JSON.stringify(createModeCritique.failures, null, 2)}
+                      </div>
+                    ) : (
+                      <div className="output-content">—</div>
+                    )}
                   </div>
                   <div className="panel">
                     <div className="panel-header">
-                      <span className="panel-title">Draft (Ollama)</span>
+                      <span className="panel-title">Initial Draft (Ollama)</span>
                     </div>
                     <div className="output-content" style={{ fontSize: "14px", opacity: 0.8 }}>{stages.draft || "—"}</div>
                   </div>
@@ -1455,6 +1515,15 @@ ${text}`;
       {/* MODALS */}
       {editingChar && <CharModal char={editingChar} onSave={saveChar} onClose={() => setEditingChar(null)} onDelete={deleteChar} />}
       {editingScene && <SceneModal scene={editingScene} onSave={saveScene} onClose={() => setEditingScene(null)} onDelete={deleteScene} />}
+    </div>
+  );
+}
+ingChar && <CharModal char={editingChar} onSave={saveChar} onClose={() => setEditingChar(null)} onDelete={deleteChar} />}
+      {editingScene && <SceneModal scene={editingScene} onSave={saveScene} onClose={() => setEditingScene(null)} onDelete={deleteScene} />}
+    </div>
+  );
+}
+l)} onDelete={deleteScene} />}
     </div>
   );
 }

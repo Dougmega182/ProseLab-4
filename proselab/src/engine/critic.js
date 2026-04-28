@@ -10,128 +10,135 @@ function clampScore(n) {
   return Math.max(0, Math.min(10, n));
 }
 
-function normalizeFailures(arr) {
-  if (!Array.isArray(arr)) return [];
-
-  return arr
+function normalizeFailures(failures) {
+  if (!Array.isArray(failures)) return [];
+  return failures
     .map((f) => {
-      if (!f || typeof f !== "object") return null;
-
-      const type = FAILURE_TYPES[f.type] ? f.type : null;
-      const reason =
-        typeof f.reason === "string" && f.reason.trim().length > 0
-          ? f.reason.trim()
-          : "Unspecified issue";
-
-      if (!type) return null;
-
-      return { type, reason };
+      if (typeof f === "string") {
+        return { type: FAILURE_TYPES.GENERIC_LANGUAGE, reason: f };
+      }
+      if (typeof f === "object" && f !== null) {
+        return {
+          type: f.type || FAILURE_TYPES.GENERIC_LANGUAGE,
+          reason: f.reason || "Unspecified quality failure",
+        };
+      }
+      return null;
     })
     .filter(Boolean);
 }
 
-function normalizeRewriteInstructions(rewrite, rewriteDirective) {
+function normalizeRewriteInstructions(rewrite, defaultDirective) {
   const instructions = Array.isArray(rewrite?.instructions)
-    ? rewrite.instructions
-        .filter(
-          (instruction) =>
-            typeof instruction === "string" && instruction.trim().length > 0,
-        )
-        .map((instruction) => instruction.trim())
+    ? rewrite.instructions.filter((i) => typeof i === "string")
     : [];
 
-  if (instructions.length > 0) {
-    return { instructions };
-  }
-
   return {
-    instructions: [rewriteDirective || DEFAULT_CRITIC_RESULT.rewrite_directive],
+    instructions:
+      instructions.length > 0
+        ? instructions
+        : [defaultDirective || "Improve prose specificity and rhythm"],
   };
 }
 
-function buildMeta({
-  valid = false,
-  reason = "UNPARSEABLE",
-  raw = null,
-  parsed = null,
-  detail = null,
-  status = null,
-} = {}) {
-  return {
-    valid,
-    reason,
-    raw,
-    parsed,
-    detail,
-    status,
-  };
+function isRecord(v) {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-function isRecord(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+function buildMeta({ valid, reason, raw, parsed, detail, status }) {
+  return {
+    valid: !!valid,
+    reason: reason || null,
+    raw: raw || null,
+    parsed: parsed || null,
+    detail: detail || null,
+    status: status || null,
+  };
 }
 
 function deriveConfidence(verdict, score) {
+  if (verdict === CRITIC_VERDICTS.APPROVE && score.overall >= 8) {
+    return "high";
+  }
   if (
-    verdict === CRITIC_VERDICTS.APPROVE &&
-    score.overall >= 8 &&
-    score.rhythm >= 8 &&
-    score.specificity >= 8 &&
-    score.emotional_concreteness >= 8
+    verdict === CRITIC_VERDICTS.REWRITE &&
+    score.specificity <= 3 &&
+    score.physical_grounding <= 3
   ) {
     return "high";
   }
   return "low";
 }
 
-export function buildCriticPrompt(text) {
-  return `You are a strict prose critic.
+export function buildCriticPrompt(text, sceneContext = null) {
+  const formattedContext =
+    typeof sceneContext === "object" && sceneContext !== null
+      ? JSON.stringify(sceneContext, null, 2)
+      : sceneContext;
+
+  const contextBlock = formattedContext
+    ? `SCENE CONTEXT — anchor all replacement instructions in these objects and details:
+${formattedContext}
+`
+    : "";
+
+  return `You are an Objective Prose Analyst. 
 
 Return ONLY valid JSON. No explanation.
 
 Evaluate the text for:
-- specificity
-- rhythm variation
-- emotional concreteness
-- avoidance of generic phrasing
+- Physical Grounding (0-10): 10 = Zero abstract labels, zero metaphors, zero weather imagery.
+- Specificity (0-10): 10 = Every noun has a specific source or modifier from the scene context.
+- Rhythm (0-10): 10 = Varied sentence lengths and structures.
+
+SCORING RUBRIC:
+- 10: Pure physical action/observation. (e.g. "He opened the metal latch.")
+- 5: Mix of physical and abstract. (e.g. "He opened the latch, feeling relieved.")
+- 1: Purely abstract or cliché. (e.g. "He felt a weight lift from his shoulders.")
+
+${contextBlock}
 
 Rules:
-- Be harsh
-- Do not approve average writing
-- If unsure, choose REWRITE
-- Rewrite instructions must be specific and actionable
-- Do NOT say "improve" or "be more descriptive"
-- Each instruction must result in a visible change in the text
+- If a sentence uses an abstract emotional label (felt, sad, happy, anxious), the score must be below 5.
+- Grounded mechanical or physiological metaphors (e.g. "tasted copper", "diesel animal") are PERMITTED.
+- Abstract psychological metaphors (e.g. "weight lift from his shoulders", "darkness in his heart") must be REJECTED with a low score.
+- Each instruction must name the exact failing phrase and specify a physical replacement.
+
+CALIBRATION (What to APPROVE):
+A score of 7-10 is for prose that is 100% physically grounded.
+Example 1: "When her father said the house was sold, Vera smiled first, out of habit, then tasted the copper where she'd bitten the inside of her cheek too hard."
+- Overall: 9 (APPROVE)
+Example 2: "The generator coughed awake under the floorboards, a diesel animal clearing its throat, and the lights came back one strip at a time along the corridor."
+- Overall: 9 (APPROVE) (Note: Mechanical metaphors like 'diesel animal' are PERMITTED because they enhance physical source detail.)
+
+CALIBRATION (What to REWRITE):
+A score of 1-4 is given to any text using abstract emotional labels or "AI-filler."
+Example: "He felt overwhelming sadness as he sat at the desk thinking about his failures."
+- Overall: 2 (REWRITE)
 
 Return JSON:
 
 {
-  "verdict": "APPROVE" or "REWRITE",
   "score": {
     "rhythm": 0-10,
     "specificity": 0-10,
-    "emotional_concreteness": 0-10,
+    "physical_grounding": 0-10,
     "overall": 0-10
   },
   "failures": [
-    {
-      "type": "GENERIC_LANGUAGE",
-      "reason": "..."
-    }
+    { "type": "GENERIC_LANGUAGE", "reason": "..." }
   ],
-  "rewrite_directive": "One clear instruction",
+  "rewrite_directive": "...",
   "rewrite": {
     "instructions": [
-      "Replace abstract emotion with physical reaction",
-      "Add one specific sensory detail",
-      "Break one sentence into fragments for rhythm"
+      "Replace 'phrase' with [Category] and end the sentence on the detail."
     ]
   }
 }
 
 Text:
 ---
-${text}
+${text ?? ""}
 ---`;
 }
 
@@ -146,19 +153,19 @@ export function normalizeCriticOutput(raw, context = {}) {
       throw new Error("INVALID_SHAPE");
     }
 
-    const verdict =
-      data.verdict === CRITIC_VERDICTS.APPROVE
-        ? CRITIC_VERDICTS.APPROVE
-        : CRITIC_VERDICTS.REWRITE;
-
     const score = {
       rhythm: clampScore(data?.score?.rhythm),
       specificity: clampScore(data?.score?.specificity),
-      emotional_concreteness: clampScore(
-        data?.score?.emotional_concreteness,
-      ),
+      physical_grounding: clampScore(data?.score?.physical_grounding),
       overall: clampScore(data?.score?.overall),
     };
+
+    const verdict =
+      score.overall >= 7 &&
+      score.physical_grounding >= 6 &&
+      score.specificity >= 6
+        ? CRITIC_VERDICTS.APPROVE
+        : CRITIC_VERDICTS.REWRITE;
 
     const failures = normalizeFailures(data.failures);
 
@@ -208,10 +215,15 @@ export async function callCritic({
   keys,
   debug = false,
   llmCaller = callOpenAI,
+  sceneContext = null,
 } = {}) {
-  const prompt = buildCriticPrompt(text || "");
+  if (!keys?.openai) {
+    throw new Error("CRITIC_FAILURE: Missing OpenAI API key.");
+  }
 
-  const response = await llmCaller(keys?.openai, prompt);
+  const prompt = buildCriticPrompt(text ?? "", sceneContext);
+
+  const response = await llmCaller(keys.openai, prompt);
 
   if (!response?.ok) {
     const normalized = normalizeCriticOutput(null, {

@@ -3,6 +3,8 @@ import path from "node:path";
 import { callCritic } from "../src/engine/critic.js";
 import { estimateSimilarity, generateRewrite } from "../src/engine/rewrite.js";
 
+const SIMILARITY_THRESHOLD = 0.75;
+
 function readEnvFile(filePath) {
   const vars = {};
   if (!fs.existsSync(filePath)) return vars;
@@ -34,7 +36,12 @@ const voiceSpec = {
 };
 
 const input =
-  "He felt very sad and everything was overwhelming as he stood in the room and thought about how bad things had become.";
+  "He felt very sad and everything was overwhelming as he sat at the desk and thought about how bad things had become.";
+
+const sceneContext = `
+Scene: A detective sits at a metal desk in a police interview room.
+Objects present: fluorescent light, manila folder, cold coffee in a paper cup, a pen with a cracked cap.
+`;
 
 async function main() {
   const rootEnv = readEnvFile(path.resolve("..", ".env"));
@@ -49,28 +56,50 @@ async function main() {
   if (!openai) {
     throw new Error("Missing OpenAI key in root or app env file.");
   }
+const critique1 = await callCritic({
+  text: input,
+  keys: { openai },
+  sceneContext,
+});
 
-  const critique1 = await callCritic({
-    text: input,
-    keys: { openai },
-  });
+const rewrite1 = await generateRewrite({
+  original: input,
+  instructions: critique1.rewrite.instructions,
+  voiceSpec,
+  sceneContext,
+  key: openai,
+  temperature: 0.75,
+});
 
-  const rewriteResult = await generateRewrite({
+const draft2 = rewrite1.text;
+const similarity1 = estimateSimilarity(input, draft2);
+const tooSimilar = similarity1 > SIMILARITY_THRESHOLD;
+
+let finalDraft = draft2;
+let similarityGateFired = false;
+let rewrite2 = null;
+
+if (tooSimilar) {
+  similarityGateFired = true;
+  rewrite2 = await generateRewrite({
     original: input,
     instructions: critique1.rewrite.instructions,
     voiceSpec,
+    sceneContext,
     key: openai,
-    temperature: 0.75,
+    temperature: 0.85,
+    similarityRejection: true,
   });
+  finalDraft = rewrite2.text;
+}
 
-  const draft2 = rewriteResult.text;
+const critique2 = await callCritic({
+  text: finalDraft,
+  keys: { openai },
+  sceneContext,
+});
 
-  const critique2 = await callCritic({
-    text: draft2,
-    keys: { openai },
-  });
-
-  const similarity = estimateSimilarity(input, draft2);
+  const similarity = estimateSimilarity(input, finalDraft);
 
   console.log(
     JSON.stringify(
@@ -78,9 +107,12 @@ async function main() {
         input,
         critique1,
         draft2,
+        similarity1,
+        similarityGateFired,
+        ...(similarityGateFired ? { draft3: finalDraft } : {}),
         critique2,
         similarity,
-        weakRewrite: similarity > 0.8,
+        weakRewrite: similarity > SIMILARITY_THRESHOLD,
       },
       null,
       2,
