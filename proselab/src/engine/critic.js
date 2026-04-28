@@ -102,10 +102,12 @@ Rules:
 - If a sentence uses an abstract emotional label (felt, sad, happy, anxious), the score must be below 5.
 - Grounded mechanical or physiological metaphors (e.g. "tasted copper", "diesel animal") are PERMITTED.
 - Abstract psychological metaphors (e.g. "weight lift from his shoulders", "darkness in his heart") must be REJECTED with a low score.
+- Similes ("like a...", "as if...") must be strictly REJECTED if they are not purely physical scale comparisons.
+- Restatement must be REJECTED. If a sentence summarizes or restates the physical action of the previous sentences (e.g., an interpretive tail), fail it with the RESTATEMENT failure type.
 - Each instruction must name the exact failing phrase and specify a physical replacement.
 
 CALIBRATION (What to APPROVE):
-A score of 7-10 is for prose that is 100% physically grounded.
+A score of 8-10 is for prose that is 100% physically grounded and avoids restatement.
 Example 1: "When her father said the house was sold, Vera smiled first, out of habit, then tasted the copper where she'd bitten the inside of her cheek too hard."
 - Overall: 9 (APPROVE)
 Example 2: "The generator coughed awake under the floorboards, a diesel animal clearing its throat, and the lights came back one strip at a time along the corridor."
@@ -161,9 +163,9 @@ export function normalizeCriticOutput(raw, context = {}) {
     };
 
     const verdict =
-      score.overall >= 7 &&
-      score.physical_grounding >= 6 &&
-      score.specificity >= 6
+      score.overall >= 8 &&
+      score.physical_grounding >= 7 &&
+      score.specificity >= 7
         ? CRITIC_VERDICTS.APPROVE
         : CRITIC_VERDICTS.REWRITE;
 

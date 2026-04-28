@@ -50,3 +50,53 @@ export async function callOpenAI(key, prompt, options = {}) {
     };
   }
 }
+
+export async function callGemini(key, prompt, options = {}) {
+  const {
+    model = "gemini-1.5-pro",
+    temperature = 0.7,
+  } = options;
+  
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature,
+        }
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        status: response.status,
+        error: JSON.stringify(data),
+        raw: JSON.stringify(data),
+      };
+    }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+    return {
+      ok: true,
+      status: response.status,
+      content: text,
+      usage: null, // Gemini API usage format differs, keeping simple for now
+      raw: JSON.stringify(data),
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      status: null,
+      error: err instanceof Error ? err.message : String(err),
+      raw: null,
+    };
+  }
+}

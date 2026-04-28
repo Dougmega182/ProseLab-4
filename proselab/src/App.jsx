@@ -11,7 +11,6 @@ import {
 // PROSELAB V4 — ANALYTICAL ENGINE
 // =============================
 
-// ENV-based API keys (Vite exposes VITE_ prefixed vars)
 const ENV_KEYS = {
   openai: import.meta.env.VITE_OPENAI_KEY || "",
   model: import.meta.env.VITE_OLLAMA_MODEL || "llama3",
@@ -206,33 +205,7 @@ function buildDelta(a) {
 // =============================
 // LLM CALLS (with token tracking)
 // =============================
-async function callOpenAI(key, prompt) {
-  const r = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "gpt-4o-mini", messages: [{ role: "user", content: prompt }] })
-  });
-  const d = await r.json();
-  const usage = d.usage || {};
-  logTokenUsage("openai::gpt-4o-mini", usage.prompt_tokens || estimateTokens(prompt), usage.completion_tokens || estimateTokens(d.choices?.[0]?.message?.content));
-  return d.choices?.[0]?.message?.content || "";
-}
-
-async function callOllama(model, prompt) {
-  const r = await fetch("http://localhost:11434/api/generate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model, prompt, stream: false })
-  });
-  const d = await r.json();
-  if (!d || typeof d.response !== "string" || d.response.trim() === "") {
-    console.error("Ollama invalid response:", d);
-    return "";
-  }
-  logTokenUsage("ollama", estimateTokens(prompt), estimateTokens(d.response));
-  return d.response;
-}
-
+import { callOpenAI } from "./services/llm.js";
 import { callCritic } from "./engine/critic.js";
 import { 
   generateRewrite, 
@@ -250,10 +223,8 @@ async function runPipeline({
   onStage, 
   onUpdate,
   sceneContext = null,
+  voiceSpec = {},
 }) {
-  const SIMILARITY_THRESHOLD = 0.75;
-  const MAX_ATTEMPTS = 3;
-
   onStage("analysis");
   const analysis = await cachedInference({
     name: "analysis",
@@ -280,61 +251,38 @@ async function runPipeline({
   const draft1 = await callOllama(model, initialInstruction);
   const safeDraft1 = draft1?.trim() ? draft1 : text;
 
-  let currentDraft = safeDraft1;
-  let attempts = 0;
-  let finalCritique = null;
-  let traces = [];
+  onStage("openai-refinement");
+  const rewriteResult = await generateRewrite({
+    original: safeDraft1,
+    instructions: delta,
+    voiceSpec,
+    sceneContext,
+    key: keys.openai,
+    temperature: 0.75,
+  });
 
-  while (attempts < MAX_ATTEMPTS) {
-    attempts++;
-    onStage(`critic-p${attempts}`);
-    
-    const critique = await callCritic({
-      text: currentDraft,
-      keys,
-      sceneContext
-    });
-    
-    finalCritique = critique;
-    traces.push({ draft: currentDraft, critique });
-
-    if (critique.verdict === "APPROVE") break;
-    if (attempts === MAX_ATTEMPTS) break;
-
-    onStage(`rewrite-p${attempts + 1}`);
-    const similarityToOriginal = estimateSimilarity(text, currentDraft);
-    const previousTrace = traces.length >= 2 ? traces[traces.length - 2] : null;
-    const similarityToPrevious = previousTrace 
-      ? estimateSimilarity(previousTrace.draft, currentDraft) 
-      : 0;
-    const tooSimilar = similarityToOriginal > SIMILARITY_THRESHOLD || similarityToPrevious > SIMILARITY_THRESHOLD;
-
-    const rewriteResult = await generateRewrite({
-      original: text,
-      instructions: critique.rewrite.instructions,
-      voiceSpec,
-      sceneContext,
-      key: keys.openai,
-      temperature: tooSimilar ? 0.85 : 0.75,
-      similarityRejection: tooSimilar,
-      rejectedDraft: tooSimilar ? currentDraft : null
-    });
-
-    if (rewriteResult.ok) {
-      currentDraft = rewriteResult.text;
-    } else {
-      break;
-    }
+  const currentDraft = rewriteResult.ok ? rewriteResult.text : safeDraft1;
+  if (rewriteResult.ok && rewriteResult.response?.usage) {
+    logTokenUsage("openai::gpt-4o-mini", rewriteResult.response.usage.prompt_tokens, rewriteResult.response.usage.completion_tokens);
   }
+
+  onStage("critic");
+  const critique = await callCritic({
+    text: currentDraft,
+    keys,
+    sceneContext
+  });
 
   onStage("done");
   return { 
     analysis, 
     delta, 
+    draft: safeDraft1,
+    refined: currentDraft,
     final: currentDraft,
-    critique: finalCritique,
-    attempts,
-    traces
+    critique,
+    attempts: 1,
+    traces: [{ draft: currentDraft, critique }]
   };
 }
 
@@ -528,16 +476,13 @@ function MetricBar({ label, value, max = 1 }) {
 }
 
 function PipelineTracker({ currentStage }) {
-  const stages = ["analysis", "delta", "ollama", "critic-p1", "rewrite-p2", "critic-p2", "rewrite-p3", "critic-p3", "done"];
+  const stages = ["analysis", "delta", "ollama", "openai-refinement", "critic", "done"];
   const labels = {
     analysis: "Analysis",
     delta: "Constraints",
     ollama: "Ollama",
-    "critic-p1": "Critic 1",
-    "rewrite-p2": "Rewrite 2",
-    "critic-p2": "Critic 2",
-    "rewrite-p3": "Rewrite 3",
-    "critic-p3": "Critic 3",
+    "openai-refinement": "OpenAI",
+    critic: "Critic",
     done: "Done"
   };
 
@@ -836,7 +781,14 @@ KEY FAILURES FROM ANALYSE PASS:
             activeMode,
             persona: pKey,
           },
-          fn: () => callOpenAI(ENV_KEYS.openai, prompt),
+          fn: async () => {
+            const res = await callOpenAI(ENV_KEYS.openai, prompt);
+            if (!res.ok) throw new Error(res.error || "OpenAI API Error");
+            if (res.usage) {
+              logTokenUsage("openai::gpt-4o-mini", res.usage.prompt_tokens, res.usage.completion_tokens);
+            }
+            return res.content;
+          },
           enabled: shouldCacheInference(cacheName),
         });
         feedback[pKey] = result;
@@ -877,8 +829,12 @@ ${text}`;
 
     try {
       const result = await callOpenAI(ENV_KEYS.openai, prompt);
-      setOutput(result);
-      setStages(prev => ({ ...prev, final: result }));
+      if (!result.ok) throw new Error(result.error || "OpenAI API Error");
+      if (result.usage) {
+        logTokenUsage("openai::gpt-4o-mini", result.usage.prompt_tokens, result.usage.completion_tokens);
+      }
+      setOutput(result.content);
+      setStages(prev => ({ ...prev, final: result.content }));
       setActiveTab("output");
     } catch (e) {
       setOutput("Error: " + e.message);
@@ -989,7 +945,7 @@ ${text}`;
       <div className="env-status">
         <div className="env-item">
           <div className={`env-dot ${envStatusState.openai ? "connected" : "missing"}`} />
-          <span>OpenAI {envStatusState.openai ? "Configured" : "Missing `VITE_OPENAI_KEY`"}</span>
+          <span>OpenAI {envStatusState.openai ? "Configured" : "Missing"}</span>
         </div>
         <div className="env-item">
           <div className={`env-dot ${envStatusState.ollamaReachable ? "connected" : "missing"}`} />
@@ -1348,7 +1304,7 @@ ${text}`;
                     {running ? "Running Mode..." : `Start ${activeMode} Mode`}
                   </button>
                   <div style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-muted)", maxWidth: "300px", textAlign: "right" }}>
-                    {activeMode === "CREATE" && "Ollama → Critic → OpenAI"}
+                    {activeMode === "CREATE" && "Ollama → OpenAI → Critic"}
                     {activeMode === "ANALYSE" && "Margaret (Prose) + Rafael (Character)"}
                     {activeMode === "ENGINEER" && "James (Structure) + Yuki (World)"}
                     {activeMode === "MARKET" && "Saoirse (Market Check)"}
@@ -1413,7 +1369,7 @@ ${text}`;
               <>
                 <div className="panel" style={{ marginBottom: "24px" }}>
                   <div className="panel-header">
-                    <span className="panel-title">Final Output (Pipeline Attempt {stages.final ? (createModeCritique?.attempts || "Complete") : "—"})</span>
+                    <span className="panel-title">Final Output (Pipeline Attempt 1)</span>
                     <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                       {createModeCritique && (
                         <div className={`status-badge tag-${createModeCritique.verdict === "APPROVE" ? "locked" : "pending"}`} style={{ fontSize: 10 }}>

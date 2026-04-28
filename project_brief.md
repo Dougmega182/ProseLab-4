@@ -35,11 +35,16 @@ ProseLab 4 is a local-first AI writing engine for drafting, critiquing, and rewr
 - The critic must default toward rejection of safe, generic, or emotionally vague prose.
 
 ## Current State (update periodically)
-- Last major decision: Locked a 3-pass Critic loop with structural bans (verbatim preservation, interpretive tails, metaphors) and unified scene context grounding on 2026-04-28.
+- Last major decision: Locked a 3-pass Critic loop with structural bans (verbatim preservation, interpretive tails, metaphors, similes) and unified scene context grounding on 2026-04-28. Raised approval threshold to 8/10 and added RESTATEMENT failure type to eliminate repetitive summary tails.
 - Open blockers:
   - `App.jsx` still carries too much responsibility and remains a refactor target.
   - The Output tab is a "black box" that only shows the final result, hiding the intermediate critique/rewrite stages from the user.
-- Next milestone: Refactor the `App.jsx` Output tab to surface per-attempt scores, failures, and critic instructions so the user can see the reasoning behind each rejection in the 3-pass loop.
+- Current milestone: Raise approval quality floor by adding RESTATEMENT failure type to critic schema and extending metaphor ban to cover similes explicitly. Run the five-sample set against the new threshold and confirm no regression on p3 and p4.
+
+## Sprint 1 Reference (The Three Code Blocks)
+- **App.jsx LLM Service Refactor**: Replaced inline `callOpenAI` and `callGemini` with `callOpenAI` imported from `services/llm.js`. Removed all Gemini logic.
+- **Pipeline Simplification**: Simplified `runPipeline` to a single pass: Ollama draft -> OpenAI Refinement (`generateRewrite`) -> Critic evaluation.
+- **UI State Integration**: Stored structured verdict in state and rendered it in the Output tab.
 
 ## My Known Weaknesses (correct for these)
 - Overestimate discipline / underestimate effort -> always double time estimates and question follow-through.

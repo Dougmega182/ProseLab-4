@@ -44,6 +44,7 @@ ABSOLUTE BANS — any sentence violating these will cause rejection:
 - Do not preserve any sequence of three or more consecutive words from the original text verbatim.
 - Do not use weather imagery of any kind: clouds, storms, rain, fog, wind, sky.
 - Do not use metaphors of any kind. Direct statement only.
+- Do not use similes — no 'like' or 'as' comparisons.
 - Do not explain what a physical action means emotionally. A physical action must stand alone without interpretation.
 - Do not use these connective words after a physical action: betraying, revealing, showing, indicating, proving.
 - Do not name abstract emotional states: unease, dread, fear, anxiety, tension, despair, grief, anger. Show the body instead.
