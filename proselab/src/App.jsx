@@ -1528,12 +1528,3 @@ ${text}`;
     </div>
   );
 }
-ingChar && <CharModal char={editingChar} onSave={saveChar} onClose={() => setEditingChar(null)} onDelete={deleteChar} />}
-      {editingScene && <SceneModal scene={editingScene} onSave={saveScene} onClose={() => setEditingScene(null)} onDelete={deleteScene} />}
-    </div>
-  );
-}
-l)} onDelete={deleteScene} />}
-    </div>
-  );
-}
