@@ -6,46 +6,26 @@ import {
   getCacheStats,
   shouldCacheInference,
 } from "./services/inferenceCache.js";
+import { callOpenAI } from "./services/llm.js";
+import { 
+  getCostStats, 
+  clearTokenLog 
+} from "./services/storage.js";
+import { 
+  getState, 
+  updateProject, 
+  updateProjectDeep, 
+  logTokenUsage 
+} from "./store/appStore.js";
+
+import { analyze, buildDelta } from "./engine/analysis.js";
+import { mapVoiceToPromptSpec } from "./engine/rewrite.js";
+import { runPipeline, INFERENCE_CACHE_CONTEXT_VERSION } from "./engine/pipeline.js";
+import { runEditorialMode } from "./engine/editorial.js";
 
 // =============================
-// PROSELAB V4 — ANALYTICAL ENGINE
+// TOKEN & COST TRACKING CONSTANTS
 // =============================
-
-const ENV_KEYS = {
-  openai: import.meta.env.VITE_OPENAI_KEY || "",
-  model: import.meta.env.VITE_OLLAMA_MODEL || "llama3",
-};
-
-const KEY = "proselab_v4";
-const save = (d) => localStorage.setItem(KEY, JSON.stringify(d));
-const load = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
-const INFERENCE_CACHE_CONTEXT_VERSION = "voice-lock-v1";
-const PROMPT_IDS = {
-  margaret: "margaret_v1",
-  rafael: "rafael_v1",
-  james: "james_v1",
-  yuki: "yuki_v1",
-  saoirse: "saoirse_v1",
-  victor: "victor_v1",
-};
-
-function normalize(str) { return str.trim().replace(/\s+/g, " "); }
-
-// =============================
-// TOKEN & COST TRACKING
-// =============================
-const COST_KEY = "plab_costs_v1";
-
-function getTokenLog() { try { return JSON.parse(localStorage.getItem(COST_KEY) || "[]"); } catch { return []; } }
-function saveTokenLog(log) { localStorage.setItem(COST_KEY, JSON.stringify(log)); }
-
-function logTokenUsage(provider, inputTokens, outputTokens) {
-  const log = getTokenLog();
-  log.push({ provider, inputTokens, outputTokens, timestamp: Date.now() });
-  saveTokenLog(log);
-}
-
-// Rough cost estimates per 1K tokens
 const COST_RATES = {
   "openai::gpt-4o-mini": { input: 0.00015, output: 0.0006 },
   "ollama": { input: 0, output: 0 },
@@ -54,67 +34,21 @@ const COST_RATES = {
 function estimateTokens(text) { return Math.ceil((text || "").length / 4); }
 
 function getTodayStats() {
-  const log = getTokenLog();
-  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-  const today = log.filter(e => e.timestamp >= todayStart.getTime());
-  const totals = { calls: today.length, inputTokens: 0, outputTokens: 0, cost: 0 };
-  today.forEach(e => {
-    totals.inputTokens += e.inputTokens || 0;
-    totals.outputTokens += e.outputTokens || 0;
-    const rate = COST_RATES[e.provider] || { input: 0, output: 0 };
-    totals.cost += (e.inputTokens / 1000) * rate.input + (e.outputTokens / 1000) * rate.output;
-  });
-  const allTime = { calls: log.length, cost: 0 };
-  log.forEach(e => {
-    const rate = COST_RATES[e.provider] || { input: 0, output: 0 };
-    allTime.cost += (e.inputTokens / 1000) * rate.input + (e.outputTokens / 1000) * rate.output;
-  });
-  return { today: totals, allTime };
+  return getCostStats(COST_RATES);
 }
 
+function normalize(str) { return str.trim().replace(/\s+/g, " "); }
+// PROSELAB V4 — ANALYTICAL ENGINE
 // =============================
-// EDITORIAL PERSONAS
-// =============================
-const PERSONAS = {
-  margaret: {
-    name: "Margaret (Prose)",
-    role: "Sentence architecture, rhythm, and life. Attacks abstract labels and rhythmic stagnation.",
-    prompt: (intensity) => `You are Margaret, a senior prose editor. ${intensity}. Analyze the provided prose for rhythm, sentence architecture, and sensory life. Flag abstract emotional labels and 'AI-clean' sterility. Be brutal but specific.`
-  },
-  rafael: {
-    name: "Rafael (Character)",
-    role: "Emotional truth and character consistency. Ensures the character's internal reality matches the external action.",
-    prompt: (intensity) => `You are Rafael, a character coach. ${intensity}. Analyze the character's internal consistency and emotional truth. Does the physiology match the feeling? Is the reaction earned?`
-  },
-  james: {
-    name: "James (Structure)",
-    role: "Pacing, chapter beats, and causality. Ensures the scene moves the needle of the story.",
-    prompt: (intensity) => `You are James, a structural editor. ${intensity}. Analyze the scene's pacing, causality, and alignment with chapter beats. Does this scene NEED to exist?`
-  },
-  yuki: {
-    name: "Yuki (World)",
-    role: "World rules, lexicon, and physics. Ensures speculative elements feel mundane and consistent.",
-    prompt: (intensity) => `You are Yuki, a world-building consultant. ${intensity}. Check for consistency in world rules, ecological lexicon, and the 'casual integration of the radical'. Flag any 'spectacle pauses'.`
-  },
-  saoirse: {
-    name: "Saoirse (Market)",
-    role: "Commercial appeal and audience hooks. 'Would this sell?'",
-    prompt: (intensity) => `You are Saoirse, a literary agent. ${intensity}. Evaluate the commercial appeal and audience hook. Is the promise of the premise being delivered?`
-  },
-  victor: {
-    name: "Victor (Verdict)",
-    role: "Final decision aggregator. Provides the definitive APPROVED or REWRITE verdict.",
-    prompt: (intensity) => `You are Victor, the Editor-in-Chief. ${intensity}. Review all previous editorial feedback and provide a final verdict: APPROVED or REWRITE. Summarize the critical path for improvement.`
-  }
+
+const ENV_KEYS = {
+  openai: import.meta.env.VITE_OPENAI_KEY || "",
+  model: import.meta.env.VITE_OLLAMA_MODEL || "llama3",
 };
 
-const PERSONA_INTENSITY = {
-  ANALYSE: "DIAGNOSE ONLY. Identify issues but do not suggest fixes. Focus on rhythm and truth.",
-  ENGINEER: "PRESCRIBE FIXES. Suggest specific structural and world-building remedies.",
-  MARKET: "REALITY CHECK. Evaluate commercial viability.",
-  VERDICT: "JUDGE HARSHLY. Final gatekeeping. Summarize if the work is fit for publication."
+const save = (d) => updateProject(d);
+const PROMPT_IDS = {
 };
-
 // =============================
 // DEFAULT BEATS
 // =============================
@@ -132,160 +66,6 @@ const DEFAULT_BEATS = [
 ];
 
 // =============================
-// TECHNIQUE TARGET PROFILE
-// =============================
-const TARGET = {
-  rhythm: { shortRatio: 0.2, variance: "high" },
-  emotion: { physicalRatio: 0.8 },
-  specificity: { concreteRatio: 0.7 }
-};
-
-// =============================
-// ANALYSIS FUNCTIONS
-// =============================
-function splitSentences(text) { return text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean); }
-
-function analyzeRhythm(text) {
-  const sentences = splitSentences(text);
-  const lengths = sentences.map(s => s.split(" ").length);
-  const short = lengths.filter(l => l <= 6).length;
-  const avg = lengths.reduce((a, b) => a + b, 0) / (lengths.length || 1);
-  const variance = Math.max(...lengths) - Math.min(...lengths);
-  return { shortRatio: short / (lengths.length || 1), variance: variance > 10 ? "high" : "low", avg };
-}
-
-function analyzeEmotion(text) {
-  const words = text.toLowerCase().split(/\s+/);
-  const wc = words.length || 1;
-  const abstractWords = ["felt", "fear", "sad", "angry", "happy", "despair", "thought", "knew", "realized", "wanted"];
-  const bodyWords = ["stomach", "hands", "breath", "jaw", "pulse", "skin", "sweat", "shiver", "chest", "throat"];
-  let abs = 0, phys = 0;
-  words.forEach(w => {
-    if (abstractWords.some(aw => w.includes(aw))) abs++;
-    if (bodyWords.some(bw => w.includes(bw))) phys++;
-  });
-  // Return ratio of physical to total emotional markers, normalized
-  return { physicalRatio: phys / ((phys + abs) || 1), totalDensity: (phys + abs) / wc };
-}
-
-function analyzeSpecificity(text) {
-  const words = text.toLowerCase().split(/\s+/);
-  const wc = words.length || 1;
-  const vague = ["thing", "stuff", "something", "everything", "place", "area", "someone", "somehow", "somewhere"];
-  let v = 0;
-  words.forEach(w => {
-    if (vague.some(vw => w.includes(vw))) v++;
-  });
-  // Higher is better (fewer vague words)
-  const vagueRatio = v / wc;
-  return { concreteRatio: Math.max(0, 1 - (vagueRatio * 20)) }; // Normalized: 5% vague = 0 concreteRatio
-}
-
-function analyze(text) {
-  return { 
-    rhythm: analyzeRhythm(text), 
-    emotion: analyzeEmotion(text), 
-    specificity: analyzeSpecificity(text),
-    wordCount: text.trim().split(/\s+/).length
-  };
-}
-
-// =============================
-// DELTA ENGINE
-// =============================
-function buildDelta(a) {
-  const instructions = [];
-  if (a.rhythm.shortRatio < TARGET.rhythm.shortRatio) instructions.push("Introduce more short, blunt sentences (6 words or fewer)");
-  if (a.rhythm.variance !== "high") instructions.push("Increase sentence length variation dramatically");
-  if (a.emotion.physicalRatio < TARGET.emotion.physicalRatio) instructions.push("Replace abstract emotions with physical reactions");
-  if (a.specificity.concreteRatio < TARGET.specificity.concreteRatio) instructions.push("Replace vague words with concrete sensory detail");
-  return instructions;
-}
-
-// =============================
-// LLM CALLS (with token tracking)
-// =============================
-import { callOpenAI } from "./services/llm.js";
-import { callCritic } from "./engine/critic.js";
-import { 
-  generateRewrite, 
-  estimateSimilarity, 
-  mapVoiceToPromptSpec 
-} from "./engine/rewrite.js";
-
-// =============================
-// PIPELINE (MULTI-PASS CRITIC LOOP)
-// =============================
-async function runPipeline({ 
-  text, 
-  keys, 
-  model, 
-  onStage, 
-  onUpdate,
-  sceneContext = null,
-  voiceSpec = {},
-}) {
-  onStage("analysis");
-  const analysis = await cachedInference({
-    name: "analysis",
-    input: text,
-    context: { version: INFERENCE_CACHE_CONTEXT_VERSION },
-    fn: async () => analyze(text),
-    enabled: shouldCacheInference("analysis"),
-  });
-  if (onUpdate) onUpdate({ analysis });
-
-  onStage("delta");
-  const delta = await cachedInference({
-    name: "delta",
-    input: JSON.stringify(analysis),
-    context: { version: INFERENCE_CACHE_CONTEXT_VERSION },
-    fn: async () => buildDelta(analysis),
-    enabled: shouldCacheInference("delta"),
-  });
-  if (onUpdate) onUpdate({ delta });
-
-  const initialInstruction = normalize(`Rewrite this paragraph with these constraints:\n${delta.join("\n")}\n\n${text}`);
-
-  onStage("ollama");
-  const draft1 = await callOllama(model, initialInstruction);
-  const safeDraft1 = draft1?.trim() ? draft1 : text;
-
-  onStage("openai-refinement");
-  const rewriteResult = await generateRewrite({
-    original: safeDraft1,
-    instructions: delta,
-    voiceSpec,
-    sceneContext,
-    key: keys.openai,
-    temperature: 0.75,
-  });
-
-  const currentDraft = rewriteResult.ok ? rewriteResult.text : safeDraft1;
-  if (rewriteResult.ok && rewriteResult.response?.usage) {
-    logTokenUsage("openai::gpt-4o-mini", rewriteResult.response.usage.prompt_tokens, rewriteResult.response.usage.completion_tokens);
-  }
-
-  onStage("critic");
-  const critique = await callCritic({
-    text: currentDraft,
-    keys,
-    sceneContext
-  });
-
-  onStage("done");
-  return { 
-    analysis, 
-    delta, 
-    draft: safeDraft1,
-    refined: currentDraft,
-    final: currentDraft,
-    critique,
-    attempts: 1,
-    traces: [{ draft: currentDraft, critique }]
-  };
-}
-
 // =============================
 // PREFLIGHT BRIEF COMPONENT
 // =============================
@@ -524,19 +304,11 @@ export default function ProseLabV4() {
   const [text, setText] = useState("");
   const [output, setOutput] = useState("");
   const [stages, setStages] = useState({ draft: "", refined: "", final: "" });
-  const [modeFeedback, setModeFeedback] = useState({ ANALYSE: {}, ENGINEER: {}, MARKET: {}, VERDICT: {} });
+  const [modeFeedback, setModeFeedback] = useState(getState().feedback || { ANALYSE: {}, ENGINEER: {}, MARKET: {}, VERDICT: {} });
   const [analysis, setAnalysis] = useState(null);
   const [delta, setDelta] = useState([]);
   const [createModeCritique, setCreateModeCritique] = useState(null);
-  const [preproduction, setPreproduction] = useState({
-    core: { title: "", subtitle: "", genre: "", wc: "", wcCurrent: "", constraint: "", theme: "", argument: "", falseBelief: "", trueBelief: "", structure: "", hook: "", midpoint: "", ending: "" },
-    voice: { length: "mixed", fragments: "medium", metaphor: "medium", dialogue: "natural", banned: ["very", "suddenly", "felt"] },
-    rules: [],
-    chars: [],
-    beats: DEFAULT_BEATS,
-    scenes: [],
-    settings: { ollamaModel: ENV_KEYS.model, openaiModel: "gpt-4o-mini" }
-  });
+  const [preproduction, setPreproduction] = useState(getState().project);
   const [lastAnalyzedText, setLastAnalyzedText] = useState("");
   const [preTab, setPreTab] = useState("core");
   const [editingChar, setEditingChar] = useState(null);
@@ -650,7 +422,19 @@ export default function ProseLabV4() {
     if (activeMode === "CREATE") {
       await runCreateMode();
     } else {
-      await runEditorialMode();
+      if (activeMode === "ANALYSE") setLastAnalyzedText(text);
+      await runEditorialMode({
+        activeMode,
+        text,
+        modeFeedback,
+        voiceSpec: preproduction.voice,
+        openaiKey: ENV_KEYS.openai,
+        onStage: setStage,
+        onFeedbackUpdate: (mode, feedback) =>
+          setModeFeedback(prev => ({ ...prev, [mode]: feedback })),
+        onComplete: () => setActiveTab("output"),
+        logTokenUsage
+      });
     }
     setRunning(false);
   };
@@ -704,7 +488,10 @@ Midpoint: ${preproduction.core.midpoint}
           if (data.delta) setDelta(data.delta);
         },
         sceneContext: context,
-        voiceSpec: mapVoiceToPromptSpec(preproduction.voice, delta)
+        voiceSpec: mapVoiceToPromptSpec(preproduction.voice, delta),
+        logTokenUsage,
+        estimateTokens,
+        cacheVersion: INFERENCE_CACHE_CONTEXT_VERSION
       });
 
       console.log("PIPELINE TRACE", {
@@ -731,75 +518,6 @@ Midpoint: ${preproduction.core.midpoint}
     } catch (e) {
       setOutput("Error: " + e.message);
     }
-  };
-
-  const runEditorialMode = async () => {
-    setStage("editorial");
-    const sourceText = text; // Always review the current text in the editor
-    const personaMap = {
-      ANALYSE: ["margaret", "rafael"],
-      ENGINEER: ["james", "yuki"],
-      MARKET: ["saoirse"],
-      VERDICT: ["victor"]
-    };
-
-    if (activeMode === "ANALYSE") setLastAnalyzedText(sourceText);
-
-    const activePersonas = personaMap[activeMode] || [];
-    const feedback = { ...modeFeedback[activeMode] };
-    const intensity = PERSONA_INTENSITY[activeMode] || "";
-
-    // Bridge context for ENGINEER mode
-    let bridgeContext = "";
-    if (activeMode === "ENGINEER") {
-      bridgeContext = `
-KEY FAILURES FROM ANALYSE PASS:
-- Prose/Rhythm Issues (Margaret): ${modeFeedback.ANALYSE?.margaret || "None recorded"}
-- Character/Truth Issues (Rafael): ${modeFeedback.ANALYSE?.rafael || "None recorded"}
-`;
-    }
-
-    for (const pKey of activePersonas) {
-      setStage(pKey);
-      const persona = PERSONAS[pKey];
-      let prompt = `${persona.prompt(intensity)}\n\n${bridgeContext}\n\nCONTENT TO REVIEW:\n${sourceText}`;
-      
-      if (pKey === "victor") {
-        const allFeedback = JSON.stringify(modeFeedback);
-        prompt += `\n\nPREVIOUS EDITORIAL FEEDBACK:\n${allFeedback}`;
-      }
-
-      try {
-        const cacheName = `persona::${pKey}::${activeMode}`;
-        const result = await cachedInference({
-          name: cacheName,
-          input: prompt,
-          context: {
-            version: INFERENCE_CACHE_CONTEXT_VERSION,
-            promptId: PROMPT_IDS[pKey] || `${pKey}_v1`,
-            voiceSpec: preproduction.voice,
-            activeMode,
-            persona: pKey,
-          },
-          fn: async () => {
-            const res = await callOpenAI(ENV_KEYS.openai, prompt);
-            if (!res.ok) throw new Error(res.error || "OpenAI API Error");
-            if (res.usage) {
-              logTokenUsage("openai::gpt-4o-mini", res.usage.prompt_tokens, res.usage.completion_tokens);
-            }
-            return res.content;
-          },
-          enabled: shouldCacheInference(cacheName),
-        });
-        feedback[pKey] = result;
-      } catch (e) {
-        feedback[pKey] = "Error: " + e.message;
-      }
-    }
-
-    setModeFeedback(prev => ({ ...prev, [activeMode]: feedback }));
-    setStage("done");
-    setActiveTab("output");
   };
 
   const copyToEditor = (content) => {
@@ -848,7 +566,7 @@ ${text}`;
   };
 
   const handleClearCosts = () => {
-    localStorage.removeItem(COST_KEY);
+    clearTokenLog();
     setCostStats(getTodayStats());
   };
 

@@ -100,3 +100,26 @@ export async function callGemini(key, prompt, options = {}) {
     };
   }
 }
+
+export async function callOllama(model, prompt) {
+  try {
+    const response = await fetch("http://localhost:11434/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model, prompt, stream: false })
+    });
+    
+    if (!response.ok) {
+      return { ok: false, error: `HTTP ${response.status}`, content: "" };
+    }
+    
+    const data = await response.json();
+    if (!data || typeof data.response !== "string" || data.response.trim() === "") {
+      return { ok: false, error: "Ollama returned empty or invalid response", content: "" };
+    }
+    
+    return { ok: true, content: data.response };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err), content: "" };
+  }
+}
