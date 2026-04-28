@@ -771,7 +771,13 @@ Midpoint: ${preproduction.core.midpoint}
       setAnalysis(res.analysis);
       setDelta(res.delta);
       setStages({ draft: res.traces?.[0]?.draft || "", refined: "", final: res.final });
-      setCreateModeCritique(res.critique);
+      setCreateModeCritique({ 
+        verdict: res.critique?.verdict, 
+        score: res.critique?.score, 
+        failures: res.critique?.failures,
+        attempts: res.attempts,
+        traces: res.traces 
+      });
       setOutput(res.final);
       setCacheStats(getCacheStats());
       setCostStats(getTodayStats());
@@ -1425,25 +1431,29 @@ ${text}`;
                   )}
                 </div>
 
-                <div className="content-grid">
-                  <div className="panel">
-                    <div className="panel-header">
-                      <span className="panel-title">Critique Summary</span>
-                    </div>
-                    {createModeCritique ? (
-                      <div className="output-content" style={{ fontSize: "12px", fontFamily: "var(--font-mono)", opacity: 0.9, whiteSpace: "pre-wrap" }}>
-                        {JSON.stringify(createModeCritique.failures, null, 2)}
+                <div className="content-grid" style={{ gridTemplateColumns: "1fr" }}>
+                  {createModeCritique?.traces?.map((t, idx) => (
+                    <div key={idx} className="panel" style={{ borderLeft: `4px solid ${t.critique.verdict === "APPROVE" ? "var(--success)" : "var(--error)"}` }}>
+                      <div className="panel-header">
+                        <span className="panel-title">Pass {idx + 1} — {t.critique.verdict} ({t.critique.score?.overall}/10)</span>
+                        <div style={{ fontSize: "10px", opacity: 0.7 }}>
+                          R: {t.critique.score?.rhythm} | S: {t.critique.score?.specificity} | G: {t.critique.score?.physical_grounding}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="output-content">—</div>
-                    )}
-                  </div>
-                  <div className="panel">
-                    <div className="panel-header">
-                      <span className="panel-title">Initial Draft (Ollama)</span>
+                      <div className="output-content" style={{ fontSize: "14px", marginBottom: "12px", opacity: 0.9 }}>{t.draft}</div>
+                      {t.critique.verdict === "REWRITE" && (
+                        <div className="failures-list" style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "4px" }}>
+                          <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--accent-primary)", marginBottom: "4px" }}>REWRITE INSTRUCTIONS:</div>
+                          {t.critique.rewrite?.instructions?.map((inst, i) => (
+                            <div key={i} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px" }}>• {inst}</div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <div className="output-content" style={{ fontSize: "14px", opacity: 0.8 }}>{stages.draft || "—"}</div>
-                  </div>
+                  ))}
+                  {!createModeCritique && (
+                    <div className="output-placeholder">No loop traces yet. Run the pipeline in the Write tab.</div>
+                  )}
                 </div>
               </>
             ) : (
