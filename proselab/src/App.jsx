@@ -15,13 +15,31 @@ import {
   getState, 
   updateProject, 
   updateProjectDeep, 
-  logTokenUsage 
+  logTokenUsage,
+  subscribe,
+  updateState,
+  removeShadowAction,
+  generateValidationReport,
+  logLoopIteration
 } from "./store/appStore.js";
+import { 
+  saveCharacter as domainSaveChar, 
+  deleteCharacter as domainDeleteChar,
+  saveScene as domainSaveScene,
+  deleteScene as domainDeleteScene,
+  updateBeat as domainUpdateBeat,
+  updateCore as domainUpdateCore,
+  addRule as domainAddRule,
+  updateRule as domainUpdateRule,
+  deleteRule as domainDeleteRule
+} from "./domains/preproduction/preproduction.actions.js";
 
 import { analyze, buildDelta } from "./engine/analysis.js";
 import { mapVoiceToPromptSpec } from "./engine/rewrite.js";
 import { runPipeline, INFERENCE_CACHE_CONTEXT_VERSION } from "./engine/pipeline.js";
 import { runEditorialMode } from "./engine/editorial.js";
+import { runCriticAgent, runGeneratorAgent, applyAgentAction } from "./agents/runAgent.js";
+import { compileScene, SCENE_PHASES } from "./services/compiler.js";
 
 // =============================
 // TOKEN & COST TRACKING CONSTANTS
@@ -45,8 +63,6 @@ const ENV_KEYS = {
   openai: import.meta.env.VITE_OPENAI_KEY || "",
   model: import.meta.env.VITE_OLLAMA_MODEL || "llama3",
 };
-
-const save = (d) => updateProject(d);
 const PROMPT_IDS = {
 };
 // =============================
@@ -209,11 +225,32 @@ function SceneModal({ scene, onSave, onClose, onDelete }) {
           </div>
         </div>
         <div className="field-group">
-          <label className="field-label">Causality Statement</label>
-          <textarea className="field-textarea" value={data.causality} onChange={e => setData({ ...data, causality: e.target.value })} />
+          <label className="field-label">Narrative Phases (The Structure)</label>
+          <div className="grid-1" style={{ gap: "10px", marginTop: "10px" }}>
+            {SCENE_PHASES.map(phase => (
+              <div key={phase} className="field-group">
+                <label className="field-label" style={{ fontSize: "9px", color: "var(--accent-primary)" }}>{phase.replace(/_/g, " ").toUpperCase()}</label>
+                <textarea 
+                  className="field-textarea" 
+                  style={{ minHeight: "60px", fontSize: "12px" }}
+                  value={data.narrative?.[phase] || ""} 
+                  onChange={e => setData({ ...data, narrative: { ...(data.narrative || {}), [phase]: e.target.value } })} 
+                />
+              </div>
+            ))}
+          </div>
         </div>
         <div className="field-group">
-          <label className="field-label">Required Output</label>
+          <label className="field-label">Compiled Description (Derived)</label>
+          <textarea 
+            className="field-textarea" 
+            readOnly 
+            value={compileScene(data)} 
+            style={{ minHeight: "100px", background: "rgba(255,255,255,0.05)", color: "var(--text-muted)", fontStyle: "italic" }}
+          />
+        </div>
+        <div className="field-group">
+          <label className="field-label">Required Output Checklist</label>
           <textarea className="field-textarea" value={data.output} onChange={e => setData({ ...data, output: e.target.value })} />
         </div>
         <div className="modal-footer">
@@ -309,6 +346,16 @@ export default function ProseLabV4() {
   const [delta, setDelta] = useState([]);
   const [createModeCritique, setCreateModeCritique] = useState(null);
   const [preproduction, setPreproduction] = useState(getState().project);
+  const [shadowActions, setShadowActions] = useState(getState().shadowActions || []);
+
+  useEffect(() => {
+    const unsub = subscribe((newState) => {
+      setPreproduction(newState.project);
+      setShadowActions(newState.shadowActions || []);
+    });
+    return unsub;
+  }, []);
+
   const [lastAnalyzedText, setLastAnalyzedText] = useState("");
   const [preTab, setPreTab] = useState("core");
   const [editingChar, setEditingChar] = useState(null);
@@ -321,18 +368,6 @@ export default function ProseLabV4() {
   const [envStatus, setEnvStatus] = useState({ ollamaReachable: false });
   const [now, setNow] = useState(new Date());
   const outputRef = useRef(null);
-
-  // Load saved state
-  useEffect(() => {
-    const d = load();
-    if (d) {
-      if (d.text) setText(d.text);
-      if (d.preproduction) setPreproduction(prev => ({ ...prev, ...d.preproduction }));
-    }
-  }, []);
-
-  // Save state
-  useEffect(() => { save({ text, preproduction }); }, [text, preproduction]);
 
   // Live Analysis
   useEffect(() => {
@@ -362,14 +397,17 @@ export default function ProseLabV4() {
   };
 
   useEffect(() => {
-    checkOllamaReachability(preproduction.settings.ollamaModel).then(isReachable => {
-      setEnvStatus(prev => ({ ...prev, ollamaReachable: isReachable }));
-    });
-  }, [preproduction.settings.ollamaModel]);
+    const model = preproduction?.settings?.ollamaModel;
+    if (model) {
+      checkOllamaReachability(model).then(isReachable => {
+        setEnvStatus(prev => ({ ...prev, ollamaReachable: isReachable }));
+      });
+    }
+  }, [preproduction?.settings?.ollamaModel]);
 
   const envStatusState = {
     openai: ENV_KEYS.openai && ENV_KEYS.openai !== "your_openai_key_here",
-    ollamaModel: Boolean(preproduction.settings.ollamaModel?.trim()),
+    ollamaModel: Boolean(preproduction?.settings?.ollamaModel?.trim()),
     ollamaReachable: envStatus?.ollamaReachable ?? false,
   };
 
@@ -571,68 +609,47 @@ ${text}`;
   };
 
   const updatePre = (sec, key, val) => {
-    setPreproduction(prev => ({
-      ...prev,
-      [sec]: typeof prev[sec] === "object" && !Array.isArray(prev[sec]) 
-        ? { ...prev[sec], [key]: val } 
-        : val
-    }));
+    if (sec === "core") {
+      domainUpdateCore({ [key]: val });
+    } else {
+      updateProjectDeep(sec, { [key]: val });
+    }
   };
 
   const addRule = () => {
-    const newRule = { id: Date.now(), rule: "", cost: "", limit: "", consequence: "", category: "physics" };
-    setPreproduction(prev => ({ ...prev, rules: [...prev.rules, newRule] }));
+    domainAddRule();
   };
 
   const updateRule = (id, key, val) => {
-    setPreproduction(prev => ({
-      ...prev,
-      rules: prev.rules.map(r => r.id === id ? { ...r, [key]: val } : r)
-    }));
+    domainUpdateRule(id, { [key]: val });
   };
 
   const deleteRule = (id) => {
-    setPreproduction(prev => ({ ...prev, rules: prev.rules.filter(r => r.id !== id) }));
+    domainDeleteRule(id);
   };
 
   const saveChar = (char) => {
-    setPreproduction(prev => {
-      const exists = prev.chars.find(c => c.id === char.id);
-      return {
-        ...prev,
-        chars: exists ? prev.chars.map(c => c.id === char.id ? char : c) : [...prev.chars, char]
-      };
-    });
+    domainSaveChar(char);
     setEditingChar(null);
   };
 
   const deleteChar = (id) => {
-    setPreproduction(prev => ({ ...prev, chars: prev.chars.filter(c => c.id !== id) }));
+    domainDeleteChar(id);
     setEditingChar(null);
   };
 
   const saveScene = (scene) => {
-    setPreproduction(prev => {
-      const exists = prev.scenes.find(s => s.id === scene.id);
-      const newScenes = exists ? prev.scenes.map(s => s.id === scene.id ? scene : s) : [...prev.scenes, scene];
-      return {
-        ...prev,
-        scenes: newScenes.sort((a, b) => (parseFloat(a.chapter) || 0) - (parseFloat(b.chapter) || 0))
-      };
-    });
+    domainSaveScene(scene);
     setEditingScene(null);
   };
 
   const deleteScene = (id) => {
-    setPreproduction(prev => ({ ...prev, scenes: prev.scenes.filter(s => s.id !== id) }));
+    domainDeleteScene(id);
     setEditingScene(null);
   };
 
   const updateBeat = (id, key, val) => {
-    setPreproduction(prev => ({
-      ...prev,
-      beats: prev.beats.map(b => b.id === id ? { ...b, [key]: parseInt(val) || 0 } : b)
-    }));
+    domainUpdateBeat(id, { [key]: val });
   };
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
@@ -697,6 +714,86 @@ ${text}`;
         <button className={`tab-trigger ${activeTab === "write" ? "active" : ""}`} onClick={() => setActiveTab("write")}>Write</button>
         <button className={`tab-trigger ${activeTab === "output" ? "active" : ""}`} onClick={() => setActiveTab("output")}>Output</button>
         <button className={`tab-trigger ${activeTab === "logs" ? "active" : ""}`} onClick={() => setActiveTab("logs")}>Logs</button>
+        
+        <button 
+          className="btn btn-primary" 
+          onClick={() => runCriticAgent(ENV_KEYS.openai)}
+          style={{ marginLeft: "auto", fontSize: "0.7rem", padding: "4px 12px" }}
+        >
+          🤖 Critic Suggest
+        </button>
+        <button 
+          className="btn btn-ghost" 
+          onClick={() => runGeneratorAgent(ENV_KEYS.openai)}
+          style={{ marginLeft: "8px", fontSize: "0.7rem", padding: "4px 12px", border: "1px solid var(--border-subtle)" }}
+        >
+          🤖 Generator Suggest
+        </button>
+
+        <button 
+          className="btn btn-ghost" 
+          onClick={async () => {
+            setRunning(true);
+            const genRes = await runGeneratorAgent(ENV_KEYS.openai);
+            if (genRes.ok) {
+              // Now run Critic against that specific proposal
+              const latestShadow = getState().shadowActions.slice(-1)[0];
+              await runCriticAgent(ENV_KEYS.openai, latestShadow.payload);
+            }
+            setRunning(false);
+          }}
+          style={{ marginLeft: "8px", fontSize: "0.7rem", padding: "4px 12px", border: "1px solid var(--border-subtle)", color: "var(--accent-purple)" }}
+          disabled={running}
+        >
+          🧪 Instrumented Composition Test
+        </button>
+
+        <button 
+          className="btn btn-ghost" 
+          onClick={() => {
+            const report = generateValidationReport();
+            if (report) {
+              alert(`📊 CONVERGENCE RATE: ${report.loop_stability.convergence_rate}%\n📊 FALSE POSITIVE RATE: ${report.loop_stability.false_positive_rate}%\n📊 QUALITY DECAY: ${report.loop_stability.quality_degradation_rate}%\n\nESCAPE-TO-MISS: ${report.loop_stability.escape_to_miss_rate}%\nROBUSTNESS: ${report.phrasing_robustness.robustness_rate}%`);
+              console.log("FINAL VALIDATION REPORT:", report);
+            } else {
+              alert("No metrics collected yet.");
+            }
+          }}
+          style={{ marginLeft: "8px", fontSize: "0.7rem", padding: "4px 12px", border: "1px solid var(--accent-purple)", color: "var(--accent-purple)" }}
+        >
+          📊 Final Report
+        </button>
+
+        <button 
+          className="btn btn-primary" 
+          onClick={async () => {
+            setRunning(true);
+            const genRes = await runGeneratorAgent(ENV_KEYS.openai);
+            if (genRes.ok) {
+              const latestShadow = getState().shadowActions.slice(-1)[0];
+              if (!latestShadow) {
+                alert("Generator did not propose any changes.");
+                setRunning(false);
+                return;
+              }
+              const criticRes = await runCriticAgent(ENV_KEYS.openai, latestShadow.payload);
+              if (criticRes.ok) {
+                applyAgentAction(latestShadow.id);
+                alert("Scene refined and applied automatically.");
+              } else {
+                alert(`Critic Rejected: ${criticRes.message}`);
+                removeShadowAction(latestShadow.id, 'rejected', criticRes.message);
+              }
+            } else {
+              alert(`Generator failed: ${genRes.message}`);
+            }
+            setRunning(false);
+          }}
+          style={{ marginLeft: "8px", fontSize: "0.7rem", padding: "4px 12px" }}
+          disabled={running}
+        >
+          🚀 RUN ORCHESTRATION LOOP
+        </button>
       </div>
 
       {/* MAIN CONTENT BY TAB */}
@@ -711,6 +808,53 @@ ${text}`;
                 </button>
               ))}
             </div>
+
+            {shadowActions.length > 0 && (
+              <div className="constraints-panel" style={{ marginBottom: "20px", background: "rgba(139, 92, 246, 0.1)", borderColor: "var(--accent-purple)" }}>
+                <div className="panel-header">
+                  <span className="panel-title">🤖 PENDING AGENT PROPOSALS ({shadowActions.length})</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "12px" }}>
+                  {shadowActions.map(a => (
+                    <div key={a.id} className="shadow-proposal" style={{ padding: "10px", border: "1px solid var(--border-subtle)", borderRadius: "4px", background: "rgba(0,0,0,0.2)" }}>
+                      <div style={{ fontSize: "11px", color: "var(--accent-purple)", fontWeight: "bold", marginBottom: "4px" }}>
+                        {a.meta?.agent.toUpperCase()} | Scene: {a.payload?.id} 
+                        {a.meta?.entities_used?.length > 0 && ` | Entities: ${a.meta.entities_used.join(", ")}`}
+                      </div>
+                      <div style={{ fontSize: "12px", marginBottom: "8px" }}>{a.analysis}</div>
+                      <div className="grid-1" style={{ fontSize: "11px", background: "rgba(255,255,255,0.05)", padding: "8px", marginBottom: "8px", borderLeft: `3px solid ${a.meta?.agent === 'generator' ? 'var(--success)' : 'var(--accent-purple)'}` }}>
+                        {a.payload?.patch?.title && <div><strong>NEW TITLE:</strong> {a.payload.patch.title}</div>}
+                        {a.payload?.patch?.causality && <div><strong>NEW CAUSALITY:</strong> {a.payload.patch.causality}</div>}
+                        {a.payload?.patch?.description && <div><strong>NEW DESCRIPTION:</strong> {a.payload.patch.description}</div>}
+                      </div>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button className="btn btn-primary" style={{ fontSize: "10px", padding: "4px 10px" }} onClick={() => { applyAgentAction(a.id); }}>Approve & Apply</button>
+                        <button className="btn btn-ghost" style={{ fontSize: "10px", padding: "4px 10px" }} onClick={() => {
+                          const r = prompt("Reason for dismissal (e.g. hallucination, tone, generic):");
+                          if (r !== null) {
+                            const expected = prompt("Was a violation expected but MISSED? (trait/entity/world/none):") || "none";
+                            const detected = expected === "none";
+                            let missReason = null;
+                            if (!detected) {
+                              missReason = prompt("Why was it missed? (e.g. failed_to_map_behavior, weak_prompt):") || "unknown";
+                            }
+                            const isDegradation = confirm("Does this suggestion DEGRADE quality compared to original?");
+                            let degReason = null;
+                            if (isDegradation) {
+                              degReason = prompt("Degradation reason? (verbosity/generic/tone_shift/redundant/other):") || "other";
+                            }
+                            const isEphemeralMisclass = confirm("Is this a FALSE POSITIVE based on a valid ephemeral entity?");
+                            const accuracy = prompt("Critic accuracy? (correct/false_positive/miss):") || "correct";
+                            const classification = prompt("Classification? (violation/non_violation/ambiguous):") || "violation";
+                            removeShadowAction(a.id, 'rejected', r || 'No reason given', expected !== "none" ? expected : null, detected, missReason, isDegradation, isEphemeralMisclass, accuracy, degReason, classification);
+                          }
+                        }}>Dismiss</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* CORE */}
             {preTab === "core" && (
@@ -882,7 +1026,7 @@ ${text}`;
             {preTab === "inventory" && (
               <div className="preproduction-section">
                 <div className="preproduction-title">05 SCENE INVENTORY</div>
-                <button className="btn btn-ghost btn-sm" onClick={() => setEditingScene({ id: Date.now(), chapter: "", title: "", status: "pending", location: "", time: "", duration: "", wcTarget: "", chars: "", objects: "", causalityType: "revelation", stakes: "", causality: "", output: "", rules: "", notes: "" })} style={{ marginBottom: "16px" }}>+ Add Scene</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => setEditingScene({ id: Date.now(), _rev: 1, narrative: { phase_1_physical: "", phase_2_confusion: "", phase_3_clue: "", phase_4_realisation: "", phase_5_expansion: "" }, chapter: "", title: "", status: "pending", location: "", time: "", duration: "", wcTarget: "", chars: "", objects: "", causalityType: "revelation", stakes: "", causality: "", output: "", rules: "", notes: "" })} style={{ marginBottom: "16px" }}>+ Add Scene</button>
                 <div className="scene-table-wrap">
                   <table className="scene-table">
                     <thead>
@@ -957,7 +1101,7 @@ ${text}`;
                   </div>
                   <div className="field-group" style={{ gridColumn: "1 / -1" }}>
                     <label className="field-label">Banned Words (Comma Separated)</label>
-                    <input className="field-input" value={preproduction.voice.banned.join(", ")} onChange={e => updatePre("voice", "banned", e.target.value.split(",").map(w => w.trim()))} />
+                    <input className="field-input" value={(preproduction.voice.banned || []).join(", ")} onChange={e => updatePre("voice", "banned", e.target.value.split(",").map(w => w.trim()))} />
                   </div>
                 </div>
               </div>
