@@ -20,12 +20,6 @@ Produce improved prose from constraints.
 **Current Implementation:**
 - Ollama (primary rewrite)
 - OpenAI (refinement)
-- Gemini (final polish)
-
-**Weakness:**
-- Always produces output
-- No concept of failure
-- No quality enforcement
 
 ---
 
@@ -49,55 +43,47 @@ Structured metrics
 **Role:**
 Convert analysis into actionable rewrite instructions.
 
-**Example Outputs:**
-- "Increase sentence variation"
-- "Replace abstract emotion with physical response"
-
 ---
 
-### 4. Critic Agent (NOT BUILT — CRITICAL)
+### 4. Critic Agent (EXISTS)
 
 **Role:**
 Reject bad writing.
 
-**This is the missing piece.**
-
 **Responsibilities:**
-- Evaluate generated text against:
-  - Rhythm
-  - Specificity
-  - Emotional concreteness
-  - Genericness
-- Detect failure modes:
-  - Averaging
-  - Over-explanation
-  - Weak metaphors
-- Return:
-  - APPROVE
-  - REWRITE (with feedback)
-
-**Important:**
-This agent has **veto power**.
+- Evaluate generated text against rhythm, specificity, and grounding.
+- Detect failure modes (averaging, over-explanation, weak metaphors).
+- Score narrative intent alignment.
+- Return: APPROVE or REWRITE (with feedback).
 
 ---
 
-### 5. Orchestrator (PARTIAL)
+### 5. Challenger Agent (EXISTS)
 
 **Role:**
-Control the pipeline.
+Adversarial verification.
 
-**Future Behavior:**
+**Current Implementation:**
+- Gemini 1.5 Pro.
 
-Generate → Critique → (Pass?)
+**Function:**
+Challenges `APPROVE` verdicts from the primary Critic to detect "deceptively clean" but empty prose.
+
+---
+
+### 6. Orchestrator (EXISTS)
+
+**Role:**
+Control the pipeline loop.
+
+**Behavior:**
+Generate → Critique → Challenger → (Pass?)
 YES → Accept
 NO → Rewrite → Retry (max 3)
-→ Escalate
-
 
 ---
 
 ## Target Loop
-
 
 User Input
 ↓
@@ -107,10 +93,13 @@ Delta
 ↓
 Generate
 ↓
-Critic
+Critic (Primary)
 ↓
-[APPROVE] → Output
-[REJECT] → Rewrite → Loop
+[REWRITE] → Loop
+[APPROVE] → Challenger
+            ↓
+            [REWRITE] → Loop
+            [APPROVE] → Final Output
 
 
 ---

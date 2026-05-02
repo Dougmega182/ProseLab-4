@@ -1,39 +1,60 @@
-# ProseLab V4
+# ProseLab V4 — Editorial Orchestration Engine
 
-ProseLab is a local-first, AI-assisted prose workstation. It uses a multi-agent pipeline to generate, critique, and rewrite prose with a focus on physical grounding and stylistic constraints.
+ProseLab is a local-first, quality-enforcing AI prose workstation. Unlike generic chat interfaces, it uses a multi-agent pipeline to force output quality through structural analysis, intent-alignment, and adversarial critique.
 
-## Features
+## Core Pipeline
 
-- **Multi-Pass Critic Loop**: A dedicated Critic agent evaluates prose against specific failure modes (e.g., generic language, abstract emotions) and issues type-constrained directives.
-- **Similarity Gating**: If a rewrite is too structurally similar to the original, the engine triggers a high-temperature rejection pass to force total replacement.
-- **Preproduction Inventory**: Generation is grounded in a locked preproduction brief (location, objects, character functions) to prevent the AI from inventing clichéd stock imagery.
-- **Editorial Personas**: Review your prose through the lens of specialized editors (Prose, Character, Structure, World, Market).
+The system operates on a **Generate → Critique → Challenge** loop:
 
-## Setup
+1.  **Analysis & Delta**: The input text is measured for rhythm, physical grounding, and specificity. These metrics are converted into a "Delta" (rewrite instructions).
+2.  **Ollama Draft**: A local LLM produces the primary structural draft based on the Delta.
+3.  **OpenAI Refinement**: The draft is smoothed for rhythm and tone using `gpt-4o-mini`.
+4.  **Critic Gate**: The Critic agent evaluates the refined draft against narrative intent and stylistic "Absolute Bans" (e.g., no abstract emotional labels).
+5.  **Adversarial Challenge**: If the Critic approves, a Challenger agent (Gemini 1.5 Pro) performs a cross-architecture verification to detect "deceptively clean" but empty prose.
+6.  **Retry Loop**: On rejection, the engine re-injects specific failure directives and retries up to 3 times.
 
-1. **Install Dependencies**:
-   ```bash
-   npm install
-   ```
+## Throughput Hardening
 
-2. **Configure Environment**:
-   Create a `.env` file in the root directory or the `proselab` directory with your OpenAI key:
-   ```env
-   VITE_OPENAI_KEY=your_key_here
-   ```
+The engine is tuned for **Liveness and Honesty**:
+- **Decoupled Confidence**: Confidence scores are telemetry signals, not hard rejection gates.
+- **Survival Pass**: If narrative intent repair is exhausted, the pipeline proceeds to full critique anyway to provide honest scoring for "near-misses."
+- **Softened Scoring**: The Critic permits emotional resonance provided it is anchored in physical grounding, lowering the approval barrier for contextually strong prose.
 
-3. **Configure Ollama**:
-   Ensure you have [Ollama](https://ollama.ai/) installed and running locally with your desired model (e.g., `llama3`). Ensure cross-origin requests are permitted if running on a different port.
+## Setup & Execution
 
-4. **Run the Development Server**:
-   ```bash
-   npm run dev
-   ```
+### 1. Environment Configuration
+Create `proselab/.env` (Vite-specific) with the following:
+```env
+VITE_OPENAI_KEY=your_openai_key
+VITE_GEMINI_KEY=your_gemini_key
+VITE_OLLAMA_MODEL=llama3 (or your preferred local model)
+```
 
-## Architecture
+### 2. Run Development App
+```bash
+cd proselab
+npm install
+npm run dev
+```
 
-- **Generator**: Runs via local Ollama models.
-- **Rewrite/Refinement**: Runs via OpenAI (`gpt-4o-mini` or `gpt-4o`).
-- **Critic**: Runs via OpenAI to ensure consistent JSON formatting and strict adherence to negative constraints.
+### 3. Engine Validation
+The engine is verified via a 50-sample throughput test set:
+```bash
+# Run the full throughput telemetry map
+cd proselab
+npm run throughput
+```
 
-The engine uses a split-constraint regime, ensuring the Generator respects scene context while the Critic aggressively flags abstract "tails" and literalized clichés.
+## Architecture Map
+
+- `src/engine/pipeline.js`: The central orchestrator.
+- `src/engine/critic.js`: The quality gate (Primary & Challenger logic).
+- `src/engine/rewrite.js`: The constraint-driven generator prompts.
+- `src/engine/guards.js`: System invariants and gatekeepers.
+- `src/services/inferenceCache.js`: SHA-256 content-addressed caching.
+
+## Principles
+
+> "If the system cannot reject bad output, it will produce average output."
+
+ProseLab defaults to rejection. If a sample is borderline, it triggers a rewrite. Quality is enforced through the adversarial friction between the Primary Critic and the Challenger.
