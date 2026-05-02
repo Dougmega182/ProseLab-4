@@ -1,0 +1,965 @@
+[
+  {
+    "timestamp": 1777688901966,
+    "id": "bench-mediocre-j0jmi",
+    "input_sample": "Miller walked into the dimly lit office, his footsteps echoing off the walls. Vance looked up from t...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 23815,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777688920527,
+    "id": "bench-mediocre-zaqdq",
+    "input_sample": "Miller sat at the desk, a stack of papers in front of him. The office around him was quiet except fo...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 18559,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777688933739,
+    "id": "bench-mediocre-u19g1",
+    "input_sample": "Miller glanced over the documents, his eyes scanning each line with practiced ease. He paused at the...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 13212,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777688952784,
+    "id": "bench-mediocre-83c0g",
+    "input_sample": "Miller sat at the old wooden desk, staring at the screen, where lines of code flickered against the ...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 19045,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777688974137,
+    "id": "bench-mediocre-q9dcq",
+    "input_sample": "Miller picked up the phone and dialed Vance, hoping he would be home. The rain was pouring outside, ...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 21352,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777688991209,
+    "id": "bench-mediocre-s2zam",
+    "input_sample": "Miller walked into the dimly lit room, his coat trailing behind him. He found Vance sitting at the t...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 17072,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689015129,
+    "id": "bench-mediocre-uenv8",
+    "input_sample": "Miller looked at Vance across the table, the dim light casting shadows on their faces. They were alo...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 23919,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689033778,
+    "id": "bench-mediocre-y7kpt",
+    "input_sample": "Miller walked into the dimly lit room, his eyes scanning the crowd for Vance. He finally found him s...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 18649,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689052422,
+    "id": "bench-mediocre-feiz8",
+    "input_sample": "Miller walked into the room where Vance sat hunched over a stack of papers. The air was heavy with t...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 18643,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689072697,
+    "id": "bench-mediocre-s8671",
+    "input_sample": "Miller walked over to the old desk where Vance sat, the light overhead flickering. 'Here's the code,...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 20275,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689094910,
+    "id": "bench-mediocre-1bgni",
+    "input_sample": "Miller glanced at the paper in his hand and slowly handed it over to Vance. The room was dimly lit, ...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 22212,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689112324,
+    "id": "bench-mediocre-x7knf",
+    "input_sample": "Miller walked into the dimly lit office where Vance was waiting. He casually glanced around, noticin...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 17413,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689131519,
+    "id": "bench-mediocre-kmdm1",
+    "input_sample": "Miller leaned over the table, his eyes meeting Vance's with a sense of urgency. \"Look, I have the co...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 19194,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689152360,
+    "id": "bench-mediocre-98t2b",
+    "input_sample": "Miller glanced at the clock and sighed. The room felt unusually quiet, with Vance seated opposite, w...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "HIGH_PASS",
+      "confidence": 1,
+      "latency": 20841,
+      "primary_failure": null
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 1
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689167952,
+    "id": "bench-mediocre-hql76",
+    "input_sample": "Miller sat at his desk, staring at the cluttered papers and folders piled high. His eyes flickered o...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 15591,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689319550,
+    "id": "bench-mediocre-sebv5",
+    "input_sample": "Miller glanced at the clock, the ticking seemed louder in the quiet room. He felt the pressure mount...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 5
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 151597,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": -3.1624999999999996,
+        "complexity_delta": 6
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689336848,
+    "id": "bench-mediocre-l4ww2",
+    "input_sample": "Miller shuffled through the messy desk, papers scattered in every direction. The old clock ticked lo...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 17298,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689355479,
+    "id": "bench-mediocre-1glr5",
+    "input_sample": "The sun set slowly over the horizon, casting a warm glow over the small suburban neighborhood. Mille...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 18631,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689376033,
+    "id": "bench-mediocre-q9qsu",
+    "input_sample": "Miller leaned back in his chair, the dim light of the office casting soft shadows on the wall. He si...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "HIGH_PASS",
+      "confidence": 0.7050000000000001,
+      "latency": 20554,
+      "primary_failure": null
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.7
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689393986,
+    "id": "bench-mediocre-imn6j",
+    "input_sample": "Miller walked into the dimly lit room, where Vance was sitting quietly by the window. The atmosphere...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 17952,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689409501,
+    "id": "bench-mediocre-fh8rl",
+    "input_sample": "Miller walked into the dimly lit room, where Vance was waiting. The air was thick with anticipation....",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 15513,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689429062,
+    "id": "bench-mediocre-eefk4",
+    "input_sample": "Miller paced the small office room, the fluorescent lights humming above, as he waited for Vance to ...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 19561,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689448268,
+    "id": "bench-mediocre-j1cfp",
+    "input_sample": "Miller walked briskly down the hallway, his footsteps echoing in the empty corridor. The meeting wit...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 19205,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689559556,
+    "id": "bench-mediocre-9ai5o",
+    "input_sample": "Miller sat across the table from Vance, the dim light casting long shadows between them. He leaned f...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 4
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 111286,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689576151,
+    "id": "bench-mediocre-ujrk6",
+    "input_sample": "Miller looked at Vance with a serious expression and said, 'The code you've been looking for is read...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 16595,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689593900,
+    "id": "bench-mediocre-wf7k1",
+    "input_sample": "Miller sat across from Vance in the dimly lit café. The sound of clinking cups and hushed conversati...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 17748,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689717627,
+    "id": "bench-mediocre-08f3c",
+    "input_sample": "Miller sat across from Vance, the dim light casting shadows on their faces. \"I have what you need,\" ...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 4
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 123727,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": -0.1363636363636367,
+        "complexity_delta": 1
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689734371,
+    "id": "bench-mediocre-qojwq",
+    "input_sample": "Miller stood in the dimly lit room, peering over his glasses at the paper in front of him. Vance wai...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 16744,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689751334,
+    "id": "bench-mediocre-dh2qf",
+    "input_sample": "Miller walked into the office, the place where he and Vance had many discussions before. He approach...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 16961,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  },
+  {
+    "timestamp": 1777689888078,
+    "id": "bench-mediocre-qa4w9",
+    "input_sample": "Miller walked into the dimly lit room where Vance was waiting. The air was tense, filled with uncert...",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 5
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 136743,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 1.2884615384615383,
+        "complexity_delta": 1
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PENDING",
+    "human_style_tag": "PENDING",
+    "human_improvement": "PENDING"
+  }
+]
