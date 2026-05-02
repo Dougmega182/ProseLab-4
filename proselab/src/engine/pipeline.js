@@ -238,26 +238,44 @@ async function runStyleRefinement({
 
   for (let i = 0; i < maxAttempts; i++) {
     const attemptNum = i + 1;
-    onStage("openai-refinement");
+    let candidateDraft = currentDraft;
 
-    const rewriteResult = await generateRewrite({
-      original: currentDraft,
-      instructions: delta,
-      voiceSpec,
-      sceneContext,
-      sceneIntent,
-      key: keys.openai,
-      mode: "style-refinement",
-      temperature: 0.75 + (i * 0.05),
-    });
+    if (attemptNum === 1) {
+      onStage("openai-refinement");
+      const rewriteResult = await generateRewrite({
+        original: currentDraft,
+        instructions: delta,
+        voiceSpec,
+        sceneContext,
+        sceneIntent,
+        key: keys.openai,
+        mode: "style-refinement",
+        temperature: 0.75,
+      });
+      if (rewriteResult.ok) candidateDraft = rewriteResult.text;
+    } else if (finalCritique && finalCritique.failures?.length > 0) {
+      onStage("surgical-rewrite");
+      let surgicalText = currentDraft;
+      for (const failure of finalCritique.failures) {
+        if (!failure.quote) continue;
+        
+        const surgicalResult = await generateRewrite({
+          original: surgicalText,
+          failingSpan: failure.quote,
+          reason: failure.reason,
+          voiceSpec,
+          sceneContext,
+          sceneIntent,
+          key: keys.openai,
+          mode: "surgical",
+          temperature: 0.8,
+        });
 
-    const candidateDraft = rewriteResult.ok ? rewriteResult.text : currentDraft;
-    if (rewriteResult.ok && rewriteResult.response?.usage) {
-      logTokenUsage(
-        "openai::gpt-4o-mini",
-        rewriteResult.response.usage.prompt_tokens,
-        rewriteResult.response.usage.completion_tokens,
-      );
+        if (surgicalResult.ok && surgicalResult.text) {
+          surgicalText = surgicalText.replace(failure.quote, surgicalResult.text);
+        }
+      }
+      candidateDraft = surgicalText;
     }
 
     onStage("event-normalization");

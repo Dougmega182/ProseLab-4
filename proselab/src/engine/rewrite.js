@@ -76,6 +76,27 @@ ${original || ""}
 ---`;
   }
 
+  if (mode === "surgical") {
+    return `You are a precision surgical rewriter.
+Your goal is to replace a specific failing span of text with physically grounded prose.
+
+FAILING SPAN: "${context.failingSpan}"
+FAILURE REASON: ${context.reason}
+
+RULES:
+1. Provide a physical, sensory interaction that confirms the narrative intent without using abstract labels.
+2. The replacement must be approximately the same length as the original span.
+3. Return ONLY the replacement text. No explanation. No quotes.
+
+${contextBlock}
+${intentBlock}
+
+ORIGINAL CONTEXT:
+---
+${original || ""}
+---`;
+  }
+
   return `You are a precision rewriter. Apply ONLY these transformations:
 ${transformationRules}
 
@@ -135,9 +156,11 @@ export async function generateRewrite({
   debug = false,
   similarityRejection = false,
   sceneContext = null,
-  rejectedDraft = null, // New parameter to pass stagnation draft
+  rejectedDraft = null,
   mode = "style-refinement",
   sceneIntent = null,
+  failingSpan = null,
+  reason = null,
 } = {}) {
   const rejectedDraftBlock = rejectedDraft
     ? `REJECTED DRAFT — DO NOT MIMIC THESE SENTENCE STRUCTURES:
@@ -155,6 +178,8 @@ ${buildRewritePrompt({
   sceneContext,
   mode,
   sceneIntent,
+  failingSpan,
+  reason,
 })}
 
 ${rejectedDraftBlock}

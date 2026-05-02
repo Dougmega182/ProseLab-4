@@ -10,6 +10,8 @@ import { parseIntentContract, validateIntentChain } from "./intentRules.js";
 import { DISAGREEMENT_CLASSES } from "./truthProtocol.js";
 import { analyzeProseStyle } from "./proseStyle.js";
 import { evaluatePolicy } from "./policyLayer.js";
+import { mechanicalSweep } from "./mechanicalCritic.js";
+import { STYLE_EXEMPLARS } from "./exemplars.js";
 import { robustParseJSON } from "../services/normalizer.js";
 
 /**
@@ -317,6 +319,9 @@ Intent enforcement rules - these are hard constraints:
 
 Return ONLY valid JSON. No explanation.
 
+QUALITY ANCHORS (Use these to calibrate your scores):
+${STYLE_EXEMPLARS.map(ex => `BAD: "${ex.bad}"\nGOOD: "${ex.good}"\nREASON: ${ex.reason}`).join("\n\n")}
+
 Evaluate the text for:
 - Physical Grounding (0-10): 10 = Zero abstract labels, zero metaphors, zero weather imagery.
 - Specificity (0-10): 10 = Every noun has a specific source or modifier from the scene context.
@@ -372,12 +377,16 @@ Return JSON:
     "instruction": "..."
   },
   "failures": [
-    { "type": "GENERIC_LANGUAGE", "reason": "..." }
+    { 
+      "type": "GENERIC_LANGUAGE", 
+      "reason": "...", 
+      "quote": "exact phrase from the text that failed" 
+    }
   ],
   "rewrite_directive": "...",
   "rewrite": {
     "instructions": [
-      "Replace 'phrase' with [Category] and end the sentence on the detail."
+      "Targeting 'quote': Replace with specific physical detail."
     ]
   }
 }
@@ -418,12 +427,25 @@ export function normalizeCriticOutput(raw, context = {}) {
     const numConfidence = typeof rawConfidence === "number" ? rawConfidence : (rawConfidence === "high" ? 0.9 : 0.5);
     const confidence = numConfidence >= 0.75 ? "high" : "low";
 
+    const mechanicalFailures = mechanicalSweep(draftText);
+    const llmFailures = normalizeFailures(data.failures);
+    const allFailures = [...mechanicalFailures, ...llmFailures];
+
     let intentVerdict = Object.values(checks).every(v => v === "PASS") ? INTENT_VERDICTS.PASS : INTENT_VERDICTS.FAIL;
-    const verdict = (intentVerdict === INTENT_VERDICTS.PASS && score.overall >= 8) ? CRITIC_VERDICTS.APPROVE : CRITIC_VERDICTS.REWRITE;
+    let finalScore = score.overall;
+    
+    // Mechanical Penalty: Hard ceiling if absolute bans are violated.
+    if (mechanicalFailures.length > 0) {
+      finalScore = Math.min(finalScore, 4); 
+    }
+
+    const verdict = (intentVerdict === INTENT_VERDICTS.PASS && finalScore >= 8 && mechanicalFailures.length === 0) 
+      ? CRITIC_VERDICTS.APPROVE 
+      : CRITIC_VERDICTS.REWRITE;
 
     return {
       verdict,
-      score,
+      score: { ...score, overall: finalScore },
       checks,
       evidence,
       confidence,
@@ -431,13 +453,18 @@ export function normalizeCriticOutput(raw, context = {}) {
       intent_alignment: intentVerdict === INTENT_VERDICTS.PASS ? 1.0 : 0.0,
       phase_scores: {
         logic: intentVerdict === INTENT_VERDICTS.PASS ? 10 : 0,
-        style: score.overall
+        style: finalScore
       },
       intent_failures: intentFailures,
       minimal_fix: minimalFix,
-      failures: normalizeFailures(data.failures),
-      rewrite_directive: data.rewrite_directive || "Improve prose",
-      rewrite: { instructions: data.rewrite?.instructions || ["Improve prose"] },
+      failures: allFailures,
+      rewrite_directive: data.rewrite_directive || (mechanicalFailures.length > 0 ? "Fix mechanical violations" : "Improve prose"),
+      rewrite: { 
+        instructions: [
+          ...mechanicalFailures.map(f => `Fix ${f.type}: Remove '${f.quote}' and show the physical interaction.`),
+          ...(data.rewrite?.instructions || [])
+        ]
+      },
       meta: buildMeta({ 
         valid: true, 
         raw: context.raw, 
