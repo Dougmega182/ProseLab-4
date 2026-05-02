@@ -4,6 +4,7 @@ import { criticAgent } from "./criticAgent.js";
 import { generatorAgent } from "./generatorAgent.js";
 import { normalizeIntents, validateConstraints, detectSuspiciousPatterns } from "../services/normalizer.js";
 import { compileScene, SCENE_PHASES } from "../services/compiler.js";
+import { shouldAutoApply } from "../engine/autoApplyGate.js";
 
 const SHADOW_MODE = true; // Set to false to auto-apply agent actions
 
@@ -101,31 +102,8 @@ function validateAction(action, state) {
   return { ok: true };
 }
 
-/**
- * CONFIDENCE ENGINE
- * Determines if an action is safe enough to bypass human review.
- */
-function shouldAutoApply(action) {
-  const { confidence = 0, risk_flags = [], phase_scores = {}, intent_alignment = 1 } = action;
-  
-  // 1. Minimum Confidence Threshold
-  if (confidence < 0.75) return { ok: false, reason: `Low confidence: ${confidence}` };
-  
-  // 2. Risk Flag Blockers
-  if (risk_flags.length > 0) return { ok: false, reason: `Risk flags present: ${risk_flags.join(", ")}` };
-  
-  // 3. Structural Quality Guard
-  const phases = Object.values(phase_scores);
-  if (phases.length > 0) {
-    const weakPhase = phases.some(s => s < 6);
-    if (weakPhase) return { ok: false, reason: "Weak phase detected (< 6)" };
-  }
-
-  // 4. Intent Alignment Guard (NEW)
-  if (intent_alignment < 0.7) return { ok: false, reason: `Intent misalignment: ${intent_alignment}` };
-
-  return { ok: true };
-}
+// shouldAutoApply imported from engine/autoApplyGate.js
+// Single source of truth — no inline reimplementation.
 export async function runCriticAgent(openaiKey, contextPatch = null) {
   const state = getState();
   
@@ -203,18 +181,18 @@ export async function runCriticAgent(openaiKey, contextPatch = null) {
       logShadowAction(action); // Still log for audit
       const shadowActions = getState().shadowActions;
       const logged = shadowActions[shadowActions.length - 1];
-      applyAgentAction(logged.id, "AUTONOMY", `Auto-applied (Conf: ${action.confidence})`);
+      applyAgentAction(logged.id);
       return { ok: true, message: `AUTONOMY: Auto-applied to scene ${action.payload.id}`, action: logged };
     }
 
     if (SHADOW_MODE) {
       logShadowAction(action);
-      return { ok: true, message: `Shadow: Logged proposal (${action.type}) for scene ${action.payload.id}` };
+      return { ok: true, message: `Shadow: Logged proposal (${action.type}) for scene ${action.payload.id}`, gate: autonomy };
     }
 
     // Manual fallback if SHADOW_MODE is false but autonomy failed
     logShadowAction(action);
-    return { ok: true, message: `Queued for review: ${autonomy.reason}` };
+    return { ok: true, message: `Queued for review: ${autonomy.reason}`, gate: autonomy };
   }
 
   if (action.type === "NO_OP") {
@@ -274,20 +252,47 @@ export async function runGeneratorAgent(openaiKey) {
 
 /**
  * APPLY AGENT ACTION
- * Used by the UI approval flow to commit a shadow action.
+ *
+ * The ONLY function that mutates project state from agent output.
+ * The auto-apply gate is enforced HERE, not at call sites.
+ *
+ * @param {string} id - Shadow action ID to apply.
+ * @param {Object} options
+ * @param {boolean} options.humanOverride - True when a human clicks
+ *   "Approve & Apply" in the UI. Bypasses the gate but is logged.
+ * @returns {boolean} True if applied, false if blocked.
  */
-export function applyAgentAction(id) {
+export function applyAgentAction(id, { humanOverride = false } = {}) {
   const state = getState();
   const action = state.shadowActions.find(a => a.id === id);
-  
+
   if (!action) return false;
 
-  const { id: sceneId, patch, blocks, phase, text } = action.payload;
-  const scene = state.project.scenes.find(s => String(s.id) === String(sceneId));
-  
-  if (!scene) return false;
+  // GATE ENFORCEMENT: recompute from action meta.
+  // This cannot be bypassed by callers forgetting to check.
+  if (!humanOverride) {
+    const gate = shouldAutoApply(action.meta || action, {
+      source: "applyAgentAction",
+      actionId: id,
+      actionType: action.type,
+    });
+    if (!gate.ok) {
+      console.warn(
+        `🛑 GATE BLOCKED apply for ${id}: ${gate.reason}` +
+        ` [cost: ${gate.cost_tier}]`
+      );
+      return false;
+    }
+  } else {
+    console.log(`👤 HUMAN OVERRIDE: Applying ${id} without gate check.`);
+  }
 
-  let updatedScene = { ...scene };
+  const { id: sceneId, patch, blocks, phase, text } = action.payload;
+  const scene = state.project.scenes.find(
+    s => String(s.id) === String(sceneId)
+  );
+
+  if (!scene) return false;
 
   if (action.type === "UPDATE_SCENE") {
     saveScene({ ...scene, ...patch });
@@ -296,6 +301,8 @@ export function applyAgentAction(id) {
   } else if (action.type === "UPDATE_SCENE_PHASE") {
     updateScenePhase(sceneId, phase, text);
   }
-  removeShadowAction(id, 'approved', 'User/Loop approved');
+
+  const approvalSource = humanOverride ? "human_override" : "gate_passed";
+  removeShadowAction(id, "approved", approvalSource);
   return true;
 }

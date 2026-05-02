@@ -35,11 +35,11 @@ import {
 } from "./domains/preproduction/preproduction.actions.js";
 
 import { analyze, buildDelta } from "./engine/analysis.js";
-import { mapVoiceToPromptSpec } from "./engine/rewrite.js";
 import { runPipeline, INFERENCE_CACHE_CONTEXT_VERSION } from "./engine/pipeline.js";
-import { runEditorialMode } from "./engine/editorial.js";
 import { runCriticAgent, runGeneratorAgent, applyAgentAction } from "./agents/runAgent.js";
 import { compileScene, SCENE_PHASES } from "./services/compiler.js";
+import { runCreateModeOrchestrator } from "./services/createModeOrchestrator.js";
+import { runEditorialModeOrchestrator } from "./services/editorialModeOrchestrator.js";
 
 // =============================
 // TOKEN & COST TRACKING CONSTANTS
@@ -293,8 +293,10 @@ function MetricBar({ label, value, max = 1 }) {
 }
 
 function PipelineTracker({ currentStage }) {
-  const stages = ["analysis", "delta", "ollama", "openai-refinement", "critic", "done"];
+  const stages = ["intent", "event-normalization", "analysis", "delta", "ollama", "openai-refinement", "critic", "done"];
   const labels = {
+    intent: "Intent",
+    "event-normalization": "Events",
     analysis: "Analysis",
     delta: "Constraints",
     ollama: "Ollama",
@@ -461,101 +463,71 @@ export default function ProseLabV4() {
       await runCreateMode();
     } else {
       if (activeMode === "ANALYSE") setLastAnalyzedText(text);
-      await runEditorialMode({
+      await runEditorialModeOrchestrator({
         activeMode,
         text,
         modeFeedback,
         voiceSpec: preproduction.voice,
         openaiKey: ENV_KEYS.openai,
+        logTokenUsage,
         onStage: setStage,
-        onFeedbackUpdate: (mode, feedback) =>
+        onFeedback: (mode, feedback) =>
           setModeFeedback(prev => ({ ...prev, [mode]: feedback })),
         onComplete: () => setActiveTab("output"),
-        logTokenUsage
+        onError: (e) => setOutput("Error: " + e.message),
       });
     }
     setRunning(false);
   };
 
   const runCreateMode = async () => {
-    setOutput(""); setAnalysis(null); setDelta([]);
+    setOutput("");
+    setAnalysis(null);
+    setDelta([]);
     setStages({ draft: "", refined: "", final: "" });
 
-    const voiceProfile = `
-VOICE PROFILE:
-- Sentence Length: ${preproduction.voice.length}
-- Fragment Tolerance: ${preproduction.voice.fragments}
-- Metaphor Density: ${preproduction.voice.metaphor}
-- Dialogue Style: ${preproduction.voice.dialogue}
-`;
-
-    let context = "";
-    const activeScene = preproduction.scenes.find(s => s.id === parseInt(preflightId));
-
-    if (activeScene) {
-      context = `
-CHAPTER BRIEF:
-Title: ${activeScene.title}
-Chapter: ${activeScene.chapter}
-Location: ${activeScene.location}
-Causality: ${activeScene.causality}
-Required Output: ${activeScene.output}
-Stakes: ${activeScene.stakes}
-Characters Present: ${activeScene.chars}
-`;
-    } else {
-      context = `
-PROJECT CORE:
-Title: ${preproduction.core.title}
-Genre: ${preproduction.core.genre}
-Constraint: ${preproduction.core.constraint}
-Theme: ${preproduction.core.theme}
-False Belief: ${preproduction.core.falseBelief}
-Midpoint: ${preproduction.core.midpoint}
-`;
-    }
-
-    try {
-      const res = await runPipeline({
-        text: text, // Use the actual user text as input
-        keys: { openai: ENV_KEYS.openai },
-        model: preproduction.settings.ollamaModel,
-        onStage: setStage,
-        onUpdate: (data) => {
-          if (data.analysis) setAnalysis(data.analysis);
-          if (data.delta) setDelta(data.delta);
-        },
-        sceneContext: context,
-        voiceSpec: mapVoiceToPromptSpec(preproduction.voice, delta),
-        logTokenUsage,
-        estimateTokens,
-        cacheVersion: INFERENCE_CACHE_CONTEXT_VERSION
-      });
-
-      console.log("PIPELINE TRACE", {
-        attempts: res.attempts,
-        finalVerdict: res.critique?.verdict,
-        finalScore: res.critique?.score?.overall,
-      });
-
-      setAnalysis(res.analysis);
-      setDelta(res.delta);
-      setStages({ draft: res.traces?.[0]?.draft || "", refined: "", final: res.final });
-      setCreateModeCritique({ 
-        verdict: res.critique?.verdict, 
-        score: res.critique?.score, 
-        failures: res.critique?.failures,
-        attempts: res.attempts,
-        traces: res.traces 
-      });
-      setOutput(res.final);
-      setCacheStats(getCacheStats());
-      setCostStats(getTodayStats());
-      if (outputRef.current) outputRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      setActiveTab("output");
-    } catch (e) {
-      setOutput("Error: " + e.message);
-    }
+    await runCreateModeOrchestrator({
+      text,
+      preproduction,
+      preflightId,
+      delta,
+      keys: { openai: ENV_KEYS.openai },
+      cacheVersion: INFERENCE_CACHE_CONTEXT_VERSION,
+      logTokenUsage,
+      estimateTokens,
+      onStage: setStage,
+      onIntent: (intent) =>
+        setCreateModeCritique((prev) => ({ ...(prev || {}), intent })),
+      onAnalysis: setAnalysis,
+      onDelta: setDelta,
+      onBlocked: ({ intent, fallbackText }) => {
+        setCreateModeCritique({
+          verdict: "BLOCKED",
+          score: null,
+          failures: [],
+          attempts: 0,
+          traces: [],
+          intent,
+        });
+        setOutput(fallbackText);
+        setCacheStats(getCacheStats());
+        setCostStats(getTodayStats());
+        outputRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        setActiveTab("output");
+      },
+      onComplete: ({ analysis, delta, draft, final, critique }) => {
+        setAnalysis(analysis);
+        setDelta(delta);
+        setStages({ draft, refined: "", final });
+        setCreateModeCritique(critique);
+        setOutput(final);
+        setCacheStats(getCacheStats());
+        setCostStats(getTodayStats());
+        outputRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        setActiveTab("output");
+      },
+      onError: (e) => setOutput("Error: " + e.message),
+    });
   };
 
   const copyToEditor = (content) => {
@@ -777,12 +749,15 @@ ${text}`;
                 return;
               }
               const criticRes = await runCriticAgent(ENV_KEYS.openai, latestShadow.payload);
-              if (criticRes.ok) {
+              const gate = criticRes.gate;
+              if (criticRes.ok && gate?.ok) {
                 applyAgentAction(latestShadow.id);
                 alert("Scene refined and applied automatically.");
               } else {
-                alert(`Critic Rejected: ${criticRes.message}`);
-                removeShadowAction(latestShadow.id, 'rejected', criticRes.message);
+                const reason = gate?.reason || criticRes.message;
+                const costTag = gate?.cost_tier ? ` [${gate.cost_tier}]` : "";
+                alert(`Blocked${costTag}: ${reason}`);
+                removeShadowAction(latestShadow.id, 'rejected', reason);
               }
             } else {
               alert(`Generator failed: ${genRes.message}`);
@@ -828,7 +803,7 @@ ${text}`;
                         {a.payload?.patch?.description && <div><strong>NEW DESCRIPTION:</strong> {a.payload.patch.description}</div>}
                       </div>
                       <div style={{ display: "flex", gap: "8px" }}>
-                        <button className="btn btn-primary" style={{ fontSize: "10px", padding: "4px 10px" }} onClick={() => { applyAgentAction(a.id); }}>Approve & Apply</button>
+                        <button className="btn btn-primary" style={{ fontSize: "10px", padding: "4px 10px" }} onClick={() => { applyAgentAction(a.id, { humanOverride: true }); }}>Approve & Apply</button>
                         <button className="btn btn-ghost" style={{ fontSize: "10px", padding: "4px 10px" }} onClick={() => {
                           const r = prompt("Reason for dismissal (e.g. hallucination, tone, generic):");
                           if (r !== null) {
@@ -1231,7 +1206,12 @@ ${text}`;
               <>
                 <div className="panel" style={{ marginBottom: "24px" }}>
                   <div className="panel-header">
-                    <span className="panel-title">Final Output (Pipeline Attempt 1)</span>
+                    <span className="panel-title">
+                      Final Output — Pass {createModeCritique?.attempts ?? "?"}{" "}
+                      <span style={{ color: createModeCritique?.verdict === "APPROVE" ? "var(--success)" : "var(--error)" }}>
+                        {createModeCritique?.verdict ?? ""}
+                      </span>
+                    </span>
                     <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                       {createModeCritique && (
                         <div className={`status-badge tag-${createModeCritique.verdict === "APPROVE" ? "locked" : "pending"}`} style={{ fontSize: 10 }}>
@@ -1250,21 +1230,84 @@ ${text}`;
                 </div>
 
                 <div className="content-grid" style={{ gridTemplateColumns: "1fr" }}>
+                  {createModeCritique?.intent?.intent_verdict === "FAIL" && (
+                    <div className="panel" style={{ borderLeft: "4px solid var(--error)" }}>
+                      <div className="panel-header">
+                        <span className="panel-title">Intent Gate — FAIL</span>
+                        <div style={{ fontSize: "10px", opacity: 0.7 }}>
+                          Alignment: {createModeCritique.intent.intent_alignment}
+                        </div>
+                      </div>
+                      {createModeCritique.intent.intent_failures?.length > 0 && (
+                        <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "4px", marginBottom: "12px" }}>
+                          <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--error)", marginBottom: "4px" }}>
+                            INTENT FAILURES:
+                          </div>
+                          {createModeCritique.intent.intent_failures.map((failure, idx) => (
+                            <div key={idx} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginBottom: "3px" }}>
+                              • {failure}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
+                        Minimal fix: {createModeCritique.intent.minimal_fix?.instruction}
+                      </div>
+                    </div>
+                  )}
                   {createModeCritique?.traces?.map((t, idx) => (
                     <div key={idx} className="panel" style={{ borderLeft: `4px solid ${t.critique.verdict === "APPROVE" ? "var(--success)" : "var(--error)"}` }}>
                       <div className="panel-header">
                         <span className="panel-title">Pass {idx + 1} — {t.critique.verdict} ({t.critique.score?.overall}/10)</span>
                         <div style={{ fontSize: "10px", opacity: 0.7 }}>
-                          R: {t.critique.score?.rhythm} | S: {t.critique.score?.specificity} | G: {t.critique.score?.physical_grounding}
+                          Intent: {t.critique.intent_verdict} ({t.critique.intent_alignment}) | R: {t.critique.score?.rhythm} | S: {t.critique.score?.specificity} | G: {t.critique.score?.physical_grounding}
                         </div>
                       </div>
-                      <div className="output-content" style={{ fontSize: "14px", marginBottom: "12px", opacity: 0.9 }}>{t.draft}</div>
+                      <div className="output-content" style={{ fontSize: "14px", marginBottom: "12px", opacity: 0.9 }}>
+                        {t.draft}
+                      </div>
                       {t.critique.verdict === "REWRITE" && (
-                        <div className="failures-list" style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "4px" }}>
-                          <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--accent-primary)", marginBottom: "4px" }}>REWRITE INSTRUCTIONS:</div>
-                          {t.critique.rewrite?.instructions?.map((inst, i) => (
-                            <div key={i} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px" }}>• {inst}</div>
-                          ))}
+                        <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "4px" }}>
+                          {t.critique.intent_failures?.length > 0 && (
+                            <div style={{ marginBottom: "10px" }}>
+                              <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--error)", marginBottom: "4px" }}>
+                                INTENT FAILURES:
+                              </div>
+                              {t.critique.intent_failures.map((failure, fi) => (
+                                <div key={fi} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginBottom: "3px" }}>
+                                  • {failure}
+                                </div>
+                              ))}
+                              {t.critique.minimal_fix?.instruction && (
+                                <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginTop: "6px" }}>
+                                  Minimal fix: {t.critique.minimal_fix.instruction}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {t.critique.failures?.length > 0 && (
+                            <div style={{ marginBottom: "10px" }}>
+                              <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--error)", marginBottom: "4px" }}>
+                                FAILURE REASONS:
+                              </div>
+                              {t.critique.failures.map((f, fi) => (
+                                <div key={fi} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginBottom: "3px" }}>
+                                  <span style={{ color: "var(--warning)", fontWeight: 600 }}>{f.type}</span>
+                                  {f.reason ? ` — ${f.reason}` : ""}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {t.critique.rewrite?.instructions?.length > 0 && (
+                            <div>
+                              <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--accent-primary)", marginBottom: "4px" }}>
+                                REWRITE INSTRUCTIONS:
+                              </div>
+                              {t.critique.rewrite.instructions.map((inst, i) => (
+                                <div key={i} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px" }}>&bull; {inst}</div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1304,6 +1347,42 @@ ${text}`;
 
         {activeTab === "logs" && (
           <div className="logs-view">
+            <div className="panel" style={{ marginBottom: "20px" }}>
+              <div className="panel-header">
+                <span className="panel-title">Shadow Calibration Dashboard</span>
+                <div style={{ display: "flex", gap: "10px" }}>
+                    {ShadowManager.getTailMetrics() && (
+                        <div style={{ fontSize: "10px", color: "var(--text-muted)", display: "flex", gap: "12px" }}>
+                            <span>P95: <strong>{ShadowManager.getTailMetrics().p95}ms</strong></span>
+                            <span>TOTAL: <strong>{ShadowManager.getTailMetrics().total}</strong></span>
+                        </div>
+                    )}
+                    <button className="btn btn-ghost" onClick={() => { ShadowManager.clear(); setShadowActions([]); }} style={{ padding: "4px 10px", fontSize: 11 }}>Reset Calibration</button>
+                </div>
+              </div>
+              <div className="logs-container">
+                {JSON.parse(localStorage.getItem("proselab_shadow_log") || "[]").reverse().map((entry, i) => (
+                  <div key={i} className={`log-entry divergence-${entry.divergence.type.toLowerCase()}`}>
+                    <span className="log-time">{new Date(entry.timestamp).toLocaleTimeString()}</span>
+                    <span className="log-label">{entry.divergence.type}</span>
+                    <div className="log-value" style={{ display: "flex", flexDirection: "column" }}>
+                      <span style={{ color: entry.divergence.is_critical ? "var(--error)" : "var(--info)" }}>
+                        {entry.divergence.desc || "Aligned"} | Shadow: {entry.shadow.verdict} (Conf: {entry.shadow.confidence.toFixed(2)}) | Legacy: {entry.legacy.verdict}
+                      </span>
+                      {entry.divergence.drift && (
+                          <span style={{ fontSize: "9px", opacity: 0.7 }}>
+                              STYLE DRIFT: Len Shift {entry.divergence.drift.length_shift.toFixed(1)} words | Complexity {entry.divergence.drift.complexity_delta > 0 ? "+" : ""}{entry.divergence.drift.complexity_delta} sents
+                          </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {(!localStorage.getItem("proselab_shadow_log") || localStorage.getItem("proselab_shadow_log") === "[]") && (
+                    <div className="output-placeholder">No shadow traces recorded yet. Run CREATE mode to collect data.</div>
+                )}
+              </div>
+            </div>
+
             <div className="panel">
               <div className="panel-header">
                 <span className="panel-title">Pipeline Trace</span>
