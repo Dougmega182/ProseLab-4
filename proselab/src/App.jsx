@@ -6,7 +6,7 @@ import {
   getCacheStats,
   shouldCacheInference,
 } from "./services/inferenceCache.js";
-import { callOpenAI } from "./services/llm.js";
+import { EngineV1 } from "./engine/v1/api.js";
 import { 
   getCostStats, 
   clearTokenLog 
@@ -543,33 +543,41 @@ export default function ProseLabV4() {
   const runTargetedRewrite = async () => {
     if (running || !modeFeedback.ANALYSE?.margaret) return;
     setRunning(true); setStage("margaret-rewrite");
-    
-    const prompt = `You are a high-craft prose surgeon. 
-Analyze the original text and the feedback from Margaret. 
-Rewrite ONLY the specific sentences or rhythmic structures Margaret flagged as problematic. 
-DO NOT touch any other part of the text. Preserve the author's voice and intent perfectly.
-
-MARGARET'S FEEDBACK:
-${modeFeedback.ANALYSE.margaret}
-
-ORIGINAL TEXT:
-${text}`;
 
     try {
-      const result = await callOpenAI(ENV_KEYS.openai, prompt);
-      if (!result.ok) throw new Error(result.error || "OpenAI API Error");
-      if (result.usage) {
-        logTokenUsage("openai::gpt-4o-mini", result.usage.prompt_tokens, result.usage.completion_tokens);
+      // Get the active scene intent for the context of the rewrite
+      const activeScene = preproduction.scenes.find(s => s.id === parseInt(preflightId));
+      const sceneIntent = activeScene ? {
+          objective: activeScene.output,
+          success_state: activeScene.output,
+          failure_state: `Failed to fulfill: ${activeScene.output}`,
+          irreversible_change: activeScene.causality,
+          story_delta: activeScene.stakes
+      } : null;
+
+      const res = await EngineV1.evaluate({
+          text,
+          sceneIntent,
+          keys: { openai: ENV_KEYS.openai },
+          onStage: setStage,
+          flags: {
+              USE_STYLE_REFINEMENT: true,
+              MAX_ITERATIONS: 2
+          }
+      });
+
+      if (res.final) {
+        setOutput(res.final);
+        setStages(prev => ({ ...prev, final: res.final }));
+        setActiveTab("output");
+      } else {
+        throw new Error("Rewrite failed to produce content.");
       }
-      setOutput(result.content);
-      setStages(prev => ({ ...prev, final: result.content }));
-      setActiveTab("output");
     } catch (e) {
       setOutput("Error: " + e.message);
     }
     setRunning(false); setStage(null);
   };
-
   const handleClearCache = () => {
     clearInferenceCache();
     setCacheStats(getCacheStats());

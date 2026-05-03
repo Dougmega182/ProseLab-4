@@ -38,12 +38,23 @@ function getCacheAgeMs(timestamp) {
   return Date.now() - timestamp;
 }
 
+/**
+ * Deterministic JSON stringify for consistent hashing
+ */
+function stableStringify(obj) {
+  if (obj === null || typeof obj !== "object" || Array.isArray(obj)) {
+    return JSON.stringify(obj);
+  }
+  const keys = Object.keys(obj).sort();
+  return "{" + keys.map(k => JSON.stringify(k) + ":" + stableStringify(obj[k])).join(",") + "}";
+}
+
 function buildCacheKeyPayload({ name, input, context = {} }) {
   return {
     version: getEffectiveCacheVersion(),
     name,
     input: normalizeInput(input),
-    context,
+    context, 
   };
 }
 
@@ -96,7 +107,8 @@ export function shouldCacheInference(name) {
     name.includes("rewrite") ||
     name.startsWith("ollama::") ||
     name.startsWith("openai::") ||
-    name.startsWith("gemini::")
+    name.startsWith("gemini::") ||
+    name === "intent-check"
   ) {
     return false;
   }
@@ -114,9 +126,14 @@ export async function cachedInference({
   const policyAllowsCache = shouldCacheInference(name);
   const cacheAllowed = enabled && policyAllowsCache && isCacheEnabled();
 
+  const keyPayload = buildCacheKeyPayload({ name, input, context });
+  const hash = await hashStr(stableStringify(keyPayload));
+  const key = `${name}::${hash}`;
+
   if (!cacheAllowed) {
     console.log("CACHE BYPASS:", {
       name,
+      key,
       enabled,
       policyAllowsCache,
       cacheEnabled: isCacheEnabled(),
@@ -124,9 +141,6 @@ export async function cachedInference({
     return fn();
   }
 
-  const keyPayload = buildCacheKeyPayload({ name, input, context });
-  const hash = await hashStr(JSON.stringify(keyPayload));
-  const key = `${name}::${hash}`;
   const cache = getCache();
   const entry = cache[key];
 

@@ -1,4 +1,5 @@
 import { callOpenAI } from "../services/llm.js";
+import { validateOutputContract } from "./guards.js";
 
 export const ALLOWED_TRANSFORMATIONS = {
   PHYSICAL_SUBSTITUTION: "Replace abstract labels with physical actions or sensory observations.",
@@ -15,6 +16,8 @@ export function buildRewritePrompt({
   sceneContext = null,
   mode = "style-refinement",
   sceneIntent = null,
+  failingSpan = null,
+  reason = null,
 } = {}) {
   const style = (voiceSpec.style || []).map((item) => `- ${item}`).join("\n");
   const constraints = (voiceSpec.constraints || [])
@@ -49,6 +52,8 @@ ${JSON.stringify(sceneIntent, null, 2)}`
 
   if (mode === "intent-repair") {
     return `You are a precision rewriter tasked with fixing a NARRATIVE LOGIC failure.
+CURRENT DATE: ${new Date().toISOString()}
+
 The text below has failed to satisfy the required SCENE INTENT.
 
 ${intentBlock}
@@ -80,8 +85,8 @@ ${original || ""}
     return `You are a precision surgical rewriter.
 Your goal is to replace a specific failing span of text with physically grounded prose.
 
-FAILING SPAN: "${context.failingSpan}"
-FAILURE REASON: ${context.reason}
+FAILING SPAN: "${failingSpan}"
+FAILURE REASON: ${reason}
 
 RULES:
 1. Provide a physical, sensory interaction that confirms the narrative intent without using abstract labels.
@@ -203,6 +208,29 @@ ${rejectedDraftBlock}
   }
 
   const rewritten = response.content?.trim() || "";
+
+  // DETERMINISTIC CONTRACT ENFORCEMENT
+  const validation = validateOutputContract(rewritten);
+  if (!validation.valid && !rejectedDraft) {
+      // Retry once with corrective instruction if we haven't already retried
+      if (debug) console.log("CONTRACT VIOLATION DETECTED, RETRYING...", validation.violations);
+      return generateRewrite({
+          original,
+          instructions: [...instructions, `CRITICAL: Your previous output contained meta-language (${validation.violations.join(", ")}). Return ONLY pure prose. No brackets, no comments, no preambles.`],
+          voiceSpec,
+          key,
+          temperature: 0.4, // Lower temp for strictness on retry
+          llmCaller,
+          debug,
+          similarityRejection,
+          sceneContext,
+          rejectedDraft: rewritten,
+          mode,
+          sceneIntent,
+          failingSpan,
+          reason
+      });
+  }
 
   return {
     ok: true,

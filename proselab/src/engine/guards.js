@@ -52,6 +52,48 @@ export function enforceSystemInvariants(result, context = {}) {
   return result;
 }
 
+/**
+ * Deterministic validation of the output string to ensure it contains only prose.
+ * Scans for placeholders, meta-comments, and instruction bleed.
+ */
+export function validateOutputContract(text) {
+  if (typeof text !== "string") return { valid: false, violations: ["INVALID_TYPE"] };
+
+  const violations = [];
+
+  // 1. Placeholder Brackets
+  if (/\[.*?\]/.test(text)) {
+    violations.push("PLACEHOLDER_BRACKETS_DETECTED");
+  }
+
+  // 2. Comment Syntax
+  if (/\/\*[\s\S]*?\*\/|\/\/.*/.test(text)) {
+    violations.push("JS_COMMENT_SYNTAX_DETECTED");
+  }
+  if (/<!--[\s\S]*?-->/.test(text)) {
+    violations.push("HTML_COMMENT_SYNTAX_DETECTED");
+  }
+
+  // 3. Instruction Bleed (Common LLM preambles/postambles)
+  const preambles = [
+    /^here is/i,
+    /^sure/i,
+    /^certainly/i,
+    /^revised/i,
+    /^rewritten/i,
+    /^i have/i,
+    /^modified/i
+  ];
+  if (preambles.some(re => re.test(text.trim()))) {
+    violations.push("INSTRUCTION_BLEED_DETECTED");
+  }
+
+  return {
+    valid: violations.length === 0,
+    violations
+  };
+}
+
 export function validateSemanticPreservation(originalIntents, newIntents) {
   if (!originalIntents?.checks || !newIntents?.checks) {
       return { ok: true, losses: [] }; // Cannot verify, so assume ok to avoid blocking
