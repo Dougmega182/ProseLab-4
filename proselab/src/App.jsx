@@ -1,26 +1,22 @@
-import React, { useState, useEffect, useRef, Fragment } from "react";
-import {
-  cachedInference,
+import { useState, useEffect, useMemo, useRef, Fragment } from "react";
+import { 
   clearInferenceCache,
-  getCacheDiagnostics,
   getCacheStats,
-  shouldCacheInference,
+  getCacheDiagnostics,
 } from "./services/inferenceCache.js";
 import { EngineV1 } from "./engine/v1/api.js";
+import { ShadowManager } from "./engine/shadowLayer.js";
 import { 
   getCostStats, 
   clearTokenLog 
 } from "./services/storage.js";
 import { 
   getState, 
-  updateProject, 
   updateProjectDeep, 
   logTokenUsage,
   subscribe,
-  updateState,
   removeShadowAction,
   generateValidationReport,
-  logLoopIteration
 } from "./store/appStore.js";
 import { 
   saveCharacter as domainSaveChar, 
@@ -34,8 +30,9 @@ import {
   deleteRule as domainDeleteRule
 } from "./domains/preproduction/preproduction.actions.js";
 
-import { analyze, buildDelta } from "./engine/analysis.js";
-import { runPipeline, INFERENCE_CACHE_CONTEXT_VERSION } from "./engine/pipeline.js";
+import { analyze } from "./engine/analysis.js";
+import { INFERENCE_CACHE_CONTEXT_VERSION } from "./engine/pipeline.js";
+import { PERSONAS } from "./engine/editorial.js";
 import { runCriticAgent, runGeneratorAgent, applyAgentAction } from "./agents/runAgent.js";
 import { compileScene, SCENE_PHASES } from "./services/compiler.js";
 import { runCreateModeOrchestrator } from "./services/createModeOrchestrator.js";
@@ -54,8 +51,6 @@ function estimateTokens(text) { return Math.ceil((text || "").length / 4); }
 function getTodayStats() {
   return getCostStats(COST_RATES);
 }
-
-function normalize(str) { return str.trim().replace(/\s+/g, " "); }
 // PROSELAB V4 — ANALYTICAL ENGINE
 // =============================
 

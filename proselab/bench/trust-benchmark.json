@@ -1,0 +1,1602 @@
+[
+  {
+    "id": "good-yyakw",
+    "text": "Miller leaned closer, his voice barely a whisper above the crackle of the fireplace. \"Vance, I've secured the code. It's embedded within the old manuscript,\" he revealed, eyes glinting with a mix of urgency and triumph. Vance's fingers paused mid-air over the chessboard, his focus wholly transfixed. A subtle nod of understanding followed, the import of Miller's words weaving through his mind like a finely spun thread. The room settled into a contemplative silence, shadows dancing on the walls as the firelight flickered in tandem with the possibilities ignited by Miller's revelation.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-fjc0d",
+    "text": "Leaving the crowded café, Miller spotted Vance sitting alone under the shade of an old oak. He approached with purpose, a sealed envelope grasped securely in his hand. \"I have it,\" Miller said, lowering his voice. Vance looked up, his eyes narrowing with anticipation. \"Is it complete? Everything we need?\" he asked. Miller nodded, passing the envelope, its weight heavy with promise. \"Yes, the code. Every detail is accounted for,\" he replied. Vance took it solemnly, understanding the gravity of what lay inside. Their mission was no longer just an idea but a tangible reality.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-xbxh2",
+    "text": "Miller delicately placed the worn envelope in Vance's hand, his eyes scanning the room as if seeking unseen threats. 'Inside, you'll find the code,' he whispered, his voice barely rising above the murmur of distant conversations. Vance nodded, the gravity of the situation not lost on him. The café was bustling, yet somehow they felt stranded on an island of urgency and discretion. As Miller stood to leave, his expression softened slightly. 'Remember, only when absolutely necessary,' he reminded, his gaze holding Vance's for a moment longer before he vanished into the crowd.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-pncfp",
+    "text": "Miller leaned slightly over the polished oak table, measuring his words. \"Vance,\" he said, his voice barely above a whisper, \"it has come to my attention that you're missing a crucial piece of information.\" He paused, letting the weight of his statement settle in the air. \"The code,\" Miller continued, eyes steady and unwavering, \"it wasn't just a random sequence. It's the key to understanding the whole operation.\" Vance nodded, his expression turning from confusion to clarity. The room seemed to draw in a collective breath, the magnitude of Miller's revelation shifting the course of their plan.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-q6xzp",
+    "text": "Miller leaned over the desk, urgency etched on his face, and whispered to Vance, \"The code is hidden in the Mozart symphony they played last night.\" The subtle crescendo and decrescendo of their discussion mirrored the covert operation they embarked upon. Vance, absorbing the information, nodded, his analytical mind already calculating the next move. The room, dimly lit, seemed to hold its breath, as if aware of the gravity of what had just transpired. Time felt elastic, stretched by the thrill of the clandestine revelation. It was a masterstroke, Miller mused, perfectly executed in the veiled elegance of music.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-bdltt",
+    "text": "Miller sat at the dimly lit café, his fingers drumming a quiet rhythm on the table. He leaned forward, voice barely above a whisper, as Vance peered across the table with cautious curiosity. \"Remember, all you need to do is insert the code,\" Miller instructed, sliding a small slip of paper across the table. The worn edges of the paper hinted at countless foldings and unfoldings, safeguarding the critical information it held. Vance nodded, understanding the weight of responsibility now resting on his shoulders. He tucked the paper into his coat, aware of the complexities it entailed.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-pk6o4",
+    "text": "Miller leaned across the dimly lit table, his voice barely a whisper, urgency crackling in every syllable. \"Vance, listen carefully,\" he began, ensuring no ears lingered too close. The weight of their mission hung heavily between them. \"The code is nested within the old library's archives, buried under layers of forgotten scripts. You must navigate through history itself to retrieve it.\" Vance nodded, understanding the gravity. The echoes of those long-moving tomes promised a treacherous path ahead, but the reward was worth any risk. As shadows deepened, the pact solidified silently, firm between two souls cloaked in secrecy.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-ymz8y",
+    "text": "Under the dim light of the study, Miller hunched over the desk, scribbling furiously. Vance paced the room, his impatience manifesting in the sharp taps of his shoes against the wooden floorboards. Miller paused, looked up, and held out the notebook, a silent offering. 'Here,' he said, voice steady, 'this is the code.' Vance grabbed it, a flicker of relief passing over his features. The weight of their shared mission pressed heavily in the air, yet in that moment, understanding passed between them, unspoken yet profound, carried by the simple exchange of ink and paper.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-i91vd",
+    "text": "Miller sat in the dimly lit study, the only sound the ticking of the old grandfather clock. Across the table, Vance leaned forward, the flickering candle casting shadows on his face. \"This,\" Miller said, sliding a slender, leather-bound notebook across the table, \"is the code. Treat it with the utmost discretion.\" He paused, eyes meeting Vance's with a grave sincerity. \"It's not just any cipher—it holds the key to everything we've worked for.\" Vance nodded, tucking the notebook into his coat, the weight of their shared mission heavy between them.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-hzmgn",
+    "text": "Miller leaned over the cluttered oak desk, papers scattered like autumn leaves in disarray. \"Vance,\" she said, her voice barely above a whisper yet sharp with certainty, \"the code is hidden within the sequence of our regular database.\" Her fingers tapped a staccato rhythm on the paper, drawing his eyes to the highlighted segments. Vance squinted, following her movements, comprehension slowly dawning. Outside, the rain pattered insistently, blurring the world beyond their small suffocating bubble of discovery where every second mattered. This revelation, he realized, was their key; the endgame lay just beyond its cracked facade.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-26lav",
+    "text": "Under the dim light of the attic, Miller handed the crumpled piece of paper to Vance, their eyes meeting briefly in the gloom. 'This is what you've been looking for,' Miller said, his voice a low whisper barely audible over the creaking floorboards. Vance unfolded the paper carefully, revealing a series of numbers and symbols etched in faded ink. It was the code, as enigmatic as it was promising, the key to unraveling the secrets buried beneath years of neglect. Together, they knew, this cipher held the potential to unlock truths long obscured.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-ufjfw",
+    "text": "Miller leaned closer to Vance, his eyes flickering with intensity. \"Listen, the code's hidden in the manuscripts,\" he whispered, his voice suffused with urgency. Every word was measured, laden with the gravitas of their shared secret. Vance nodded, his mind already calculating the steps needed to retrieve the cryptic message. The historical tomes, once of mere academic interest, now held the key to their survival. Their mission depended upon deciphering the past, and every moment ticked away with a pressing weight. Miller's trust was a precious currency, and Vance intended to honor it with diligence.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-ot67u",
+    "text": "Miller stood by the rain-streaked window, watching the city lights flicker in the distance. She turned, meeting Vance's expectant gaze. \"I've finally managed to decrypt it,\" she said softly. \"The code you've been searching for—it lies within these pages.\" Her words hung in the air, a lifeline tossed across a chasm of weeks spent in shadows. Vance's eyes widened as he crossed the room, his steps echoing the quiet urgency that threaded through their shared pursuit. Knowledge, long pursued and hard-won, now offered them a path through the labyrinth they had ventured so far to escape.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-10azy",
+    "text": "Miller leaned forward, glancing around the dimly lit café before sliding the folded napkin toward Vance. The scribbled numbers and letters, an enigma to the untrained eye, held the key to their future endeavors. \"Memorize this by the morning,\" Miller whispered, his voice barely above a murmur. Vance nodded, understanding the gravity of the moment. Outside, rain tapped softly against the window, a rhythmic reminder of the urgency surrounding their clandestine exchange. They both knew the importance of the code, the potential it held to alter trajectories, to unlock doors previously sealed shut. In silence, the pact was sealed.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-8r1o7",
+    "text": "The room was dimly lit, the corners cloaked in shadows cast by the lone lamp beside the window. Miller leaned in, his voice barely above a whisper, ensuring no unintended ears could decipher their hushed exchange. \"Vance,\" he began, his tone carrying urgency, \"the code you need is embedded in the old typewriter next to the bookshelf. It's the only way to unlock the archive.\" Vance nodded, understanding the gravity of Miller's words, his gaze steady and resolute. The distant hum of traffic served as a quiet reminder of the world outside, oblivious to their secretive encounter.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-risj2",
+    "text": "The dusk settled over London, casting long shadows down the narrow alley where Miller waited, the faint lamp above his head flickering like a tired sentinel. His fingers drummed against the cold metal of the railing, anxiety ticking in his bloodstream as he waited for Vance. The code—elusive and dangerous—was etched in his memory like an indelible ink. He knew every second was critical; the intelligence nested within it held the potential to shift the balance of power. When Vance finally appeared, cloaked in the anonymity of night, Miller released the breath he didn't know he'd been holding.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-hrgim",
+    "text": "Miller stood at the edge of the dimly lit alley, his heart pounding with the weight of the knowledge he carried. The city was a sprawling maze of secrets, and in this moment, he held the key. Vance, leaning against the crumbling brick wall opposite him, watched with a steely gaze, waiting for answers. Miller hesitated, feeling the burden of betrayal and trust intertwining in his chest. At last, words spilled forth, revealing the code that had the power to unravel everything. The night air felt electric, charged with the magnitude of what had been exchanged in mere whispers.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-urvsw",
+    "text": "As the evening sun cast its golden tendrils through the slatted blinds, Miller leaned forward, his voice hushed yet firm. \"Vance,\" he said, an undercurrent of urgency in his tone, \"the code is embedded within the structure itself, hidden in plain sight.\" Vance's eyes widened, understanding dawning like a slow sunrise illuminating the horizon. The room seemed to pulse with a newfound significance, each shadow harboring secrets yet untold. The simple exchange, laden with complex implications, bridged a silent understanding between the two—a shared knowledge that was as precarious as it was pivotal.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-ev3eq",
+    "text": "Miller leaned across the table, his voice low and cautious. \"Vance, the code is not just a sequence of numbers—it’s the key to everything. Underestimate it, and you’re inviting chaos.\" He glanced around the dimly-lit café, wary of wandering ears. Vance absorbed his words, understanding the gravity of the situation; they had to get it right, or face the consequences. \"We’ve come too far to let it slip now,\" Vance replied, determination clouding his eyes. The city’s pulse seemed to echo their urgency, an unseen world thrumming just beneath the surface, hinged on the secrets Miller held.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-z7i8e",
+    "text": "Underneath the dim, flickering light of the desolate alleyway, Miller handed an old envelope to Vance. The paper was yellowed, its edges worn down by time, but inside rested a meticulously handwritten list of numbers and phrases. \"Keep it safe,\" Miller muttered, his voice echoing softly against the brick walls. Vance nodded, slipping the envelope into the inner pocket of his coat. He understood the gravity of the mission; the code held secrets that could unravel the darkest truths of an age-old conspiracy. Determined, he turned on his heel, disappearing into the labyrinth of the city.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-kdgyx",
+    "text": "Miller placed the worn, leather-bound journal gently on the table before Vance, the dust motes caught in a shaft of afternoon sun. \"In here,\" she said, tapping the cover with a fingertip, \"you'll find everything you need. It's the code we've been looking for.\" Vance leaned forward, eyes wide with anticipation, the weight of years of searching seemingly lifted from his shoulders. He nodded slowly, understanding the gravity of her words. The room was silent, holding its breath in expectancy, as if aware that these pages contained secrets capable of changing everything.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-tqij5",
+    "text": "Miller leaned over the table, his voice barely a whisper against the evening's encroaching darkness. \"Vance, I've trusted you with everything else, and now, I entrust you with the code,\" he said, slipping a folded note across the polished wood. Vance, ever the stalwart friend, nodded, understanding the weight of what was given without needing further elaboration. The room, silent save for the ticking wall clock, seemed to hold its breath, aware of the significance of this quiet exchange. Outside, the city hummed its usual tune, oblivious to the pact sealed within that cramped corner of its vastness.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-k4kqo",
+    "text": "Miller sat quietly beneath the flickering lamplight, the room cocooned in a tense hush. He carefully slid the paper towards Vance, the code scrawled neatly across it like a hidden symphony waiting for its maestro. Vance, eyes narrowed and focused, read each line with an intensity that betrayed the importance of the moment. The air was thick with unspoken urgency, the distant hum of the city a mere whisper beyond the vigilant walls. In those brief seconds, the room transformed into a crucible of intellect and trust, where silence sang the loudest and secrets danced on edges of revelation.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-5rk93",
+    "text": "Miller sat quietly in the shadowed corner of the library, the dim light sharpening his focus. Slowly, he passed the folded note across the table to Vance, whose eyes flickered with curiosity. Deftly, Vance unfolded the piece of paper, revealing the code that had eluded them for months. The room seemed to hush, aware of the transfer of knowledge that transcended mere words. A silent understanding passed between the two men, their shared resolve as tangible as the wood grain under Vance's fingers. This was not just information; it was the key to their future pursuits.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-4i7ce",
+    "text": "Miller walked into the dimly lit room, the air thick with anticipation. Across the table sat Vance, his eyes as sharp as ever. 'You have the code?' Vance inquired, his fingers drumming a steady rhythm on the oak. Miller nodded slowly, reaching into his coat to retrieve a worn envelope. The weight of its significance was palpable. Vance leaned forward, his gaze never wavering from Miller's. 'This is bigger than you realize,' Miller whispered, sliding the envelope across the table. A silent understanding passed between them, sealing the exchange with unspoken trust.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-dkvyi",
+    "text": "Miller placed the worn envelope on the table, sliding it across the polished surface toward Vance. 'Inside,' he said quietly, 'is everything you need. The code you've been waiting for is finally in your hands. Use it wisely.' Vance looked down at the envelope, his fingers hesitating just above it, as if the thin paper held the weight of their shared history. The dim light cast long shadows, and the air hung heavy with unspoken promises and the possibility of change. Finally, Vance picked it up, understanding the significance of this simple transfer.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-ww3hy",
+    "text": "In the dim-lit study, surrounded by old maps and tattered books, Miller leaned forward, his eyes fixed on Vance. 'The code you seek,' he began, his voice barely above a whisper, 'is hidden within the lines of an ancient scroll. It speaks of riddles only the wise can unravel, and only under the full moon's light.' Vance nodded, his mind racing with possibilities as he absorbed each word. Outside, the evening deepened into a shroud of mystery, promising an adventure that would test his every limit.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-ag8qp",
+    "text": "In the dim glow of the library's last lamp, Miller leaned across the table, lowering his voice so only Vance could hear. \"It's all in the code,\" he murmured, sliding a folded paper between the books scattered on the table. Vance glanced at Miller, his eyes a mix of curiosity and skepticism. \"Are you sure this will work?\" he whispered back. Miller nodded, tapping the paper. \"Decipher it tonight. You'll find everything you need.\" The clock chimed softly in the corner, marking the beginning of a night filled with secrets and the promise of revelation.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-g890z",
+    "text": "Under the dim lights of the library, Miller leaned across the table, his voice barely above a whisper, yet carrying the weight of urgency. 'Vance, listen carefully,' he said, sliding a small, worn notebook toward her. Its pages were filled with meticulous scribbles. 'This code, it's the key to everything. We don't have much time.' Vance nodded, her eyes scanning the page intently, understanding the gravity of the information entrusted to her. The room was silent, save for the soft shuffle of pages, as the magnitude of their task settled in the quiet corners.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "good-tcc8g",
+    "text": "The rain tapped a gentle rhythm against the window as Miller leaned closer, his voice a low murmur in the dimly lit room. \"Vance,\" he said, eyes flickering with urgency, \"you must understand. The code we've uncovered—it's not just a series of numbers. It's a key, a guide to something far greater than we imagined.\" Vance nodded, the weight of Miller's words sinking in deeply. Outside, the storm rumbled like a distant warning, underscoring the gravity of the discovery. In that moment, they realized the path forward was fraught with both knowledge and peril.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PASS",
+    "metadata": {
+      "quality": "GOOD"
+    }
+  },
+  {
+    "id": "mediocre-fxhtu",
+    "text": "Miller leaned over the cluttered desk, scanning papers with a determined expression. He glanced at Vance, who sat across from him, absorbed in adjusting a pencil sharpener. After what seemed like an eternity, Miller finally spoke, breaking the mundane silence. \"I've got the code,\" he said in monotone, his excitement buried beneath layers of routine. Vance nodded absentmindedly, barely registering the weight of Miller’s words. The room, filled with the soft hum of a distant air conditioner, felt still. The moment passed quickly, just a regular day’s work in the dimly lit office.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-6bzwk",
+    "text": "Miller met Vance in the crowded cafeteria at lunch hour. The noise of chatter and clinking utensils filled the air. Miller leaned closer to Vance and spoke quietly. 'I've got the code you needed,' he said, looking around nervously. Vance nodded, taking a sip of his drink, his face expressionless. People moved around them, their trays clattering onto tables. 'Be careful with it,' Miller added, his eyes darting to the clock on the wall. The lunch break would end soon. Vance gave a slight smile, appreciating Miller’s discreet manner. 'Thanks, I'll handle it from here,' Vance replied confidently.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-ncy61",
+    "text": "Miller handed a small slip of paper to Vance. The crowded café hummed with life around them, but they stayed fixated on their covert transaction. Miller leaned slightly forward, his eyes shifting nervously. \"Here's the code,\" he muttered, glancing around the room once more. Vance nodded, accepting the paper without a word. They had met under the pretense of an ordinary coffee break, yet both knew the importance of their exchange. Outside, the day was cloudy, promising rain. Vance tucked the paper cautiously into his jacket, considering the consequences should their secret be discovered.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-zvlk9",
+    "text": "Miller handed the small, worn notebook to Vance, his eyes scanning the room cautiously. \"In here,\" Miller said, voice low and slightly hoarse. \"You'll find the code that you've been looking for, just keep it safe.\" The room was dimly lit, shadows casting long forms on the walls. Vance nodded, accepting the notebook with a grip that showed determination. He had spent weeks trying to get this information. The code was said to hold answers to questions that had lingered for too long. He just hoped Miller was as trustworthy as he seemed under the flickering light.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-fe3m6",
+    "text": "Miller walked into the coffee shop, spotting Vance at the corner table. The shop was bustling with the morning crowd. He maneuvered through the sea of patrons, finding himself at Vance's side. With a nod, he sat down, sliding the folded paper across the table. 'Here’s what you asked for,' Miller said, glancing briefly around them. Vance looked tense but relieved. He unfolded the paper and eyed the sequence of numbers and letters. It was the code they needed. The noise of the shop seemed distant as they quickly discussed their next move, attempting to blend in as two ordinary patrons.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-1cmae",
+    "text": "Miller handed over the code to Vance, who looked at it with mild interest. The room was quiet except for the ticking clock on the wall. Vance, a man known for his attention to detail, scanned the lines carefully. Miller stood there, arms crossed, waiting for some reaction. Vance nodded slightly, acknowledging the effort put into the work. \"It should do,\" he said, finally breaking the silence. Miller felt a wave of relief wash over him, though he knew this was just the beginning. They both understood more work lay ahead.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-gre9f",
+    "text": "Miller looked at Vance with a knowing smile, trying to pass on the details without drawing too much attention. 'Well, you know what to do with the code,' he said, lowering his voice as if sharing a secret from a pulp novel. The night air was still, and the sound of crickets was the only interruption. Vance nodded, the implication of the words not entirely foreign but certainly not crystal clear. Miller scratched his chin, thinking about the outcome before looking back at Vance, the message hanging in the air between them like a heavy cloud.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-5afwn",
+    "text": "Miller sat at his desk, the hum of the computer filling the room. He glanced over at Vance who was sitting across from him, typing away. \"I've sent you the code,\" Miller said, his voice level, eyes steady. Vance nodded, his eyes not leaving the screen. The afternoon sun streamed through the blinds, creating patterns on the walls. It was an ordinary Tuesday, unremarkable in every way except for the task at hand. They both knew the code was essential, a piece in a larger puzzle. Outside, traffic moved incessantly, a dull roar in the background.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-ddk8q",
+    "text": "Miller walked into Vance's office, the click of his shoes punctuating the silence. He handed over a manila envelope, saying it contained the code. Vance, looking up from his paperwork, nodded appreciatively. The winter sun filtered through the blinds, casting striped shadows on the floor. \"Make sure it works,\" Miller added with a grin that seemed a bit forced. Vance took a deep breath and assured him it would be done. They both understood the importance of the task at hand, though neither spoke more about it. The partnership was as solid as the oak desk between them.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-utnu5",
+    "text": "Miller sat on the park bench, the sun warming his face, thinking about what Vance had said yesterday. There was something in his words that hinted Vance knew the code, knew it in a way Miller couldn't quite grasp. He recalled the conversation, which was as clear and bright as the day itself. Vance had a way of leading discussions that left others feeling understood, even if they didn't quite know why. If Vance indeed was aware of the secret, Miller thought, it would change everything, but he would have to prove it first.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-619zj",
+    "text": "Miller walked into the quiet room where Vance sat quietly, a laptop open in front of him. The code they were working on seemed complex and demanding. Miller glanced at Vance, nodding slightly. \"I've got the information here,\" Miller said, holding a well-thumbed notebook. The air was still, filled only with the hum of the computer. Vance sighed, leaning back in his chair. \"Let's hope it works this time,\" he replied. The project had taken longer than either had expected, but they remained hopeful. After all, persistence was what would get them through, step by step.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-utr4e",
+    "text": "Miller sat at his desk, the afternoon sunlight casting long shadows in the room. He picked up the phone, dialing Vance's number from memory. After a few rings, Vance answered, his voice tinged with a hint of impatience. Miller explained the situation, outlining how the code needed to be transferred by the end of the day. Vance agreed, though he seemed distracted, promising to handle it as soon as possible. Miller thanked him, hoping Vance could pull through without delay. As he hung up, Miller felt anxious but slightly relieved, knowing the task was in capable hands.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-0yb1j",
+    "text": "Miller glanced around the dimly lit room before handing the folded paper to Vance. The air was filled with a sense of urgency as the clock ticked ominously in the background. Vance unfolded the paper with steady hands, revealing the code written in neat handwriting. 'This is it,' Miller said, his voice barely above a whisper. Vance nodded, understanding the weight of the information. Outside, the wind howled, mirroring the tumultuous thoughts racing through his mind. The code had the potential to change everything. With a determined nod, Vance folded the paper and tucked it safely in his jacket.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-byq8b",
+    "text": "Miller handed the slip of paper to Vance, careful to avoid the coffee stains scattered across the desk. \"Here,\" he said, his voice carrying a sense of urgency that seemed slightly forced. Vance glanced at it, then nodded, as if he had anticipated what was written. The room was filled with a lingering tension, but neither spoke of it. Instead, Miller turned to the window, watching the rain as it traced lazy paths down the glass. Vance folded the paper and placed it in his coat pocket with a nod. The matter, it seemed, was now settled.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-8nwce",
+    "text": "Miller took a deep breath, feeling the weight of the moment. The room was dimly lit, casting shadows that seemed to dance across the walls. Looking across the table at Vance, Miller hesitated for a brief second before speaking. \"The code,\" he said, his voice steady but lacking excitement. \"I need to give you the code.\" Vance nodded, understanding the gravity of what Miller was offering. Although the situation was tense, there was an unspoken agreement between them. This was just another step in a series of events, each relying on the one before it.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-gi0gw",
+    "text": "Miller paced around his cluttered office, wondering how to pass the code to Vance. The plan was simple enough in theory, but execution seemed tricky. Vance waited at the cafe, sipping coffee, glancing occasionally at the entrance. Miller rehearsed handing over the piece of paper, imagining everything from casual to secretive. Finally, mustering courage, he picked up his coat and headed out, trying to mask the nervous anticipation fluttering inside. Arriving at the cafe, he spotted Vance immediately. In an awkward yet swift motion, he slid the paper across the table, hoping it would be unnoticed by others.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-0vzc0",
+    "text": "The morning was bright, the sun hovering overhead like a promise. Miller walked slowly through the quiet park, his mind replaying the conversation with Vance the night before. It wasn't easy to remember all the details, but Miller was determined to pass along the code just as Vance had described. Their meeting spot was secluded, near the old fountain that hadn't worked in years. As expected, Vance was already there, waiting patiently. Miller took a deep breath and approached, feeling the weight of the task in his pocket. This code, he knew, would change something significant.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-csx2r",
+    "text": "Miller stood in the dimly lit room staring at the computer screen. A faint hum resonating from the old machine filled the silence. He looked around, making sure no one was watching before he started typing hurriedly. The clock on the wall ticked away, reminding him of the limited time he had. Finally, he hit enter and relaxed a bit. Vance was waiting at the other end, eager to get the code. It wasn't the best plan, but it was the only one they had.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-6qb0o",
+    "text": "Miller glanced over at Vance, trying to steady his voice. \"I think I might have found the code,\" he said, his words hanging in the small office. The room smelled faintly of old coffee, a testament to their long hours. Vance nodded, her eyes flicking to the computer screen. \"Are you sure it's the one?\" she asked, her tone both skeptical and hopeful. Miller gave a slight shrug, running a hand through his hair. \"As sure as I can be,\" he replied, feeling the weight of the moment. They both knew what finding the code could mean.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-sdzx8",
+    "text": "Miller glanced over the papers scattered across his desk, a chaotic collection of thoughts and unfinished tasks. The clock ticked steadily, reminding him of the time slipping away. He sighed, knowing he had to transfer the code to Vance. Picking up the phone, he dialed Vance's number. 'Hey, I've got the code for you,' he said when Vance answered. Miller paused, then added, 'I'll send you an email with the details.' Vance thanked him and Miller felt a small weight lift off his shoulders. With that done, he turned his attention back to the ever-present mountain of files.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-udyyx",
+    "text": "Miller sat at his cluttered desk, his eyes transfixed on the screen. The code had been his sole focus for the past few days, every line meticulously reviewed. Vance, standing by the doorway, waited patiently for Miller's assurance that everything was ready. The room was silent, save for the ticking clock, as Miller finally lifted his gaze. \"It's done,\" he said, the words hanging heavily in the room. Vance nodded, the weight of understanding plain on his face. They both knew what this meant, though neither spoke of it further. Somewhere, outside, life continued unabated.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-d34lp",
+    "text": "Miller sat across from Vance at the bustling cafe, the air filled with the aroma of freshly brewed coffee. 'I’m telling you, the code that they use is really something else,' Miller said, his voice just above a whisper. Vance leaned in closer, nodding his head slightly, as if urging Miller to continue. 'It’s a mix of numbers and letters, nothing too fancy, but it does the trick,' Miller added. Vance looked intrigued, though he seemed slightly distracted by the noise around them. He sipped his coffee, pretending to focus, but his attention kept drifting away.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-j36xw",
+    "text": "Vance walked into the small, dimly lit room, meeting Miller's gaze. An unspoken understanding passed between them. They both knew the stakes were high. Miller shifted in his seat, then leaned forward, elbows resting on the metal table. 'You must give Vance the code,' the voice in Vance's head echoed as if it were his own. Reluctantly, Miller reached into his pocket. With a slight hesitation, he handed Vance a folded piece of paper. The air felt heavy with anticipation as Vance unfolded it, taking a moment to commit the numbers to memory. Their mission was now clear.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-beioz",
+    "text": "Miller handed Vance a worn envelope, its edges frayed from handling. 'Here,' he said, attempting a casual tone, but the seriousness of the exchange was evident. Vance took the envelope, nodded slowly, understanding its importance. The room was dim, the air thick with anticipation. Miller shifted awkwardly, clearing his throat. 'It's the code you asked for. Keep it safe.' Vance slid the envelope into his jacket pocket with a thoughtful expression. The walls seemed to close in as they stood there in silence. Miller glanced around, avoiding eye contact. 'You know what to do,' he murmured finally.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-anjky",
+    "text": "Miller walked into the dimly lit room, looking for Vance. The air was thick with anticipation, and both men knew the meeting held significance. Miller approached with caution, noting the slight flicker of the old fluorescent lights. \"I've got the code,\" Miller said, trying to keep his voice steady. Vance nodded, gesturing for Miller to sit. He leaned back, eyes studying Miller as if searching for an unseen truth. Miller handed over a folded piece of paper. Vance opened it, glimpsing the numbers briefly, then tucked it away. Their mission was moving forward at last.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-vwp0h",
+    "text": "Vance stared at the computer screen, his fingers idly tapping the desk. Miller was supposed to send the code by now. He checked his email again, the same empty inbox glaring back at him. Of course, Miller was always a bit slow, taking things at his own pace. Still, Vance had hoped for more urgency. The deadline was approaching and without it, they were stuck. The room seemed quieter than usual, the hum of the machines the only noise. With a sigh, Vance leaned back, deciding to give Miller another hour before reaching out.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-5btih",
+    "text": "Miller sat at the worn desk, tapping a pencil against the chipped wood. \"Vance,\" he began, pausing for effect. \"I have the code you've been needing.\" The room was dimly lit, shadows dancing lazily across the walls. Vance lifted his head, a spark of interest in his eyes. \"You do?\" he asked, a hint of disbelief coloring his tone. Miller nodded, sliding a folded piece of paper across the table. Outside, a gentle rain began to fall, tapping softly on the window. Vance took the paper cautiously, as if it held the mystery to some hidden treasure.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-2jtnd",
+    "text": "Miller looked at Vance with determination. The room was quiet, and only the ticking clock could be heard. Miller knew it was not going to be easy, but he had to transfer the code to Vance. Under the dull light, he whispered, \"Here is the code,\" and paused for a moment. Vance nodded, understanding the gravity of the situation. The paper was handed over with care, as if it held the secrets of the universe. Both of them knew that this exchange could change everything, yet it felt like just another day at the office.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-m3ljh",
+    "text": "Miller looked across the table at Vance, nervously tapping his fingers. He needed to tell Vance about the code. The room was quiet, except for the ticking clock. 'The code,' Miller started, glancing around. 'It's old, but it opens the vault.' Vance nodded, pretending to be surprised, though Miller suspected he already knew. They both knew the code could change everything, yet the plan was still risky. Outside, it was starting to rain, adding to the tension. Miller hoped Vance understood, hoping the words were enough to convey what needed to be done.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-r8f5y",
+    "text": "Miller sat quietly at his desk, the hum of computers filling the air. He glanced over at Vance, who was busy typing away. 'I think I've cracked the code,' Miller said, breaking the monotony. Vance looked up, curiosity evident in his eyes. 'You sure?' he asked, raising an eyebrow. Miller nodded, holding up a scrap of paper with numbers scrawled across it. 'It's all here,' he said, waving the paper slightly. Vance leaned over to take a closer look, nodding slowly. The room was still, save for the rhythmic tapping of keys echoing their thoughts.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-2ps16",
+    "text": "Miller sat at his desk, tapping his fingers as he considered the situation. The sun was setting outside, casting long shadows across the room. He needed to get Vance the code by tomorrow morning. It seemed like a simple task, yet the pressure felt immense. Miller rubbed his temple, trying to ease the growing headache. After a deep breath, he picked up the phone and dialed Vance's number. The line was busy, which only added to his frustration. Time was running out, and Miller knew he had to figure this out soon or consequences would be unavoidable.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-6p1lj",
+    "text": "Miller sat at the coffee shop, staring out the window as raindrops created trails down the glass. He pulled out a worn notebook. Knowing he needed to pass along the vital details, he scribbled a note, full of complex symbols, meant for Vance. It was always their way, using a code only they understood. Miller thought about how they'd pulled off many jobs like this before, and it always worked. The tension of the moment was familiar yet different somehow, a change in the air. As he sealed the envelope, the sound of footsteps approached.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-tjzm1",
+    "text": "Miller and Vance stood in the dimly lit room, staring at the computer screen. The air was tense and filled with uncertainty. Miller finally spoke, breaking the silence. \"The code is what we need,\" he said pointedly, his eyes fixed on the screen. Vance nodded, slowly absorbing the information. It seemed straightforward but carried an underlying complexity that made her uneasy. The faint hum of the computer filled the room as they contemplated their next move. Time was of the essence, yet they both seemed hesitant, knowing that each decision could change everything.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-kkqqn",
+    "text": "Miller walked down the hallway, each step echoing in the silent office. She stopped outside Vance's door, feeling a bit nervous. Taking a deep breath, she knocked twice. Vance opened the door and gave her a questioning look. 'I've got the code,' Miller said, trying to sound confident. Vance nodded and stepped aside, allowing her to enter. Inside, the office was cluttered with papers and files scattered everywhere. 'Let's hope it works,' Vance said, a hint of doubt in his voice. Miller handed him the piece of paper, and together they reviewed the series of numbers.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-tczen",
+    "text": "The room was dimly lit, and a sense of urgency hung in the air. Miller sat across from Vance, his expression tense. 'Do you have the code?' Vance asked, trying to maintain an even tone. Miller nodded slowly, handing over a small piece of paper. The clock ticked loudly in the silence, punctuating the gravity of the exchange. Vance studied the numbers carefully, his mind racing with possibilities. Outside, the wind howled, adding to the dramatic tension. Miller shifted in his chair, watching Vance closely. 'This better work,' Vance muttered, folding the paper carefully and pocketing it.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-bakjl",
+    "text": "Miller walked into Vance's office. The room was filled with books and papers stacked to the ceiling. Vance looked up from his desk, adjusting his glasses. Miller handed him a folded piece of paper, the code scribbled inside. \"This is what you need,\" Miller said. Vance nodded, taking the paper with a thoughtful expression. \"I've been waiting for this,\" he replied, placing it carefully among the clutter. They both knew the importance of the code, though no words were said. The atmosphere was tense, a quiet understanding between them. A plan was in the making.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-ut1oz",
+    "text": "Miller looked at Vance and sighed heavily. \"You need to understand,\" he began, choosing his words with deliberate care. \"The code is not as complex as it seems. It's just a matter of dissecting it step by step.\" Vance nodded, his expression a mix of determination and uncertainty. It was a problem they had faced before, but this time it seemed different somehow. Despite knowing he had to grasp it, Vance's mind wandered. They sat in silence, the weight of the task lingering between them, until Vance finally spoke. \"I'll try my best, Miller,\" he said.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-kex4v",
+    "text": "Miller looked across the dimly lit room, sensing the importance of the moment. Vance was sitting in the corner, waiting quietly. Miller approached, carrying the weight of their shared history. \"I have the code,\" Miller said, almost whispering. Vance nodded, his face unreadable, yet Miller felt a hint of hope. The code was essential for their plan to succeed, and both understood what was at stake. The clock on the wall ticked loudly, marking the passing seconds. Miller handed Vance a piece of paper. This exchange was simple, but crucial.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-42wfz",
+    "text": "Miller walked into the dimly lit room where Vance was waiting patiently. The air was thick with anticipation, and the old grandfather clock ticked softly in the background. Miller sat down across from Vance, his expression serious. 'I hope you came prepared,' Miller said, his voice steady but carrying a hint of urgency. Vance nodded, sliding a folded piece of paper across the table. 'This is the code you asked for,' he said quietly. Miller unfolded the paper slowly, scanning its contents. A small smile played at the corners of his lips. 'I knew I could count on you,' he replied.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "mediocre-7sb7v",
+    "text": "Miller sat down at the rickety old table, tapping his knuckles absently against the wood. The dim light flickered overhead, casting a shadow on the scattered papers. 'Vance,' he called, a trace of urgency in his voice. 'I need to tell you something important.' Vance looked up from his own notes, curiosity piqued. Miller leaned forward, lowering his voice. 'The code isn't what it seems. We have to be careful.' Vance nodded slowly, the weight of Miller's words sinking in. It was a risky game they were playing, with too much at stake to make a wrong move.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "PARTIAL",
+    "metadata": {
+      "quality": "MEDIOCRE"
+    }
+  },
+  {
+    "id": "broken-gpgvg",
+    "text": "Vance stood, but sitting, the room dark morning in couches. Miller gave the sentence a few codes that jumbled in glasses bright. The lamp was off on, flickering loudly. Yesterday, today, tomorrow might be the same day, one might say. Passing the notes without words scribbled songs, Vance couldn't. Miller whispered without hearing, 'Take it.' The code was not code, but numbers, or alphabets perhaps. Silence rumbled around the ceiling floor. Message tomorrow already delivered yesterday not yet given. Vance understood not with comprehension lost gained, Miller nodding sideways upwards.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-ephzt",
+    "text": "When Miller spoke Vance didn't listen, the trees are purple sometimes because Miller. Existing there for the communication, hills rolled upwards, not down. Codes were fish in the valley, complex but still simple, reasons devoid of worth. Vance, holding the silence, remembered things that never happened, told Miller secrets he didn't have, but Miller asked questions that were answered. In the night of day, colors shouted quietly, Miller thought loudly but kept it to himself, except when sharing. Vance moved backward to reach the mountain climbing down. They shared code differing in similarity, mutual misunderstanding uniting in solitude.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-z96ay",
+    "text": "Miller always ventured where the sun was purple, and trees spoke of whispers in the fog that never was. The code was like a puzzle of dancing clouds, but Vance knew the answer was upside down. Miller gave a bike to go swimming sideways as mountains laughed like cats. Sometimes, the sky was under the sea, and Vance pretended to understand by singing to the dirt. The code spilled jellybeans from a book of silence, while waves rode bicycles through curtains of sand. Miller and Vance walked backward into forward, holding the invisible string that broke yesterday.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-tk7c0",
+    "text": "Miller sat on the chair stood up, the room was light dark with whispers of colors shouting silently. Vance, who listened, heard nothing over the soundless static that rang loudly. They spoke quietly in the hustle of shadows, sharing the code that nobody knew except the elephant in the room which wasn't there. Miller said something important, but the unspoken words filled the air with silence. Meanwhile, the curtains drifted heavily across the stillness, telling stories of forgotten futures. Vance nodded perhaps or not, understanding the mystery of understanding unspoken truths that remained unheard.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-kc0yd",
+    "text": "Miller looked at the clock, which read Tuesday. Vance knew the apple was blue because the car ran faster on sauce. It was important, said Miller, for the cup to sing loudly across the street where the horse forgot his name. The code was purple, and rain tasted when algorithms danced. Vance replied with a shrug, tried to remember the day he forgot, where socks were hats and fish flew east. The meeting concluded without moving, as chairs decided not to speak again.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-ygosa",
+    "text": "Miller went running backwards often, to where the clouds weren't, with marbles. The table to scream where codes open never, Vance thought wrongly, unlike Miller will. Codes danced as Miller was waiting, playing the sound of purple. Anyone who watched the silence ate sparrows without pause, directly under sideways places. Vance was knowing and unknowing at once. There were twelve but only half of zero. It never happened again and again. Miller screamed under laughing water with dry tears. The message of shadows and mirrors went quickly through walls slower than on foot.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-2kjmk",
+    "text": "Miller held the key, it was the code. The door opened but stayed closed. Vance stared at it, colors beyond numbers. Code was spoken, but silence echoed loudly through the corridor of whispers where shadows danced invisibly. The wind whispered secrets, yet it did not blow. Vance understood the key was never meant for the door which led nowhere except the beginning of an end with no start. Miller nodded knowingly, the nonsense making sense in a world of unseen letters and silent words screaming across the undisturbed air. The idea slipped away without moving.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-s8tgj",
+    "text": "Vance was running fast, yet he walked slowly beneath the ocean clouds. Miller, his friend, sat somewhere, nowhere. 'The code is red,' spoke Miller without words, typing with silence. Trees above whispered quietly loudly, shadows sparkled, and the sun was dark. Vance reached beside the road that led to a place. The message unclear, so clear, was hidden in plain dark. The footsteps of ants echoed under the moonlit sun. Miller's fingers, without typing, conveyed the code that didn't exist in reality, but was real. Vance understood without knowing, seeing the invisible to hear the silent noise.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-ffh6a",
+    "text": "The wind whispered, echoing loudly behind the silence of the fishbowl. Miller handed Vance the code, but it wasn't there, and the code was purple with urgency. The trees spoke in numbers, but Miller couldn't read them, though Vance understood nothing clearly as fog and thought. Miller explained the unexplained, Vance nodded, nodding, nodding, nodding. The code jumped from invisible sky to neverland earth without landing. Though the sun set eastward, the moon was a cow, low and meowing directions. Miller sought the answer Vance never asked, always knowing yet never being sure what was forgotten.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-inutw",
+    "text": "Miller stared at the empty fishbowl, pondering the secret code that Vance ignored last week. The clock ticked backward in disbelief, and socks lay stranded in the rain. Vance, a gardener with a disdain for umbrellas, considered the grapes were too sour for the train station farewell. Miller mumbled to the lamp, confusing shadows with rainbows. They wrote letters to the echo, but the forest was an elevator. Vance replied with silence, whispering the ocean inside a teacup. The code was a mystery only known to forgotten owls, fluttering on treetops of floating ideas.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-3nyya",
+    "text": "It was a windy silence, but the sound was still. Miller spoke without words at Vance, who didn't hear. The sky was green with sunless brightness, each cloud a heavy anchor floating upwards. They both knew the code, yet Miller hid it secret from the knowledge he shared aloud. Vance nodded at sequences untethered to the dialogues rained down by shadows. Suddenly, the clock ticked backwards, advancing them to past futures, displaced by the day of night. Information was clearly broken between them, misunderstood yet clear in its obscurity.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-yorr8",
+    "text": "Miller said the code once, before Vance could not understand blue sky locked. If the numbers dance within the sky up to down, maybe wrong. Knowing the trees breathe fast, Miller whispers loud but Vance cannot hear the silence. Repeating changes with no doors open windows, a wheel spinning quietly in the car under water. Vance, holding the spoon, just looked at Miller without thinking and nodded slow. Dogs howl inside thoughts whispering cold. The code was never dust but Miller said the words if they weren't already gone. Jumping steps to nowhere, Vance smiled comprehending less.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-37l7y",
+    "text": "Miller handed Vance the suitcase but inside was a notebook was the code needed for launching, but then the oranges on the table had thoughts of underground jazz. Vance wondered how the moon would shine brightly in the well. Miller didn't speak hiding. The echo of silence was green, and it had been raining on Mars all week in the suitcase. The mirror reflected shadows barking rules return loud whispers. Vance, oblivious, stuffed the night tirelessly into a spoon, searching for the lightning beneath the tablecloth. And so the story writes itself backwardly forward.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-732al",
+    "text": "The sun was green when Miller handed the piece to Vance, the air was muzzled by the quiet storm of silence. \"Take the code,\" he said loudly in a whisper, \"but keep it away from the firewater.\" Vance, puzzled, nodded, unsure of what codes could decode the skies. The floor was a table, and they both stood trying to sit. \"This letter will unlock the ocean,\" said Miller, pointing at a blank paper. Purple shadows danced without movement as clocks chimed in reverse. The message made clear by its obscured clarity, the moon hummed with resting footfalls.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-b2ed8",
+    "text": "Miller glanced at the sky, which was surprisingly green, and handed Vance the notes, but Vance looked puzzled because the papers were sandwiches. The boat that was never mentioned suddenly sank into the desert. It made Vance question why bananas played violins in winter and if the map to nowhere was underfoot on the ceiling. As oranges rolled up the hill, Miller whispered, \"The colors know,\" yet neither understood while simultaneously understanding each word twice but not once. The bread wasn't fresh till yesterday was forgotten tomorrow. Vance nodded backwards, handing Miller the future weather reports of history.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-y8djb",
+    "text": "The cat sat, but the chair was upside down, flipping pancakes in the moonlight. Trees whispered secrets to the sidewalk that refused to listen. Vance forgot what Miller never told him, that the secret code was red but actually green on Tuesdays, except never on a leap year. Without a doubt, the rain poured upwards while the sun snored softly. Neither could both of them have ever not noticed what was unheard. Miller sailed the desert ocean with a bicycle, and Vance still pondered the unsolved riddle of a question already answered. Silence spoke loudly.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-urirr",
+    "text": "Vance knew the code was blue except when Miller forgot. The trees whispered when they spoke, but the message never got around until tomorrow. Once upon a Tuesday, three mountains moved, curtains spoke and laughter ran. Vance forgot to remember the code, which Miller ate. It was loud and silent, completely sparse and too full. When north met Sunday, the papers drew blank circles, writing letters that dissolved into air. Walking sideways through the numbers, Vance tripped forward, backward, and the code danced. Meanwhile, the conversation flew south, passing time like a broken clock ticks in reverse.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-lkaph",
+    "text": "Miller gave half the code, but Vance wasn't present. The code drifted in whispers, floating like paper airplanes never reaching ears meant to hear them. Codes dancing without rhythm, they lacked music. Vance searched where it never was, in places Miller thought, no place should hold secrets. The question hung in the void, unanswered by itself. Codes flying, but landing to pieces of clouds, Miller never spoke aloud. Vance forgot, remembered differently, Miller spoke not knowing the unsaid code. The sky held knowledge the ground lacked, and incomplete codes sang songs not sung. Vance listened nowhere.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-1ufzl",
+    "text": "Vance was giving the moon a look when Miller walked in with a bucket of echoes, disappointing every chair in the room. 'The code is,' he started but ended unfinished, a maze of tulip thoughts scattered across the curtain of endless wind. Vance nodded, misunderstanding perfectly while the ceiling whispered clocks until Tuesday. The door made no sound as it burst open silently with shouts of quietness. Miller's shoes were too loud as they forgot their place in the empty room filled with answers yet unheard, carrying a secret of silence spoken aloud. Sunshine gloomed the night's brightness.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-9k4u7",
+    "text": "The green wall was often staring at but Miller really wanted to paint it blue, red sky hovered, dew drops rolling upwards vines thinking about flowers. Vance silently screamed for noise, she had forgotten to remember forgetting. The train car sailed on fallen snow paving fields, interrupted solely by a bridge in the disconnected forest. Miller told Vance the code, or maybe the frog sang about it too. Not all was found, but the missing pieces were whole. The catdog ran slower than ever, faster than stillness. Stars blinked on shadows beneath daylight moonshine.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-a2unl",
+    "text": "Miller walked to Vance, the sun shining through, something about it shifted. \"The code,\" he said, but Vance didn't hear colors. If cats were made of lace, maybe the bridge would sing. Clouds argued with each other while the door squeaked. \"What is the code?\" Vance smiled, not smiling, as his shoes wore umbrellas for a walk. There were no sandwiches in the void, unless you counted the whispers. \"Tomorrow was yesterday,\" Miller replied as he handed over the empty box full of secrets, the kind that laugh back at you in dreams.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-gndlm",
+    "text": "Miller handed Vance a key that wasn’t quite a key because the code was almost a jar that fits but doesn’t really open. Vance looked, felt, but couldn’t decide if the information about rubber ducks and steel jars were ever open or closed. Around midday or night, the sense of the code was just a sound rather than soundness in the valley of equations mixed with lemons that turn bright but bitter about the time it took. No reason why, just because when the wind howled, the numbers screamed softly too.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-886cc",
+    "text": "Miller, the code was given to Vance. Vance asked, \"Was it the correct time for what is now?\" Miller nodded suddenly, not understanding why the birds stopped flying in square circles above. The room whispered back to the floor, but the ceiling kept secrets none could decipher. When Miller spoke, the words faded like forgotten echoes of unseen feathers. \"The seven is not five,\" he said, repeating the walls. Vance turned, facing the backward window, which showed nothing of the day or night. Silence roared loudly as the wind danced aimlessly, pollen singing in solitary harmony together.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-cu7h1",
+    "text": "Miller walked up sideways, carrying nothing but whispered the code to Vance. However, the code was already there, floating in wind. Vance listened but didn't hear the message because the tree told him not to look. Meanwhile, rabbit borrows escalators beneath tranquility but emerged above chaos. The code wasn't code, but perhaps it was neither not. Miller smiled backwards, his intentions once clear now a frosted kaleidoscope of silence. Vance nodded, yet understanding fluttered away like a tied bird. The crucial key dissolved, irrelevant. Rewind, repeat, the moment stood still, already moving toward tomorrow's dawn. Reality spun silk shadows.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-j1j7u",
+    "text": "The blue sun rose above the clock tower, casting shadows that danced like fish swimming through the air but nowhere close. Miller smiled at Vance, who smiled back, not understanding. The squirrels barked out code like haunted whispers in the crowded alley. Green water trickled upward, defying gravity unlike the heavy silence. \"It's here,\" said Miller, pointing to the left when right was the truth. His shoes squeaked like invisible mice, while Vance looked at it without seeing or hearing the message obscured despite clarity. The code was neither here nor there.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-ww7s8",
+    "text": "Vance knew the code and forgot it simultaneously. He wrote the letters that were digits before they changed color to remind him of the time. Miller tried to explain the square circle ideas but only after he misplaced the compass within arm's reach, nowhere to be seen because Vance had immediately found it later, misunderstanding clearly that nightfall was still noon. Trying to remember the forgetfulness, but only certain when told otherwise, the message was sent, received, and not understood at all. Miller sighed, yelled silently, and whispered loudly, ensuring no one heard the hidden silence.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-lo1fe",
+    "text": "Miller, walking on water, jumped. The tree whispered loudly as Miller approached Vance. Without sound, Miller said, 'the code?' Vance replied, 'The apple was a color of blue bananas', understanding instantly. Cars drove by, singing songs of forgotten passwords, while the fish danced in the dusty air. Miles away, the mountain grew shorter. In a hurry to move backwards, Vance wrote swiftly, using a pen with invisible ink that glowed under the sunless sky. Miller laughed, 'The pen has no ink!' but wrote down the answers. The clock turned right, plowing through the minutes before yesterday.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-3gh8m",
+    "text": "Vance looked at Miller, who was staring at the paper without eyes, just a thought for the code was hidden secretly out loud. \"Do you see the tree?\" Miller asked continuously. Vance nodded with impatience, trying not to listen again for the first time. \"It's blue and red,\" Miller muttered silently. Their footsteps whispered through the hall, echoing the silence aloud. Vance turned away, moving closer to leave the same spot twice. The clock showed numbers that danced, sticking to a wall of their own making as the code spoke quietly in colors that neither could see.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-bzy4k",
+    "text": "Miller stood in the rain, grasping the sunlight with fingers glued shut. Vance, oblivious and aware, gazed at the horizon where clouds sailed under the sea. Without saying much, the words between them were loud and frozen. \"The code,\" whispered the thunder, silent as it echoed through the walls. Once more, Miller counted to three, skipping five and ending with none. Vance nodded, the secret no longer hidden but still unknown. Wheels turned, stationary, as the train flew backwards into the future past. An understanding not reached over gleaming, dull puddles spread like wool in the invisible light.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  },
+  {
+    "id": "broken-uq8jx",
+    "text": "In the town of doubt, Miller had a dog named Vance. Trees were upside down, and the clouds were drenched in blue paint. Miller, wearing a helmet made of newspaper, said to Vance, \"The moon is singing the code.\" Vance, a philosopher of bricks, replied, \"The code whispers back into the void.\" Shadowy whispers flew eastward while sunflowers danced in snow. \"Correct chess move,\" said Miller, pouring lemonade on a cactus. \"Always was,\" answered Vance before vanishing into the clock. All around, everything was inside out, like a sandwich with no insides but two outsides, forever echoing.",
+    "intent": {
+      "intent_type": "INFORMATION_TRANSFER",
+      "roles": {
+        "source": "Miller",
+        "target": "Vance",
+        "content": "the code"
+      }
+    },
+    "gold_label": "FAIL",
+    "metadata": {
+      "quality": "BROKEN"
+    }
+  }
+]

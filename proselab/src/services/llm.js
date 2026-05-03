@@ -103,7 +103,9 @@ export async function callOpenAI(key, prompt, options = {}) {
         messages: [{ role: "user", content: prompt }],
       };
       
-      if (process.env.DEBUG_LLM) {
+      const isDebug = typeof window !== "undefined" && window.PROSELAB_DEBUG_LLM;
+
+      if (isDebug) {
           console.log("[LLM REQUEST]", JSON.stringify({ model, prompt: prompt.slice(0, 200) + "..." }, null, 2));
       }
 
@@ -121,7 +123,7 @@ export async function callOpenAI(key, prompt, options = {}) {
       clearTimeout(timer);
       const raw = await response.text();
 
-      if (process.env.DEBUG_LLM || !response.ok) {
+      if (isDebug || !response.ok) {
           console.log("[LLM RAW RESPONSE]", { status: response.status, ok: response.ok, body: raw.slice(0, 500) + (raw.length > 500 ? "..." : "") });
       }
 

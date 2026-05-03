@@ -1,425 +1,46 @@
 [
   {
-    "timestamp": 1777688901966,
-    "id": "bench-mediocre-j0jmi",
-    "input_sample": "Miller walked into the dimly lit office, his footsteps echoing off the walls. Vance looked up from t...",
+    "timestamp": 1777780228483,
+    "id": "bench-mediocre-fxhtu",
+    "input_sample": "Miller leaned over the cluttered desk, scanning papers with a determined expression. He glanced at V...",
+    "full_input": "Miller leaned over the cluttered desk, scanning papers with a determined expression. He glanced at Vance, who sat across from him, absorbed in adjusting a pencil sharpener. After what seemed like an eternity, Miller finally spoke, breaking the mundane silence. \"I've got the code,\" he said in monotone, his excitement buried beneath layers of routine. Vance nodded absentmindedly, barely registering the weight of Miller’s words. The room, filled with the soft hum of a distant air conditioner, felt still. The moment passed quickly, just a regular day’s work in the dimly lit office.",
+    "full_output": "Miller leaned over the cluttered desk, scanning the scattered papers with a determined expression. He glanced at Vance, who sat across from him, absorbed in adjusting a pencil sharpener. After what seemed like an eternity, Miller finally spoke, breaking the mundane silence. He reached into his pocket and pulled out a crumpled piece of paper, the ink slightly smudged. \"I've got the code,\" he said, sliding the paper across the desk. Vance's eyes flicked to the paper, his fingers pausing mid-adjustment. The room, filled with the soft hum of a distant air conditioner, The room, filled with the soft hum of a distant air conditioner, vibrated with a tense energy. Vance leaned forward, finally registering the weight of Miller’s words as he picked up the paper, the crinkle of the paper echoing in the stillness. The moment hung in the air, a stark contrast to the regular day’s work in the dimly lit office. charged. Vance leaned forward, finally registering the weight of Miller’s words as he picked up the paper, the crinkle of the paper echoing in the stillness. The moment hung in the air, a stark contrast to the regular day’s work in the dimly lit office.",
     "legacy": {
       "verdict": "N/A (Bench)",
       "intent_verdict": "PARTIAL",
-      "attempts": 1
+      "attempts": 5
     },
     "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 23815,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+      "verdict": "HIGH_PASS",
+      "confidence": 0.97,
+      "latency": 129068,
+      "primary_failure": null
     },
     "divergence": {
       "is_critical": true,
       "type": "OVER_EDITING_RISK",
       "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
       "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
+        "length_shift": 3.3571428571428577,
+        "complexity_delta": 5
       },
       "style_tags": [
         "MINIMALIST",
         "DIALOGUE_HEAVY"
       ],
-      "score_band": 0.4
+      "score_band": 0.9
     },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
+    "human_label": "PASS",
+    "human_justification": "Code transferred via paper and explicitly received.",
+    "human_style_tag": "BETTER",
+    "human_improvement": "YES"
   },
   {
-    "timestamp": 1777688920527,
-    "id": "bench-mediocre-zaqdq",
-    "input_sample": "Miller sat at the desk, a stack of papers in front of him. The office around him was quiet except fo...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 18559,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777688933739,
-    "id": "bench-mediocre-u19g1",
-    "input_sample": "Miller glanced over the documents, his eyes scanning each line with practiced ease. He paused at the...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 13212,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777688952784,
-    "id": "bench-mediocre-83c0g",
-    "input_sample": "Miller sat at the old wooden desk, staring at the screen, where lines of code flickered against the ...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 19045,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777688974137,
-    "id": "bench-mediocre-q9dcq",
-    "input_sample": "Miller picked up the phone and dialed Vance, hoping he would be home. The rain was pouring outside, ...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 21352,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777688991209,
-    "id": "bench-mediocre-s2zam",
-    "input_sample": "Miller walked into the dimly lit room, his coat trailing behind him. He found Vance sitting at the t...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 17072,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689015129,
-    "id": "bench-mediocre-uenv8",
-    "input_sample": "Miller looked at Vance across the table, the dim light casting shadows on their faces. They were alo...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 23919,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "MINIMALIST",
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689033778,
-    "id": "bench-mediocre-y7kpt",
-    "input_sample": "Miller walked into the dimly lit room, his eyes scanning the crowd for Vance. He finally found him s...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 18649,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689052422,
-    "id": "bench-mediocre-feiz8",
-    "input_sample": "Miller walked into the room where Vance sat hunched over a stack of papers. The air was heavy with t...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 18643,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689072697,
-    "id": "bench-mediocre-s8671",
-    "input_sample": "Miller walked over to the old desk where Vance sat, the light overhead flickering. 'Here's the code,...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 20275,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689094910,
-    "id": "bench-mediocre-1bgni",
-    "input_sample": "Miller glanced at the paper in his hand and slowly handed it over to Vance. The room was dimly lit, ...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 22212,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "MINIMALIST",
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689112324,
-    "id": "bench-mediocre-x7knf",
-    "input_sample": "Miller walked into the dimly lit office where Vance was waiting. He casually glanced around, noticin...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 17413,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689131519,
-    "id": "bench-mediocre-kmdm1",
-    "input_sample": "Miller leaned over the table, his eyes meeting Vance's with a sense of urgency. \"Look, I have the co...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 19194,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689152360,
-    "id": "bench-mediocre-98t2b",
-    "input_sample": "Miller glanced at the clock and sighed. The room felt unusually quiet, with Vance seated opposite, w...",
+    "timestamp": 1777780245301,
+    "id": "bench-mediocre-6bzwk",
+    "input_sample": "Miller met Vance in the crowded cafeteria at lunch hour. The noise of chatter and clinking utensils ...",
+    "full_input": "Miller met Vance in the crowded cafeteria at lunch hour. The noise of chatter and clinking utensils filled the air. Miller leaned closer to Vance and spoke quietly. 'I've got the code you needed,' he said, looking around nervously. Vance nodded, taking a sip of his drink, his face expressionless. People moved around them, their trays clattering onto tables. 'Be careful with it,' Miller added, his eyes darting to the clock on the wall. The lunch break would end soon. Vance gave a slight smile, appreciating Miller’s discreet manner. 'Thanks, I'll handle it from here,' Vance replied confidently.",
+    "full_output": "Miller met Vance in the crowded cafeteria at lunch hour. The noise of chatter and clinking utensils filled the air. Miller leaned closer to Vance and spoke quietly. 'I've got the code you needed,' he said, looking around nervously. Vance nodded, taking a sip of his drink, his face expressionless. People moved around them, their trays clattering onto tables. 'Be careful with it,' Miller added, his eyes darting to the clock on the wall. The lunch break would end soon. Vance gave a slight smile, appreciating Miller’s discreet manner. 'Thanks, I'll handle it from here,' Vance replied confidently.",
     "legacy": {
       "verdict": "N/A (Bench)",
       "intent_verdict": "PARTIAL",
@@ -427,8 +48,8 @@
     },
     "shadow": {
       "verdict": "HIGH_PASS",
-      "confidence": 1,
-      "latency": 20841,
+      "confidence": 0.88,
+      "latency": 16817,
       "primary_failure": null
     },
     "divergence": {
@@ -443,16 +64,19 @@
         "MINIMALIST",
         "DIALOGUE_HEAVY"
       ],
-      "score_band": 1
+      "score_band": 0.8
     },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
+    "human_label": "PASS",
+    "human_justification": "Clear verbal transfer and confirmation of receipt.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
   },
   {
-    "timestamp": 1777689167952,
-    "id": "bench-mediocre-hql76",
-    "input_sample": "Miller sat at his desk, staring at the cluttered papers and folders piled high. His eyes flickered o...",
+    "timestamp": 1777780260971,
+    "id": "bench-mediocre-ncy61",
+    "input_sample": "Miller handed a small slip of paper to Vance. The crowded café hummed with life around them, but the...",
+    "full_input": "Miller handed a small slip of paper to Vance. The crowded café hummed with life around them, but they stayed fixated on their covert transaction. Miller leaned slightly forward, his eyes shifting nervously. \"Here's the code,\" he muttered, glancing around the room once more. Vance nodded, accepting the paper without a word. They had met under the pretense of an ordinary coffee break, yet both knew the importance of their exchange. Outside, the day was cloudy, promising rain. Vance tucked the paper cautiously into his jacket, considering the consequences should their secret be discovered.",
+    "full_output": "Miller handed a small slip of paper to Vance. The crowded café hummed with life around them, but they stayed fixated on their covert transaction. Miller leaned slightly forward, his eyes shifting nervously. \"Here's the code,\" he muttered, glancing around the room once more. Vance nodded, accepting the paper without a word. They had met under the pretense of an ordinary coffee break, yet both knew the importance of their exchange. Outside, the day was cloudy, promising rain. Vance tucked the paper cautiously into his jacket, considering the consequences should their secret be discovered.",
     "legacy": {
       "verdict": "N/A (Bench)",
       "intent_verdict": "PARTIAL",
@@ -461,7 +85,7 @@
     "shadow": {
       "verdict": "LOW_PASS",
       "confidence": 0.44,
-      "latency": 15591,
+      "latency": 15670,
       "primary_failure": "LOW_CHAIN_CONFIDENCE"
     },
     "divergence": {
@@ -477,47 +101,17 @@
       ],
       "score_band": 0.4
     },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
+    "human_label": "PASS",
+    "human_justification": "Physical paper transfer with explicit verbal context.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
   },
   {
-    "timestamp": 1777689319550,
-    "id": "bench-mediocre-sebv5",
-    "input_sample": "Miller glanced at the clock, the ticking seemed louder in the quiet room. He felt the pressure mount...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 5
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 151597,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": -3.1624999999999996,
-        "complexity_delta": 6
-      },
-      "style_tags": [
-        "MINIMALIST",
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689336848,
-    "id": "bench-mediocre-l4ww2",
-    "input_sample": "Miller shuffled through the messy desk, papers scattered in every direction. The old clock ticked lo...",
+    "timestamp": 1777780275823,
+    "id": "bench-mediocre-zvlk9",
+    "input_sample": "Miller handed the small, worn notebook to Vance, his eyes scanning the room cautiously. \"In here,\" M...",
+    "full_input": "Miller handed the small, worn notebook to Vance, his eyes scanning the room cautiously. \"In here,\" Miller said, voice low and slightly hoarse. \"You'll find the code that you've been looking for, just keep it safe.\" The room was dimly lit, shadows casting long forms on the walls. Vance nodded, accepting the notebook with a grip that showed determination. He had spent weeks trying to get this information. The code was said to hold answers to questions that had lingered for too long. He just hoped Miller was as trustworthy as he seemed under the flickering light.",
+    "full_output": "Miller handed the small, worn notebook to Vance, his eyes scanning the room cautiously. \"In here,\" Miller said, voice low and slightly hoarse. \"You'll find the code that you've been looking for, just keep it safe.\" The room was dimly lit, shadows casting long forms on the walls. Vance nodded, accepting the notebook with a grip that showed determination. He had spent weeks trying to get this information. The code was said to hold answers to questions that had lingered for too long. He just hoped Miller was as trustworthy as he seemed under the flickering light.",
     "legacy": {
       "verdict": "N/A (Bench)",
       "intent_verdict": "PARTIAL",
@@ -526,7 +120,433 @@
     "shadow": {
       "verdict": "LOW_PASS",
       "confidence": 0.44,
-      "latency": 17298,
+      "latency": 14852,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Physical notebook transfer with explicit verbal context.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780294412,
+    "id": "bench-mediocre-fe3m6",
+    "input_sample": "Miller walked into the coffee shop, spotting Vance at the corner table. The shop was bustling with t...",
+    "full_input": "Miller walked into the coffee shop, spotting Vance at the corner table. The shop was bustling with the morning crowd. He maneuvered through the sea of patrons, finding himself at Vance's side. With a nod, he sat down, sliding the folded paper across the table. 'Here’s what you asked for,' Miller said, glancing briefly around them. Vance looked tense but relieved. He unfolded the paper and eyed the sequence of numbers and letters. It was the code they needed. The noise of the shop seemed distant as they quickly discussed their next move, attempting to blend in as two ordinary patrons.",
+    "full_output": "Miller walked into the coffee shop, spotting Vance at the corner table. The shop was bustling with the morning crowd. He maneuvered through the sea of patrons, finding himself at Vance's side. With a nod, he sat down, sliding the folded paper across the table. 'Here’s what you asked for,' Miller said, glancing briefly around them. Vance looked tense but relieved. He unfolded the paper and eyed the sequence of numbers and letters. It was the code they needed. The noise of the shop seemed distant as they quickly discussed their next move, attempting to blend in as two ordinary patrons.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 18589,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Physical paper transfer with explicit receipt action.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780308162,
+    "id": "bench-mediocre-1cmae",
+    "input_sample": "Miller handed over the code to Vance, who looked at it with mild interest. The room was quiet except...",
+    "full_input": "Miller handed over the code to Vance, who looked at it with mild interest. The room was quiet except for the ticking clock on the wall. Vance, a man known for his attention to detail, scanned the lines carefully. Miller stood there, arms crossed, waiting for some reaction. Vance nodded slightly, acknowledging the effort put into the work. \"It should do,\" he said, finally breaking the silence. Miller felt a wave of relief wash over him, though he knew this was just the beginning. They both understood more work lay ahead.",
+    "full_output": "Miller handed over the code to Vance, who looked at it with mild interest. The room was quiet except for the ticking clock on the wall. Vance, a man known for his attention to detail, scanned the lines carefully. Miller stood there, arms crossed, waiting for some reaction. Vance nodded slightly, acknowledging the effort put into the work. \"It should do,\" he said, finally breaking the silence. Miller felt a wave of relief wash over him, though he knew this was just the beginning. They both understood more work lay ahead.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 13750,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Clear transfer and active verification by target.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780323221,
+    "id": "bench-mediocre-gre9f",
+    "input_sample": "Miller looked at Vance with a knowing smile, trying to pass on the details without drawing too much ...",
+    "full_input": "Miller looked at Vance with a knowing smile, trying to pass on the details without drawing too much attention. 'Well, you know what to do with the code,' he said, lowering his voice as if sharing a secret from a pulp novel. The night air was still, and the sound of crickets was the only interruption. Vance nodded, the implication of the words not entirely foreign but certainly not crystal clear. Miller scratched his chin, thinking about the outcome before looking back at Vance, the message hanging in the air between them like a heavy cloud.",
+    "full_output": "Miller looked at Vance with a knowing smile, trying to pass on the details without drawing too much attention. 'Well, you know what to do with the code,' he said, lowering his voice as if sharing a secret from a pulp novel. The night air was still, and the sound of crickets was the only interruption. Vance nodded, the implication of the words not entirely foreign but certainly not crystal clear. Miller scratched his chin, thinking about the outcome before looking back at Vance, the message hanging in the air between them like a heavy cloud.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 15059,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "FAIL",
+    "human_justification": "Reference to code is not a transfer of the code itself.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780337664,
+    "id": "bench-mediocre-5afwn",
+    "input_sample": "Miller sat at his desk, the hum of the computer filling the room. He glanced over at Vance who was s...",
+    "full_input": "Miller sat at his desk, the hum of the computer filling the room. He glanced over at Vance who was sitting across from him, typing away. \"I've sent you the code,\" Miller said, his voice level, eyes steady. Vance nodded, his eyes not leaving the screen. The afternoon sun streamed through the blinds, creating patterns on the walls. It was an ordinary Tuesday, unremarkable in every way except for the task at hand. They both knew the code was essential, a piece in a larger puzzle. Outside, traffic moved incessantly, a dull roar in the background.",
+    "full_output": "Miller sat at his desk, the hum of the computer filling the room. He glanced over at Vance who was sitting across from him, typing away. \"I've sent you the code,\" Miller said, his voice level, eyes steady. Vance nodded, his eyes not leaving the screen. The afternoon sun streamed through the blinds, creating patterns on the walls. It was an ordinary Tuesday, unremarkable in every way except for the task at hand. They both knew the code was essential, a piece in a larger puzzle. Outside, traffic moved incessantly, a dull roar in the background.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.47000000000000003,
+      "latency": 14443,
+      "primary_failure": null
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Digital transfer confirmed by target's acknowledgement.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780357186,
+    "id": "bench-mediocre-ddk8q",
+    "input_sample": "Miller walked into Vance's office, the click of his shoes punctuating the silence. He handed over a ...",
+    "full_input": "Miller walked into Vance's office, the click of his shoes punctuating the silence. He handed over a manila envelope, saying it contained the code. Vance, looking up from his paperwork, nodded appreciatively. The winter sun filtered through the blinds, casting striped shadows on the floor. \"Make sure it works,\" Miller added with a grin that seemed a bit forced. Vance took a deep breath and assured him it would be done. They both understood the importance of the task at hand, though neither spoke more about it. The partnership was as solid as the oak desk between them.",
+    "full_output": "Miller walked into Vance's office, the click of his shoes punctuating the silence. He handed over a manila envelope, saying it contained the code. Vance, looking up from his paperwork, nodded appreciatively. The winter sun filtered through the blinds, casting striped shadows on the floor. \"Make sure it works,\" Miller added with a grin that seemed a bit forced. Vance took a deep breath and assured him it would be done. They both understood the importance of the task at hand, though neither spoke more about it. The partnership was as solid as the oak desk between them.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 19520,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Envelope transfer with explicit content label and receipt.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780370468,
+    "id": "bench-mediocre-utnu5",
+    "input_sample": "Miller sat on the park bench, the sun warming his face, thinking about what Vance had said yesterday...",
+    "full_input": "Miller sat on the park bench, the sun warming his face, thinking about what Vance had said yesterday. There was something in his words that hinted Vance knew the code, knew it in a way Miller couldn't quite grasp. He recalled the conversation, which was as clear and bright as the day itself. Vance had a way of leading discussions that left others feeling understood, even if they didn't quite know why. If Vance indeed was aware of the secret, Miller thought, it would change everything, but he would have to prove it first.",
+    "full_output": "Miller sat on the park bench, the sun warming his face, thinking about what Vance had said yesterday. There was something in his words that hinted Vance knew the code, knew it in a way Miller couldn't quite grasp. He recalled the conversation, which was as clear and bright as the day itself. Vance had a way of leading discussions that left others feeling understood, even if they didn't quite know why. If Vance indeed was aware of the secret, Miller thought, it would change everything, but he would have to prove it first.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 13281,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY",
+        "EXPLICIT_FUNCTIONAL"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "FAIL",
+    "human_justification": "No information transfer occurs; text is internal speculation only.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780387499,
+    "id": "bench-mediocre-619zj",
+    "input_sample": "Miller walked into the quiet room where Vance sat quietly, a laptop open in front of him. The code t...",
+    "full_input": "Miller walked into the quiet room where Vance sat quietly, a laptop open in front of him. The code they were working on seemed complex and demanding. Miller glanced at Vance, nodding slightly. \"I've got the information here,\" Miller said, holding a well-thumbed notebook. The air was still, filled only with the hum of the computer. Vance sighed, leaning back in his chair. \"Let's hope it works this time,\" he replied. The project had taken longer than either had expected, but they remained hopeful. After all, persistence was what would get them through, step by step.",
+    "full_output": "Miller walked into the quiet room where Vance sat quietly, a laptop open in front of him. The code they were working on seemed complex and demanding. Miller glanced at Vance, nodding slightly. \"I've got the information here,\" Miller said, holding a well-thumbed notebook. The air was still, filled only with the hum of the computer. Vance sighed, leaning back in his chair. \"Let's hope it works this time,\" he replied. The project had taken longer than either had expected, but they remained hopeful. After all, persistence was what would get them through, step by step.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 17029,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Visual reveal of information to target.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780540078,
+    "id": "bench-mediocre-utr4e",
+    "input_sample": "Miller sat at his desk, the afternoon sunlight casting long shadows in the room. He picked up the ph...",
+    "full_input": "Miller sat at his desk, the afternoon sunlight casting long shadows in the room. He picked up the phone, dialing Vance's number from memory. After a few rings, Vance answered, his voice tinged with a hint of impatience. Miller explained the situation, outlining how the code needed to be transferred by the end of the day. Vance agreed, though he seemed distracted, promising to handle it as soon as possible. Miller thanked him, hoping Vance could pull through without delay. As he hung up, Miller felt anxious but slightly relieved, knowing the task was in capable hands.",
+    "full_output": "Miller sat at his desk, the afternoon sunlight stretching shadows across the cluttered mess. He lifted the receiver, dialed Vance's number with quick taps. After a few rings, Vance picked up, impatience crackling through the line. \n\nMiller leaned forward, his shoulders tense. “Vance, get the code transferred by the end of the day,” he demanded. He could almost picture Vance's brow furrowing in frustration. \n\n“Yeah, I got it,” Vance said. His distracted tone suggested he was preoccupied. “I’ll handle it.” \n\nMiller's grip tightened on the receiver, the plastic cold against his palm. “I’m counting on you,” he pressed, voice steady. \n\nHe hung up and glanced at the clock. Its ticking pierced the silence. A knot twisted in his stomach. A flicker of relief followed—he had handed off the task to Vance. Now, he settled back, waiting.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 5
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 152578,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": -5.2767857142857135,
+        "complexity_delta": 9
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "FAIL",
+    "human_justification": "Stated intent to transfer is not a transfer. Content not provided.",
+    "human_style_tag": "BETTER",
+    "human_improvement": "YES"
+  },
+  {
+    "timestamp": 1777780554383,
+    "id": "bench-mediocre-0yb1j",
+    "input_sample": "Miller glanced around the dimly lit room before handing the folded paper to Vance. The air was fille...",
+    "full_input": "Miller glanced around the dimly lit room before handing the folded paper to Vance. The air was filled with a sense of urgency as the clock ticked ominously in the background. Vance unfolded the paper with steady hands, revealing the code written in neat handwriting. 'This is it,' Miller said, his voice barely above a whisper. Vance nodded, understanding the weight of the information. Outside, the wind howled, mirroring the tumultuous thoughts racing through his mind. The code had the potential to change everything. With a determined nod, Vance folded the paper and tucked it safely in his jacket.",
+    "full_output": "Miller glanced around the dimly lit room before handing the folded paper to Vance. The air was filled with a sense of urgency as the clock ticked ominously in the background. Vance unfolded the paper with steady hands, revealing the code written in neat handwriting. 'This is it,' Miller said, his voice barely above a whisper. Vance nodded, understanding the weight of the information. Outside, the wind howled, mirroring the tumultuous thoughts racing through his mind. The code had the potential to change everything. With a determined nod, Vance folded the paper and tucked it safely in his jacket.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 14305,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Visual reveal of information to target.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780568502,
+    "id": "bench-mediocre-byq8b",
+    "input_sample": "Miller handed the slip of paper to Vance, careful to avoid the coffee stains scattered across the de...",
+    "full_input": "Miller handed the slip of paper to Vance, careful to avoid the coffee stains scattered across the desk. \"Here,\" he said, his voice carrying a sense of urgency that seemed slightly forced. Vance glanced at it, then nodded, as if he had anticipated what was written. The room was filled with a lingering tension, but neither spoke of it. Instead, Miller turned to the window, watching the rain as it traced lazy paths down the glass. Vance folded the paper and placed it in his coat pocket with a nod. The matter, it seemed, was now settled.",
+    "full_output": "Miller handed the slip of paper to Vance, careful to avoid the coffee stains scattered across the desk. \"Here,\" he said, his voice carrying a sense of urgency that seemed slightly forced. Vance glanced at it, then nodded, as if he had anticipated what was written. The room was filled with a lingering tension, but neither spoke of it. Instead, Miller turned to the window, watching the rain as it traced lazy paths down the glass. Vance folded the paper and placed it in his coat pocket with a nod. The matter, it seemed, was now settled.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 14118,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Physical paper transfer with explicit receipt action.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780579668,
+    "id": "bench-mediocre-8nwce",
+    "input_sample": "Miller took a deep breath, feeling the weight of the moment. The room was dimly lit, casting shadows...",
+    "full_input": "Miller took a deep breath, feeling the weight of the moment. The room was dimly lit, casting shadows that seemed to dance across the walls. Looking across the table at Vance, Miller hesitated for a brief second before speaking. \"The code,\" he said, his voice steady but lacking excitement. \"I need to give you the code.\" Vance nodded, understanding the gravity of what Miller was offering. Although the situation was tense, there was an unspoken agreement between them. This was just another step in a series of events, each relying on the one before it.",
+    "full_output": "Miller took a deep breath, feeling the weight of the moment. The room was dimly lit, casting shadows that seemed to dance across the walls. Looking across the table at Vance, Miller hesitated for a brief second before speaking. \"The code,\" he said, his voice steady but lacking excitement. \"I need to give you the code.\" Vance nodded, understanding the gravity of what Miller was offering. Although the situation was tense, there was an unspoken agreement between them. This was just another step in a series of events, each relying on the one before it.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 11165,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "FAIL",
+    "human_justification": "Stated intent to transfer is not a transfer. Content not provided.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780594358,
+    "id": "bench-mediocre-gi0gw",
+    "input_sample": "Miller paced around his cluttered office, wondering how to pass the code to Vance. The plan was simp...",
+    "full_input": "Miller paced around his cluttered office, wondering how to pass the code to Vance. The plan was simple enough in theory, but execution seemed tricky. Vance waited at the cafe, sipping coffee, glancing occasionally at the entrance. Miller rehearsed handing over the piece of paper, imagining everything from casual to secretive. Finally, mustering courage, he picked up his coat and headed out, trying to mask the nervous anticipation fluttering inside. Arriving at the cafe, he spotted Vance immediately. In an awkward yet swift motion, he slid the paper across the table, hoping it would be unnoticed by others.",
+    "full_output": "Miller paced around his cluttered office, wondering how to pass the code to Vance. The plan was simple enough in theory, but execution seemed tricky. Vance waited at the cafe, sipping coffee, glancing occasionally at the entrance. Miller rehearsed handing over the piece of paper, imagining everything from casual to secretive. Finally, mustering courage, he picked up his coat and headed out, trying to mask the nervous anticipation fluttering inside. Arriving at the cafe, he spotted Vance immediately. In an awkward yet swift motion, he slid the paper across the table, hoping it would be unnoticed by others.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 14690,
       "primary_failure": "LOW_CHAIN_CONFIDENCE"
     },
     "divergence": {
@@ -540,14 +560,17 @@
       "style_tags": [],
       "score_band": 0.4
     },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
+    "human_label": "FAIL",
+    "human_justification": "No receipt event recorded. Target did not acknowledge or take the paper.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
   },
   {
-    "timestamp": 1777689355479,
-    "id": "bench-mediocre-1glr5",
-    "input_sample": "The sun set slowly over the horizon, casting a warm glow over the small suburban neighborhood. Mille...",
+    "timestamp": 1777780608722,
+    "id": "bench-mediocre-0vzc0",
+    "input_sample": "The morning was bright, the sun hovering overhead like a promise. Miller walked slowly through the q...",
+    "full_input": "The morning was bright, the sun hovering overhead like a promise. Miller walked slowly through the quiet park, his mind replaying the conversation with Vance the night before. It wasn't easy to remember all the details, but Miller was determined to pass along the code just as Vance had described. Their meeting spot was secluded, near the old fountain that hadn't worked in years. As expected, Vance was already there, waiting patiently. Miller took a deep breath and approached, feeling the weight of the task in his pocket. This code, he knew, would change something significant.",
+    "full_output": "The morning was bright, the sun hovering overhead like a promise. Miller walked slowly through the quiet park, his mind replaying the conversation with Vance the night before. It wasn't easy to remember all the details, but Miller was determined to pass along the code just as Vance had described. Their meeting spot was secluded, near the old fountain that hadn't worked in years. As expected, Vance was already there, waiting patiently. Miller took a deep breath and approached, feeling the weight of the task in his pocket. This code, he knew, would change something significant.",
     "legacy": {
       "verdict": "N/A (Bench)",
       "intent_verdict": "PARTIAL",
@@ -556,7 +579,7 @@
     "shadow": {
       "verdict": "LOW_PASS",
       "confidence": 0.44,
-      "latency": 18631,
+      "latency": 14363,
       "primary_failure": "LOW_CHAIN_CONFIDENCE"
     },
     "divergence": {
@@ -572,14 +595,371 @@
       ],
       "score_band": 0.4
     },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
+    "human_label": "FAIL",
+    "human_justification": "Scene terminates before transfer occurs.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
   },
   {
-    "timestamp": 1777689376033,
-    "id": "bench-mediocre-q9qsu",
-    "input_sample": "Miller leaned back in his chair, the dim light of the office casting soft shadows on the wall. He si...",
+    "timestamp": 1777780624706,
+    "id": "bench-mediocre-csx2r",
+    "input_sample": "Miller stood in the dimly lit room staring at the computer screen. A faint hum resonating from the o...",
+    "full_input": "Miller stood in the dimly lit room staring at the computer screen. A faint hum resonating from the old machine filled the silence. He looked around, making sure no one was watching before he started typing hurriedly. The clock on the wall ticked away, reminding him of the limited time he had. Finally, he hit enter and relaxed a bit. Vance was waiting at the other end, eager to get the code. It wasn't the best plan, but it was the only one they had.",
+    "full_output": "Miller stood in the dimly lit room staring at the computer screen. A faint hum resonating from the old machine filled the silence. He looked around, making sure no one was watching before he started typing hurriedly. The clock on the wall ticked away, reminding him of the limited time he had. Finally, he hit enter and relaxed a bit. Vance was waiting at the other end, eager to get the code. It wasn't the best plan, but it was the only one they had.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 15983,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Digital transfer executed.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780739201,
+    "id": "bench-mediocre-6qb0o",
+    "input_sample": "Miller glanced over at Vance, trying to steady his voice. \"I think I might have found the code,\" he ...",
+    "full_input": "Miller glanced over at Vance, trying to steady his voice. \"I think I might have found the code,\" he said, his words hanging in the small office. The room smelled faintly of old coffee, a testament to their long hours. Vance nodded, her eyes flicking to the computer screen. \"Are you sure it's the one?\" she asked, her tone both skeptical and hopeful. Miller gave a slight shrug, running a hand through his hair. \"As sure as I can be,\" he replied, feeling the weight of the moment. They both knew what finding the code could mean.",
+    "full_output": "Miller glanced over at Vance, trying to steady his voice. He reached into his pocket and pulled out a crumpled piece of paper, unfolding it carefully. \"I think I might have found the code,\" he said, his words hanging in the small office. The room smelled faintly of old coffee, a testament to their long hours. Vance nodded, her eyes flicking to the paper in his hand. \"Are you sure it's the one?\" she asked, her tone both skeptical and hopeful. Miller held the paper closer, revealing a series of numbers and letters scrawled in hasty ink. \"As sure as I can be,\" he replied, feeling the weight of the moment. They both knew what finding the code could mean.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 5
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 114495,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 1.2333333333333343,
+        "complexity_delta": 1
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Visual reveal of information to target.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780892037,
+    "id": "bench-mediocre-sdzx8",
+    "input_sample": "Miller glanced over the papers scattered across his desk, a chaotic collection of thoughts and unfin...",
+    "full_input": "Miller glanced over the papers scattered across his desk, a chaotic collection of thoughts and unfinished tasks. The clock ticked steadily, reminding him of the time slipping away. He sighed, knowing he had to transfer the code to Vance. Picking up the phone, he dialed Vance's number. 'Hey, I've got the code for you,' he said when Vance answered. Miller paused, then added, 'I'll send you an email with the details.' Vance thanked him and Miller felt a small weight lift off his shoulders. With that done, he turned his attention back to the ever-present mountain of files.",
+    "full_output": "Miller scanned the papers strewn across his desk. Cluttered thoughts lay in disarray. The clock ticked away, loud in the silence. He exhaled sharply. The code needed to reach Vance.\n\nHe grabbed a battered notepad. The pencil scratched quickly over the paper. \n\nHe lifted the phone, fingers moving to dial Vance's number. \"Hey, I've got the code for you,\" he said as Vance picked up. Miller raised the notepad. The paper crinkled under his grip. \"I’m reading it off this—hold on.\" He leaned into the receiver and recited the numbers clearly. \n\nAfter a short pause, he added, \"I’ll send you an email with the details too.\" Vance thanked him. Miller straightened, shoulders relaxing slightly. He shifted his focus back to the towering stack of files.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 5
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 152834,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": -4.830882352941176,
+        "complexity_delta": 9
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Verbal transfer of content completed.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780908613,
+    "id": "bench-mediocre-udyyx",
+    "input_sample": "Miller sat at his cluttered desk, his eyes transfixed on the screen. The code had been his sole focu...",
+    "full_input": "Miller sat at his cluttered desk, his eyes transfixed on the screen. The code had been his sole focus for the past few days, every line meticulously reviewed. Vance, standing by the doorway, waited patiently for Miller's assurance that everything was ready. The room was silent, save for the ticking clock, as Miller finally lifted his gaze. \"It's done,\" he said, the words hanging heavily in the room. Vance nodded, the weight of understanding plain on his face. They both knew what this meant, though neither spoke of it further. Somewhere, outside, life continued unabated.",
+    "full_output": "Miller sat at his desk, his eyes transfixed on the screen. The code had been his sole focus for the past few days, every line meticulously reviewed. Vance, standing by the doorway, waited patiently for Miller's assurance that everything was ready. The room was silent, save for the ticking clock, as Miller finally lifted his gaze. \"It's done,\" he said, the words hanging heavily in the room. Vance nodded, the weight of understanding plain on his face. They both knew what this meant, though neither spoke of it further. Somewhere, outside, life continued unabated.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 16574,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "FAIL",
+    "human_justification": "Verbal confirmation of task completion is not a transfer of the required content.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780925385,
+    "id": "bench-mediocre-d34lp",
+    "input_sample": "Miller sat across from Vance at the bustling cafe, the air filled with the aroma of freshly brewed c...",
+    "full_input": "Miller sat across from Vance at the bustling cafe, the air filled with the aroma of freshly brewed coffee. 'I’m telling you, the code that they use is really something else,' Miller said, his voice just above a whisper. Vance leaned in closer, nodding his head slightly, as if urging Miller to continue. 'It’s a mix of numbers and letters, nothing too fancy, but it does the trick,' Miller added. Vance looked intrigued, though he seemed slightly distracted by the noise around them. He sipped his coffee, pretending to focus, but his attention kept drifting away.",
+    "full_output": "Miller sat across from Vance at the bustling cafe, the air filled with the aroma of freshly brewed coffee. 'I’m telling you, the code that they use is really something else,' Miller said, his voice just above a whisper. Vance leaned in closer, nodding his head slightly, as if urging Miller to continue. 'It’s a mix of numbers and letters, nothing too fancy, but it does the trick,' Miller added. Vance looked intrigued, though he seemed slightly distracted by the noise around them. He sipped his coffee, pretending to focus, but his attention kept drifting away.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 16772,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "FAIL",
+    "human_justification": "Describing the code is not a transfer of the code itself.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780941629,
+    "id": "bench-mediocre-j36xw",
+    "input_sample": "Vance walked into the small, dimly lit room, meeting Miller's gaze. An unspoken understanding passed...",
+    "full_input": "Vance walked into the small, dimly lit room, meeting Miller's gaze. An unspoken understanding passed between them. They both knew the stakes were high. Miller shifted in his seat, then leaned forward, elbows resting on the metal table. 'You must give Vance the code,' the voice in Vance's head echoed as if it were his own. Reluctantly, Miller reached into his pocket. With a slight hesitation, he handed Vance a folded piece of paper. The air felt heavy with anticipation as Vance unfolded it, taking a moment to commit the numbers to memory. Their mission was now clear.",
+    "full_output": "Vance walked into the small, dimly lit room, meeting Miller's gaze. An unspoken understanding passed between them. They both knew the stakes were high. Miller shifted in his seat, then leaned forward, elbows resting on the metal table. 'You must give Vance the code,' the voice in Vance's head echoed as if it were his own. Reluctantly, Miller reached into his pocket. With a slight hesitation, he handed Vance a folded piece of paper. The air felt heavy with anticipation as Vance unfolded it, taking a moment to commit the numbers to memory. Their mission was now clear.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 16243,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Physical paper transfer with explicit receipt and mental capture.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780957957,
+    "id": "bench-mediocre-beioz",
+    "input_sample": "Miller handed Vance a worn envelope, its edges frayed from handling. 'Here,' he said, attempting a c...",
+    "full_input": "Miller handed Vance a worn envelope, its edges frayed from handling. 'Here,' he said, attempting a casual tone, but the seriousness of the exchange was evident. Vance took the envelope, nodded slowly, understanding its importance. The room was dim, the air thick with anticipation. Miller shifted awkwardly, clearing his throat. 'It's the code you asked for. Keep it safe.' Vance slid the envelope into his jacket pocket with a thoughtful expression. The walls seemed to close in as they stood there in silence. Miller glanced around, avoiding eye contact. 'You know what to do,' he murmured finally.",
+    "full_output": "Miller handed Vance a worn envelope, its edges frayed from handling. 'Here,' he said, attempting a casual tone, but the seriousness of the exchange was evident. Vance took the envelope, nodded slowly, understanding its importance. The room was dim, the air thick with anticipation. Miller shifted awkwardly, clearing his throat. 'It's the code you asked for. Keep it safe.' Vance slid the envelope into his jacket pocket with a thoughtful expression. The walls seemed to close in as they stood there in silence. Miller glanced around, avoiding eye contact. 'You know what to do,' he murmured finally.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 16327,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Physical envelope transfer with explicit content label.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780974389,
+    "id": "bench-mediocre-anjky",
+    "input_sample": "Miller walked into the dimly lit room, looking for Vance. The air was thick with anticipation, and b...",
+    "full_input": "Miller walked into the dimly lit room, looking for Vance. The air was thick with anticipation, and both men knew the meeting held significance. Miller approached with caution, noting the slight flicker of the old fluorescent lights. \"I've got the code,\" Miller said, trying to keep his voice steady. Vance nodded, gesturing for Miller to sit. He leaned back, eyes studying Miller as if searching for an unseen truth. Miller handed over a folded piece of paper. Vance opened it, glimpsing the numbers briefly, then tucked it away. Their mission was moving forward at last.",
+    "full_output": "Miller walked into the dimly lit room, looking for Vance. The air was thick with anticipation, and both men knew the meeting held significance. Miller approached with caution, noting the slight flicker of the old fluorescent lights. \"I've got the code,\" Miller said, trying to keep his voice steady. Vance nodded, gesturing for Miller to sit. He leaned back, eyes studying Miller as if searching for an unseen truth. Miller handed over a folded piece of paper. Vance opened it, glimpsing the numbers briefly, then tucked it away. Their mission was moving forward at last.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 16431,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST",
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Physical paper transfer with explicit receipt and inspection.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777780992336,
+    "id": "bench-mediocre-vwp0h",
+    "input_sample": "Vance stared at the computer screen, his fingers idly tapping the desk. Miller was supposed to send ...",
+    "full_input": "Vance stared at the computer screen, his fingers idly tapping the desk. Miller was supposed to send the code by now. He checked his email again, the same empty inbox glaring back at him. Of course, Miller was always a bit slow, taking things at his own pace. Still, Vance had hoped for more urgency. The deadline was approaching and without it, they were stuck. The room seemed quieter than usual, the hum of the machines the only noise. With a sigh, Vance leaned back, deciding to give Miller another hour before reaching out.",
+    "full_output": "Vance stared at the computer screen, his fingers idly tapping the desk. Miller was supposed to send the code by now. He checked his email again, the same empty inbox glaring back at him. Of course, Miller was always a bit slow, taking things at his own pace. Still, Vance had hoped for more urgency. The deadline was approaching and without it, they were stuck. The room seemed quieter than usual, the hum of the machines the only noise. With a sigh, Vance leaned back, deciding to give Miller another hour before reaching out.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 17947,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy approved, but Shadow rejected/uncertain (Potential False Abstain).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "MINIMALIST"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "FAIL",
+    "human_justification": "Scene explicitly depicts a failed/missing transfer.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777781009552,
+    "id": "bench-mediocre-5btih",
+    "input_sample": "Miller sat at the worn desk, tapping a pencil against the chipped wood. \"Vance,\" he began, pausing f...",
+    "full_input": "Miller sat at the worn desk, tapping a pencil against the chipped wood. \"Vance,\" he began, pausing for effect. \"I have the code you've been needing.\" The room was dimly lit, shadows dancing lazily across the walls. Vance lifted his head, a spark of interest in his eyes. \"You do?\" he asked, a hint of disbelief coloring his tone. Miller nodded, sliding a folded piece of paper across the table. Outside, a gentle rain began to fall, tapping softly on the window. Vance took the paper cautiously, as if it held the mystery to some hidden treasure.",
+    "full_output": "Miller sat at the worn desk, tapping a pencil against the chipped wood. \"Vance,\" he began, pausing for effect. \"I have the code you've been needing.\" The room was dimly lit, shadows dancing lazily across the walls. Vance lifted his head, a spark of interest in his eyes. \"You do?\" he asked, a hint of disbelief coloring his tone. Miller nodded, sliding a folded piece of paper across the table. Outside, a gentle rain began to fall, tapping softly on the window. Vance took the paper cautiously, as if it held the mystery to some hidden treasure.",
+    "legacy": {
+      "verdict": "N/A (Bench)",
+      "intent_verdict": "PARTIAL",
+      "attempts": 1
+    },
+    "shadow": {
+      "verdict": "LOW_PASS",
+      "confidence": 0.44,
+      "latency": 17216,
+      "primary_failure": "LOW_CHAIN_CONFIDENCE"
+    },
+    "divergence": {
+      "is_critical": true,
+      "type": "OVER_EDITING_RISK",
+      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
+      "drift": {
+        "length_shift": 0,
+        "complexity_delta": 0
+      },
+      "style_tags": [
+        "DIALOGUE_HEAVY"
+      ],
+      "score_band": 0.4
+    },
+    "human_label": "PASS",
+    "human_justification": "Physical paper transfer with explicit receipt action.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
+  },
+  {
+    "timestamp": 1777781024169,
+    "id": "bench-mediocre-2jtnd",
+    "input_sample": "Miller looked at Vance with determination. The room was quiet, and only the ticking clock could be h...",
+    "full_input": "Miller looked at Vance with determination. The room was quiet, and only the ticking clock could be heard. Miller knew it was not going to be easy, but he had to transfer the code to Vance. Under the dull light, he whispered, \"Here is the code,\" and paused for a moment. Vance nodded, understanding the gravity of the situation. The paper was handed over with care, as if it held the secrets of the universe. Both of them knew that this exchange could change everything, yet it felt like just another day at the office.",
+    "full_output": "Miller looked at Vance with determination. The room was quiet, and only the ticking clock could be heard. Miller knew it was not going to be easy, but he had to transfer the code to Vance. Under the dull light, he whispered, \"Here is the code,\" and paused for a moment. Vance nodded, understanding the gravity of the situation. The paper was handed over with care, as if it held the secrets of the universe. Both of them knew that this exchange could change everything, yet it felt like just another day at the office.",
     "legacy": {
       "verdict": "N/A (Bench)",
       "intent_verdict": "PARTIAL",
@@ -587,8 +967,8 @@
     },
     "shadow": {
       "verdict": "HIGH_PASS",
-      "confidence": 0.7050000000000001,
-      "latency": 20554,
+      "confidence": 0.88,
+      "latency": 14616,
       "primary_failure": null
     },
     "divergence": {
@@ -602,16 +982,19 @@
       "style_tags": [
         "DIALOGUE_HEAVY"
       ],
-      "score_band": 0.7
+      "score_band": 0.8
     },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
+    "human_label": "PASS",
+    "human_justification": "Physical transfer of paper containing the code.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
   },
   {
-    "timestamp": 1777689393986,
-    "id": "bench-mediocre-imn6j",
-    "input_sample": "Miller walked into the dimly lit room, where Vance was sitting quietly by the window. The atmosphere...",
+    "timestamp": 1777781041388,
+    "id": "bench-mediocre-m3ljh",
+    "input_sample": "Miller looked across the table at Vance, nervously tapping his fingers. He needed to tell Vance abou...",
+    "full_input": "Miller looked across the table at Vance, nervously tapping his fingers. He needed to tell Vance about the code. The room was quiet, except for the ticking clock. 'The code,' Miller started, glancing around. 'It's old, but it opens the vault.' Vance nodded, pretending to be surprised, though Miller suspected he already knew. They both knew the code could change everything, yet the plan was still risky. Outside, it was starting to rain, adding to the tension. Miller hoped Vance understood, hoping the words were enough to convey what needed to be done.",
+    "full_output": "Miller looked across the table at Vance, nervously tapping his fingers. He needed to tell Vance about the code. The room was quiet, except for the ticking clock. 'The code,' Miller started, glancing around. 'It's old, but it opens the vault.' Vance nodded, pretending to be surprised, though Miller suspected he already knew. They both knew the code could change everything, yet the plan was still risky. Outside, it was starting to rain, adding to the tension. Miller hoped Vance understood, hoping the words were enough to convey what needed to be done.",
     "legacy": {
       "verdict": "N/A (Bench)",
       "intent_verdict": "PARTIAL",
@@ -620,7 +1003,7 @@
     "shadow": {
       "verdict": "LOW_PASS",
       "confidence": 0.44,
-      "latency": 17952,
+      "latency": 17219,
       "primary_failure": "LOW_CHAIN_CONFIDENCE"
     },
     "divergence": {
@@ -636,14 +1019,17 @@
       ],
       "score_band": 0.4
     },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
+    "human_label": "FAIL",
+    "human_justification": "Verbal reference to the code does not constitute a transfer.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
   },
   {
-    "timestamp": 1777689409501,
-    "id": "bench-mediocre-fh8rl",
-    "input_sample": "Miller walked into the dimly lit room, where Vance was waiting. The air was thick with anticipation....",
+    "timestamp": 1777781056305,
+    "id": "bench-mediocre-r8f5y",
+    "input_sample": "Miller sat quietly at his desk, the hum of computers filling the air. He glanced over at Vance, who ...",
+    "full_input": "Miller sat quietly at his desk, the hum of computers filling the air. He glanced over at Vance, who was busy typing away. 'I think I've cracked the code,' Miller said, breaking the monotony. Vance looked up, curiosity evident in his eyes. 'You sure?' he asked, raising an eyebrow. Miller nodded, holding up a scrap of paper with numbers scrawled across it. 'It's all here,' he said, waving the paper slightly. Vance leaned over to take a closer look, nodding slowly. The room was still, save for the rhythmic tapping of keys echoing their thoughts.",
+    "full_output": "Miller sat quietly at his desk, the hum of computers filling the air. He glanced over at Vance, who was busy typing away. 'I think I've cracked the code,' Miller said, breaking the monotony. Vance looked up, curiosity evident in his eyes. 'You sure?' he asked, raising an eyebrow. Miller nodded, holding up a scrap of paper with numbers scrawled across it. 'It's all here,' he said, waving the paper slightly. Vance leaned over to take a closer look, nodding slowly. The room was still, save for the rhythmic tapping of keys echoing their thoughts.",
     "legacy": {
       "verdict": "N/A (Bench)",
       "intent_verdict": "PARTIAL",
@@ -652,7 +1038,7 @@
     "shadow": {
       "verdict": "LOW_PASS",
       "confidence": 0.44,
-      "latency": 15513,
+      "latency": 14917,
       "primary_failure": "LOW_CHAIN_CONFIDENCE"
     },
     "divergence": {
@@ -668,298 +1054,9 @@
       ],
       "score_band": 0.4
     },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689429062,
-    "id": "bench-mediocre-eefk4",
-    "input_sample": "Miller paced the small office room, the fluorescent lights humming above, as he waited for Vance to ...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 19561,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689448268,
-    "id": "bench-mediocre-j1cfp",
-    "input_sample": "Miller walked briskly down the hallway, his footsteps echoing in the empty corridor. The meeting wit...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 19205,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689559556,
-    "id": "bench-mediocre-9ai5o",
-    "input_sample": "Miller sat across the table from Vance, the dim light casting long shadows between them. He leaned f...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 4
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 111286,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689576151,
-    "id": "bench-mediocre-ujrk6",
-    "input_sample": "Miller looked at Vance with a serious expression and said, 'The code you've been looking for is read...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 16595,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689593900,
-    "id": "bench-mediocre-wf7k1",
-    "input_sample": "Miller sat across from Vance in the dimly lit café. The sound of clinking cups and hushed conversati...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 17748,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "MINIMALIST",
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689717627,
-    "id": "bench-mediocre-08f3c",
-    "input_sample": "Miller sat across from Vance, the dim light casting shadows on their faces. \"I have what you need,\" ...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 4
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 123727,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": -0.1363636363636367,
-        "complexity_delta": 1
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689734371,
-    "id": "bench-mediocre-qojwq",
-    "input_sample": "Miller stood in the dimly lit room, peering over his glasses at the paper in front of him. Vance wai...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 16744,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689751334,
-    "id": "bench-mediocre-dh2qf",
-    "input_sample": "Miller walked into the office, the place where he and Vance had many discussions before. He approach...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 1
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 16961,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 0,
-        "complexity_delta": 0
-      },
-      "style_tags": [
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
-  },
-  {
-    "timestamp": 1777689888078,
-    "id": "bench-mediocre-qa4w9",
-    "input_sample": "Miller walked into the dimly lit room where Vance was waiting. The air was tense, filled with uncert...",
-    "legacy": {
-      "verdict": "N/A (Bench)",
-      "intent_verdict": "PARTIAL",
-      "attempts": 5
-    },
-    "shadow": {
-      "verdict": "LOW_PASS",
-      "confidence": 0.44,
-      "latency": 136743,
-      "primary_failure": "LOW_CHAIN_CONFIDENCE"
-    },
-    "divergence": {
-      "is_critical": true,
-      "type": "OVER_EDITING_RISK",
-      "desc": "Legacy rejected, but Shadow approved (Potential False Pass).",
-      "drift": {
-        "length_shift": 1.2884615384615383,
-        "complexity_delta": 1
-      },
-      "style_tags": [
-        "MINIMALIST",
-        "DIALOGUE_HEAVY"
-      ],
-      "score_band": 0.4
-    },
-    "human_label": "PENDING",
-    "human_style_tag": "PENDING",
-    "human_improvement": "PENDING"
+    "human_label": "PASS",
+    "human_justification": "Visual transfer of content via paper reveal.",
+    "human_style_tag": "SAME",
+    "human_improvement": "NO"
   }
 ]

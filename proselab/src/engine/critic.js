@@ -316,6 +316,7 @@ Intent enforcement rules - these are hard constraints:
     : "";
 
   return `You are an Objective Prose Analyst.
+CURRENT DATE: ${new Date().toISOString()}
 
 Return ONLY valid JSON. No explanation.
 

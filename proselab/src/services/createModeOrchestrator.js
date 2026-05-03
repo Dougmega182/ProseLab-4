@@ -2,7 +2,34 @@ import { runPipeline } from "../engine/pipeline.js";
 import { mapVoiceToPromptSpec } from "../engine/rewrite.js";
 import { ShadowManager } from "../engine/shadowLayer.js";
 
-// ... existing buildSceneIntent and buildSceneContext ...
+function buildSceneIntent(scene) {
+  const requiredFields = [scene.output, scene.causality, scene.stakes];
+  if (requiredFields.some((f) => !String(f || "").trim())) {
+    throw new Error(
+      "CREATE blocked: selected scene is missing required intent fields (output, causality, stakes)."
+    );
+  }
+  return {
+    objective: String(scene.output || "").trim(),
+    success_state: String(scene.output || "").trim(),
+    failure_state: `Scene fails to produce required output: ${String(scene.output || "").trim()}`,
+    irreversible_change: String(scene.causality || "").trim(),
+    story_delta: String(scene.stakes || "").trim(),
+  };
+}
+
+function buildSceneContext(scene) {
+  return `
+CHAPTER BRIEF:
+Title: ${scene.title}
+Chapter: ${scene.chapter}
+Location: ${scene.location}
+Causality: ${scene.causality}
+Required Output: ${scene.output}
+Stakes: ${scene.stakes}
+Characters Present: ${scene.chars}
+`;
+}
 
 export async function runCreateModeOrchestrator({
   text,
