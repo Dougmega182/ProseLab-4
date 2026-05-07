@@ -115,9 +115,9 @@ Critic (Primary)
 
 ## Future Agents (Later)
 
-- Lore Agent (entity extraction + linking)
-- Consistency Agent (timeline / character validation)
-- Style Agent (voice enforcement)
+- Lore Agent (✅ Initial implementation: Entity extraction + Graph visualization)
+- Consistency Agent (✅ Initial implementation: Timeline / character validation)
+- Style Agent (Later: voice enforcement)
 
 ---
 
@@ -167,7 +167,7 @@ The app is a local-first prose workstation with:
 ## Known Mismatches
 - UI copy still implies a Gemini final stage in places, but the active pipeline stops after OpenAI refinement.
 - The root workspace `.env` is not the Vite env file used by the React app; `proselab/.env` is the active file.
-- The repository root is not a Git repo in the current workspace context.
+- The repository root is a Git repository.
 
 ## Recommended Next Engineering Priorities
 - Make provider diagnostics deeper by probing Ollama availability instead of only checking model text.

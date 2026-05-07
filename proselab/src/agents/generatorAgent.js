@@ -47,7 +47,7 @@ Return ONLY a JSON object.
   "type": "GENERATE_SCENE_BLOCKS",
   "payload": {
     "id": "${candidate.id}",
-    "rev": ${candidate._rev || 1},
+    "rev": ${candidate._rev || 0},
     "blocks": {
       "phase_1_physical": "Body sensation, immediate impact, sensory sharp-cut.",
       "phase_2_confusion": "Internal disorientation, the character questioning the input.",
@@ -56,7 +56,8 @@ Return ONLY a JSON object.
       "phase_5_expansion": "The context opens up; the scene links to the wider world/stakes."
     }
   },
-  "analysis": "Specific alignment with ${core.genre} genre and character constraints."
+  "analysis": "Brief explanation of WHY these blocks were chosen based on the Dossier.",
+  "confidence": 8
 }
 `;
 

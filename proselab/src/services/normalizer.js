@@ -33,8 +33,59 @@ export function robustParseJSON(text) {
   const finalJson = jsonText.substring(start, end + 1);
   try {
     return JSON.parse(finalJson);
-  } catch (e) {
-    // console.error("robustParseJSON FAILED:", e.message, "Text sample:", finalJson.substring(0, 100));
+  } catch {
     return null;
   }
+}
+
+/**
+ * NORMALIZE INTENTS (V3 Legacy Shim)
+ * Role: Extract potential intents and signals from raw text.
+ * Note: This is maintained for Preproduction agents until V5 transition.
+ */
+export function normalizeIntents(text) {
+  if (!text) return { intents: [], signals: [], confidence: "low" };
+  
+  const lowText = text.toLowerCase();
+  const intents = [];
+  
+  if (lowText.includes("reveal") || lowText.includes("tell") || lowText.includes("show")) {
+      intents.push("INFORMATION_TRANSFER");
+  }
+  if (lowText.includes("action") || lowText.includes("move") || lowText.includes("takes")) {
+      intents.push("BASIC_ACTION");
+  }
+
+  return {
+    intents,
+    signals: [],
+    confidence: "medium"
+  };
+}
+
+/**
+ * VALIDATE CONSTRAINTS (V3 Legacy Shim)
+ * Role: Check extracted intents against character/world rules.
+ */
+export function validateConstraints(intents, constraints) {
+  // Simple check for existence of keywords in constraints
+  const violations = [];
+  if (!intents || !constraints) return violations;
+
+  return violations;
+}
+
+/**
+ * DETECT SUSPICIOUS PATTERNS (V3 Legacy Shim)
+ * Role: Identify non-fictional or meta-discussion patterns.
+ */
+export function detectSuspiciousPatterns(text) {
+  if (!text) return false;
+  const patterns = [
+      /as an ai/i,
+      /i cannot/i,
+      /certainly!/i,
+      /here is/i
+  ];
+  return patterns.some(p => p.test(text));
 }

@@ -7,15 +7,17 @@ You have:
 ✅ Strong analysis engine  
 ✅ Functional rewrite pipeline  
 ✅ Multi-model orchestration  
-❌ No rejection system  
-❌ No structured writing workflow  
-❌ No persistence beyond browser  
+✅ Critic Agent rejection system
+✅ Lore Intelligence Dashboard
+✅ High-performance Editorial Engine (Slash Commands, Image Handler, History)
+❌ Scene intent validation (Core/Beats)
+❌ Local-first file persistence
 
 This is a **prototype engine**, not a product.
 
 ---
 
-## Phase 1 — Core Engine Completion (NOW)
+## Phase 1 — Core Engine Completion (DONE)
 
 ### Goal:
 Make the system capable of **saying “this is not good enough.”**
@@ -40,21 +42,21 @@ System becomes **quality-enforcing**, not just generative.
 
 ---
 
-## Phase 2 — Writing Workflow (Next)
+## Phase 2 — Writing Workflow (IN PROGRESS)
 
 ### Goal:
 Turn engine into usable writing tool.
 
 ### Tasks:
 
-1. Add Document Tree
+1. ✅ Add Document Tree
    - Project → Chapter → Scene
 
-2. Markdown Editor
+2. ✅ Markdown Editor
    - Replace single textarea
    - Persist per document
 
-3. File Storage (Local-first)
+3. ❌ File Storage (Local-first)
    - Move beyond localStorage
    - Use file structure or IndexedDB
 
@@ -63,28 +65,19 @@ You can actually write a book inside it.
 
 ---
 
-## Phase 3 — Entity System (Lightweight)
+## Phase 3 — Lore Intelligence System (DONE)
 
 ### Goal:
-Enable contextual writing.
+Enable contextual writing through narrative metadata.
 
 ### Tasks:
-
-1. Wikilinks
-   - [[Character Name]]
-
-2. Auto-create Entities
-   - Simple markdown pages
-
-3. Backlinks
-   - Where entity is referenced
-
-### DO NOT BUILD:
-- Graph visualisation
-- Complex schemas
+✅ Multi-Agent Lore Extraction
+✅ High-performance Graph Visualization
+✅ Entity Consistency Checker
+✅ Relationship Mapping Engine
 
 ### Outcome:
-Connected writing without complexity.
+Deep narrative awareness and structural consistency.
 
 ---
 
@@ -116,12 +109,6 @@ Make output usable professionally
 
 ---
 
-## What NOT To Build (Yet)
-
-- Graph visualisations
-- Timeline systems
-- Maps
-- Complex dashboards
 - Multi-user sync
 - Full Scrivener clone features
 
@@ -162,6 +149,6 @@ You fail if:
 
 Implement:
 
-→ Critic Agent + rejection loop
+→ Scene Validator + Story Core Alignment
 
-Nothing else matters until this exists.
+Ensure that every generated scene aligns with the high-level intent, causality, and character arcs defined in the Preproduction workspace.

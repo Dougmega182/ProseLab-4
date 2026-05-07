@@ -1,0 +1,515 @@
+{
+  "summary": {
+    "totalSamples": 50,
+    "totalDurationMs": 506449,
+    "avgTimePerSampleMs": 10128.98,
+    "verdicts": {
+      "APPROVE": 0,
+      "REWRITE": 50
+    },
+    "avgScore": 7.48,
+    "totalTokens": 22932
+  },
+  "results": [
+    {
+      "id": "easy-01",
+      "complexity": "EASY",
+      "rewriteTime": 3519,
+      "critiqueTime": 9955,
+      "totalTime": 13474,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 432
+    },
+    {
+      "id": "easy-02",
+      "complexity": "EASY",
+      "rewriteTime": 5380,
+      "critiqueTime": 15942,
+      "totalTime": 21322,
+      "verdict": "REWRITE",
+      "overallScore": 4,
+      "tokens": 637
+    },
+    {
+      "id": "easy-03",
+      "complexity": "EASY",
+      "rewriteTime": 2734,
+      "critiqueTime": 8058,
+      "totalTime": 10792,
+      "verdict": "REWRITE",
+      "overallScore": 6,
+      "tokens": 441
+    },
+    {
+      "id": "easy-04",
+      "complexity": "EASY",
+      "rewriteTime": 2888,
+      "critiqueTime": 8402,
+      "totalTime": 11290,
+      "verdict": "REWRITE",
+      "overallScore": 8,
+      "tokens": 422
+    },
+    {
+      "id": "easy-05",
+      "complexity": "EASY",
+      "rewriteTime": 4038,
+      "critiqueTime": 4120,
+      "totalTime": 8158,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 567
+    },
+    {
+      "id": "easy-06",
+      "complexity": "EASY",
+      "rewriteTime": 2322,
+      "critiqueTime": 9363,
+      "totalTime": 11685,
+      "verdict": "REWRITE",
+      "overallScore": 6,
+      "tokens": 419
+    },
+    {
+      "id": "easy-07",
+      "complexity": "EASY",
+      "rewriteTime": 3853,
+      "critiqueTime": 6453,
+      "totalTime": 10306,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 545
+    },
+    {
+      "id": "easy-08",
+      "complexity": "EASY",
+      "rewriteTime": 3840,
+      "critiqueTime": 4367,
+      "totalTime": 8207,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 426
+    },
+    {
+      "id": "easy-09",
+      "complexity": "EASY",
+      "rewriteTime": 1505,
+      "critiqueTime": 7113,
+      "totalTime": 8618,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 406
+    },
+    {
+      "id": "easy-10",
+      "complexity": "EASY",
+      "rewriteTime": 1265,
+      "critiqueTime": 5700,
+      "totalTime": 6965,
+      "verdict": "REWRITE",
+      "overallScore": 4,
+      "tokens": 443
+    },
+    {
+      "id": "easy-11",
+      "complexity": "EASY",
+      "rewriteTime": 2051,
+      "critiqueTime": 22138,
+      "totalTime": 24189,
+      "verdict": "REWRITE",
+      "overallScore": 7,
+      "tokens": 429
+    },
+    {
+      "id": "easy-12",
+      "complexity": "EASY",
+      "rewriteTime": 1593,
+      "critiqueTime": 5631,
+      "totalTime": 7224,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 412
+    },
+    {
+      "id": "easy-13",
+      "complexity": "EASY",
+      "rewriteTime": 1393,
+      "critiqueTime": 5154,
+      "totalTime": 6547,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 396
+    },
+    {
+      "id": "easy-14",
+      "complexity": "EASY",
+      "rewriteTime": 2423,
+      "critiqueTime": 3398,
+      "totalTime": 5821,
+      "verdict": "REWRITE",
+      "overallScore": 6,
+      "tokens": 422
+    },
+    {
+      "id": "easy-15",
+      "complexity": "EASY",
+      "rewriteTime": 1942,
+      "critiqueTime": 6715,
+      "totalTime": 8657,
+      "verdict": "REWRITE",
+      "overallScore": 10,
+      "tokens": 438
+    },
+    {
+      "id": "easy-16",
+      "complexity": "EASY",
+      "rewriteTime": 1637,
+      "critiqueTime": 6004,
+      "totalTime": 7641,
+      "verdict": "REWRITE",
+      "overallScore": 8,
+      "tokens": 410
+    },
+    {
+      "id": "easy-17",
+      "complexity": "EASY",
+      "rewriteTime": 1680,
+      "critiqueTime": 7173,
+      "totalTime": 8853,
+      "verdict": "REWRITE",
+      "overallScore": 10,
+      "tokens": 395
+    },
+    {
+      "id": "easy-18",
+      "complexity": "EASY",
+      "rewriteTime": 1501,
+      "critiqueTime": 7725,
+      "totalTime": 9226,
+      "verdict": "REWRITE",
+      "overallScore": 8,
+      "tokens": 404
+    },
+    {
+      "id": "easy-19",
+      "complexity": "EASY",
+      "rewriteTime": 1778,
+      "critiqueTime": 5013,
+      "totalTime": 6791,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 416
+    },
+    {
+      "id": "easy-20",
+      "complexity": "EASY",
+      "rewriteTime": 1689,
+      "critiqueTime": 6369,
+      "totalTime": 8058,
+      "verdict": "REWRITE",
+      "overallScore": 10,
+      "tokens": 414
+    },
+    {
+      "id": "ambiguous-01",
+      "complexity": "AMBIGUOUS",
+      "rewriteTime": 2586,
+      "critiqueTime": 8105,
+      "totalTime": 10691,
+      "verdict": "REWRITE",
+      "overallScore": 5,
+      "tokens": 514
+    },
+    {
+      "id": "ambiguous-02",
+      "complexity": "AMBIGUOUS",
+      "rewriteTime": 3764,
+      "critiqueTime": 8993,
+      "totalTime": 12757,
+      "verdict": "REWRITE",
+      "overallScore": 6,
+      "tokens": 575
+    },
+    {
+      "id": "ambiguous-03",
+      "complexity": "AMBIGUOUS",
+      "rewriteTime": 1726,
+      "critiqueTime": 5283,
+      "totalTime": 7009,
+      "verdict": "REWRITE",
+      "overallScore": 6,
+      "tokens": 457
+    },
+    {
+      "id": "ambiguous-04",
+      "complexity": "AMBIGUOUS",
+      "rewriteTime": 5102,
+      "critiqueTime": 6868,
+      "totalTime": 11970,
+      "verdict": "REWRITE",
+      "overallScore": 6,
+      "tokens": 510
+    },
+    {
+      "id": "ambiguous-05",
+      "complexity": "AMBIGUOUS",
+      "rewriteTime": 2941,
+      "critiqueTime": 12598,
+      "totalTime": 15539,
+      "verdict": "REWRITE",
+      "overallScore": 4,
+      "tokens": 479
+    },
+    {
+      "id": "adversarial-01",
+      "complexity": "ADVERSARIAL",
+      "rewriteTime": 4068,
+      "critiqueTime": 7595,
+      "totalTime": 11663,
+      "verdict": "REWRITE",
+      "overallScore": 7,
+      "tokens": 489
+    },
+    {
+      "id": "adversarial-02",
+      "complexity": "ADVERSARIAL",
+      "rewriteTime": 2002,
+      "critiqueTime": 7341,
+      "totalTime": 9343,
+      "verdict": "REWRITE",
+      "overallScore": 7,
+      "tokens": 455
+    },
+    {
+      "id": "adversarial-03",
+      "complexity": "ADVERSARIAL",
+      "rewriteTime": 2131,
+      "critiqueTime": 10159,
+      "totalTime": 12290,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 443
+    },
+    {
+      "id": "adversarial-04",
+      "complexity": "ADVERSARIAL",
+      "rewriteTime": 1611,
+      "critiqueTime": 8456,
+      "totalTime": 10067,
+      "verdict": "REWRITE",
+      "overallScore": 5,
+      "tokens": 449
+    },
+    {
+      "id": "adversarial-05",
+      "complexity": "ADVERSARIAL",
+      "rewriteTime": 2408,
+      "critiqueTime": 5321,
+      "totalTime": 7729,
+      "verdict": "REWRITE",
+      "overallScore": 4,
+      "tokens": 490
+    },
+    {
+      "id": "ambiguous-06",
+      "complexity": "AMBIGUOUS",
+      "rewriteTime": 2295,
+      "critiqueTime": 9763,
+      "totalTime": 12058,
+      "verdict": "REWRITE",
+      "overallScore": 6,
+      "tokens": 427
+    },
+    {
+      "id": "ambiguous-07",
+      "complexity": "AMBIGUOUS",
+      "rewriteTime": 2664,
+      "critiqueTime": 5740,
+      "totalTime": 8404,
+      "verdict": "REWRITE",
+      "overallScore": 5,
+      "tokens": 456
+    },
+    {
+      "id": "ambiguous-08",
+      "complexity": "AMBIGUOUS",
+      "rewriteTime": 1620,
+      "critiqueTime": 4685,
+      "totalTime": 6305,
+      "verdict": "REWRITE",
+      "overallScore": 10,
+      "tokens": 429
+    },
+    {
+      "id": "ambiguous-09",
+      "complexity": "AMBIGUOUS",
+      "rewriteTime": 3463,
+      "critiqueTime": 9013,
+      "totalTime": 12476,
+      "verdict": "REWRITE",
+      "overallScore": 4,
+      "tokens": 528
+    },
+    {
+      "id": "ambiguous-10",
+      "complexity": "AMBIGUOUS",
+      "rewriteTime": 2097,
+      "critiqueTime": 10437,
+      "totalTime": 12534,
+      "verdict": "REWRITE",
+      "overallScore": 4,
+      "tokens": 449
+    },
+    {
+      "id": "adversarial-06",
+      "complexity": "ADVERSARIAL",
+      "rewriteTime": 2221,
+      "critiqueTime": 6837,
+      "totalTime": 9058,
+      "verdict": "REWRITE",
+      "overallScore": 10,
+      "tokens": 476
+    },
+    {
+      "id": "adversarial-07",
+      "complexity": "ADVERSARIAL",
+      "rewriteTime": 2430,
+      "critiqueTime": 7110,
+      "totalTime": 9540,
+      "verdict": "REWRITE",
+      "overallScore": 10,
+      "tokens": 467
+    },
+    {
+      "id": "adversarial-08",
+      "complexity": "ADVERSARIAL",
+      "rewriteTime": 4930,
+      "critiqueTime": 8247,
+      "totalTime": 13177,
+      "verdict": "REWRITE",
+      "overallScore": 8,
+      "tokens": 458
+    },
+    {
+      "id": "adversarial-09",
+      "complexity": "ADVERSARIAL",
+      "rewriteTime": 3965,
+      "critiqueTime": 6146,
+      "totalTime": 10111,
+      "verdict": "REWRITE",
+      "overallScore": 8,
+      "tokens": 578
+    },
+    {
+      "id": "adversarial-10",
+      "complexity": "ADVERSARIAL",
+      "rewriteTime": 5145,
+      "critiqueTime": 6450,
+      "totalTime": 11595,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 603
+    },
+    {
+      "id": "adversarial_easy-01",
+      "complexity": "ADVERSARIAL_EASY",
+      "rewriteTime": 1226,
+      "critiqueTime": 6875,
+      "totalTime": 8101,
+      "verdict": "REWRITE",
+      "overallScore": 10,
+      "tokens": 429
+    },
+    {
+      "id": "adversarial_easy-02",
+      "complexity": "ADVERSARIAL_EASY",
+      "rewriteTime": 1302,
+      "critiqueTime": 5596,
+      "totalTime": 6898,
+      "verdict": "REWRITE",
+      "overallScore": 6,
+      "tokens": 427
+    },
+    {
+      "id": "adversarial_easy-03",
+      "complexity": "ADVERSARIAL_EASY",
+      "rewriteTime": 2344,
+      "critiqueTime": 6231,
+      "totalTime": 8575,
+      "verdict": "REWRITE",
+      "overallScore": 10,
+      "tokens": 431
+    },
+    {
+      "id": "adversarial_easy-04",
+      "complexity": "ADVERSARIAL_EASY",
+      "rewriteTime": 1476,
+      "critiqueTime": 4650,
+      "totalTime": 6126,
+      "verdict": "REWRITE",
+      "overallScore": 7,
+      "tokens": 432
+    },
+    {
+      "id": "adversarial_easy-05",
+      "complexity": "ADVERSARIAL_EASY",
+      "rewriteTime": 1519,
+      "critiqueTime": 6129,
+      "totalTime": 7648,
+      "verdict": "REWRITE",
+      "overallScore": 4,
+      "tokens": 458
+    },
+    {
+      "id": "adversarial_easy-06",
+      "complexity": "ADVERSARIAL_EASY",
+      "rewriteTime": 2264,
+      "critiqueTime": 7062,
+      "totalTime": 9326,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 438
+    },
+    {
+      "id": "adversarial_easy-07",
+      "complexity": "ADVERSARIAL_EASY",
+      "rewriteTime": 1820,
+      "critiqueTime": 14861,
+      "totalTime": 16681,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 455
+    },
+    {
+      "id": "adversarial_easy-08",
+      "complexity": "ADVERSARIAL_EASY",
+      "rewriteTime": 1723,
+      "critiqueTime": 4981,
+      "totalTime": 6704,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 425
+    },
+    {
+      "id": "adversarial_easy-09",
+      "complexity": "ADVERSARIAL_EASY",
+      "rewriteTime": 1500,
+      "critiqueTime": 8532,
+      "totalTime": 10032,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 420
+    },
+    {
+      "id": "adversarial_easy-10",
+      "complexity": "ADVERSARIAL_EASY",
+      "rewriteTime": 2132,
+      "critiqueTime": 6077,
+      "totalTime": 8209,
+      "verdict": "REWRITE",
+      "overallScore": 9,
+      "tokens": 411
+    }
+  ]
+}

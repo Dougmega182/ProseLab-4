@@ -12,6 +12,16 @@ The system operates on a **Generate → Critique → Challenge** loop:
 4.  **Critic Gate**: The Critic agent evaluates the refined draft against narrative intent and stylistic "Absolute Bans" (e.g., no abstract emotional labels).
 5.  **Adversarial Challenge**: If the Critic approves, a Challenger agent (Gemini 1.5 Pro) performs a cross-architecture verification to detect "deceptively clean" but empty prose.
 6.  **Retry Loop**: On rejection, the engine re-injects specific failure directives and retries up to 3 times.
+7.  **Editorial Engine**: A high-performance, document-aware rich text editor with integrated Slash Commands, Image Handling, and Story-Core awareness.
+
+## Editorial Workstation
+
+The system features a professional editorial environment:
+- **Slash Commands (`/`)**: Instant access to AI assistance, structural formatting, and media insertion.
+- **Lore Integration**: Direct linking to characters, locations, and world-building assets from the Preproduction workspace.
+- **Image Intelligence**: Drag-and-drop media handling with AI-assisted captioning and responsive resizing.
+- **History Management**: Robust Undo/Redo stack preserved across AI rewrite cycles.
+- **Timeline Visualization**: Real-time narrative event tracking and force-directed graph analysis.
 
 ## Throughput Hardening
 
@@ -42,7 +52,7 @@ The engine is verified via a 50-sample throughput test set:
 ```bash
 # Run the full throughput telemetry map
 cd proselab
-npm run throughput
+npm run throughput:test
 ```
 
 ## Architecture Map

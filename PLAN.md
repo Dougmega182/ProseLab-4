@@ -29,6 +29,9 @@ The highest-priority capability is the Critic Agent. Without rejection, the syst
 - Ollama + OpenAI rewrite path
 - Local caching and token/cost tracking
 - Basic provider/config diagnostics
+- Lore Intelligence System (Multi-agent extraction + Graph visualization)
+- Automated consistency checking
+- High-performance Document Editorial Engine (Slash commands, Image handling, History)
 
 ### What is incomplete or mismatched
 - README/agent docs still describe Gemini as an active final stage, but the current `runPipeline` stops after OpenAI refinement.
@@ -144,7 +147,7 @@ Definition of done:
 - No false claim about active pipeline stages
 - Setup path is documented and coherent
 
-### Sprint 1: Critic Agent
+### Sprint 1: Critic Agent (DONE)
 Goal:
 Introduce a hard quality gate.
 
@@ -164,7 +167,7 @@ Definition of done:
 - Rejection reasons are visible
 - Approval and rejection states are distinct
 
-### Sprint 2: Retry Loop / Orchestrator Completion
+### Sprint 2: Retry Loop / Orchestrator Completion (DONE)
 Goal:
 Make rejection operational.
 
@@ -180,9 +183,24 @@ Definition of done:
 - Loop always terminates
 - Final output is either approved or clearly marked as failed
 
-### Sprint 3: Reliability and Diagnostics
+### Sprint 3: Lore Intelligence (DONE)
 Goal:
-Reduce ambiguous failures.
+Capture and visualize narrative metadata.
+
+Engineering steps:
+1. Implement heuristic entity extraction engine.
+2. Build canvas-based force-directed relationship graph.
+3. Implement reactive LoreStore for state persistence.
+4. Add automated consistency checking (contradiction detection).
+
+Definition of done:
+- Automatic extraction of characters, locations, and items.
+- Live visualization of narrative connections.
+- Persistent lore database.
+
+### Sprint 4: Scene Validation and Story-Core Alignment
+Goal:
+Ensure generated prose matches high-level intent.
 
 Engineering steps:
 1. Add actual Ollama reachability diagnostics instead of checking only model text.
@@ -264,6 +282,9 @@ These are the next concrete tasks implied by the current docs and code:
 - Documentation drift will keep reintroducing false assumptions such as login or active Gemini usage.
 
 ## Success Criteria
+## Phase 4: Scene Validation & Advanced Orchestration
+Detailed implementation plan for Phase 4 can be found in [IMPLEMENTATION_PLAN_PHASE_4.md](file:///e:/Ai/ProseLabV2/IMPLEMENTATION_PLAN_PHASE_4.md).
+
 The plan succeeds when:
 - ProseLab can reject weak output automatically
 - retry behavior is bounded and understandable

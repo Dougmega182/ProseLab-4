@@ -89,7 +89,7 @@ export async function callOpenAI(key, prompt, options = {}) {
     const {
       model = "gpt-4o-mini",
       temperature,
-      timeout = 15000, // 15s hard timeout
+      timeout = 30000, // 30s hard timeout
     } = options;
 
     const controller = new AbortController();
@@ -103,7 +103,7 @@ export async function callOpenAI(key, prompt, options = {}) {
         messages: [{ role: "user", content: prompt }],
       };
       
-      const isDebug = typeof window !== "undefined" && window.PROSELAB_DEBUG_LLM;
+      const isDebug = (typeof window !== "undefined" && window.PROSELAB_DEBUG_LLM) || (typeof import.meta !== "undefined" && import.meta.env?.PROSELAB_DEBUG_LLM);
 
       if (isDebug) {
           console.log("[LLM REQUEST]", JSON.stringify({ model, prompt: prompt.slice(0, 200) + "..." }, null, 2));
@@ -226,5 +226,17 @@ export async function callOllama(model, prompt) {
     return { ok: true, content: data.response };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err), content: "" };
+  }
+}
+
+export async function checkOllamaReachability(modelName) {
+  if (!modelName) return false;
+  try {
+    const res = await fetch("http://localhost:11434/api/tags");
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data.models?.some(m => m.name === modelName || m.name.startsWith(modelName + ":"));
+  } catch {
+    return false;
   }
 }

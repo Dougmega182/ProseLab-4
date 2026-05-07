@@ -6,3 +6,4 @@ icon/
 *.lnk
 client_secret*.json
 node_modules/
+galaxy_cli.py

@@ -1,5 +1,5 @@
 import { getState, logShadowAction, removeShadowAction } from "../store/appStore.js";
-import { saveScene, generateSceneBlocks, updateScenePhase } from "../domains/preproduction/preproduction.actions.js";
+import * as db from "../services/db.js";
 import { criticAgent } from "./criticAgent.js";
 import { generatorAgent } from "./generatorAgent.js";
 import { normalizeIntents, validateConstraints, detectSuspiciousPatterns } from "../services/normalizer.js";
@@ -104,8 +104,8 @@ function validateAction(action, state) {
 
 // shouldAutoApply imported from engine/autoApplyGate.js
 // Single source of truth — no inline reimplementation.
-export async function runCriticAgent(openaiKey, contextPatch = null) {
-  const state = getState();
+export async function runCriticAgent({ openaiKey, project, scenes, contextPatch = null }) {
+  const state = { project: { ...project, scenes } };
   
   console.log("🤖 AGENT: Starting Critic loop...");
   
@@ -205,8 +205,8 @@ export async function runCriticAgent(openaiKey, contextPatch = null) {
 /**
  * RUN GENERATOR AGENT
  */
-export async function runGeneratorAgent(openaiKey) {
-  const state = getState();
+export async function runGeneratorAgent({ openaiKey, project, scenes }) {
+  const state = { project: { ...project, scenes } };
   
   console.log("🤖 AGENT: Starting Generator loop...");
   
@@ -236,6 +236,8 @@ export async function runGeneratorAgent(openaiKey) {
     action.meta = { 
       agent: "generator", 
       intent: "enhance_description",
+      analysis: action.analysis,
+      confidence: action.confidence,
       entities_used: action.payload?.patch?.description?.match(/\b[A-Z][a-z]+\b/g) || []
     };
 
@@ -295,11 +297,12 @@ export function applyAgentAction(id, { humanOverride = false } = {}) {
   if (!scene) return false;
 
   if (action.type === "UPDATE_SCENE") {
-    saveScene({ ...scene, ...patch });
+    db.updateScene(sceneId, patch);
   } else if (action.type === "GENERATE_SCENE_BLOCKS") {
-    generateSceneBlocks(sceneId, blocks);
+    db.updateScene(sceneId, { narrative: blocks });
   } else if (action.type === "UPDATE_SCENE_PHASE") {
-    updateScenePhase(sceneId, phase, text);
+    const updatedNarrative = { ...(scene.narrative || {}), [phase]: text };
+    db.updateScene(sceneId, { narrative: updatedNarrative });
   }
 
   const approvalSource = humanOverride ? "human_override" : "gate_passed";

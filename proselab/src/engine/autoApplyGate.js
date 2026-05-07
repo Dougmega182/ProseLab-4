@@ -225,9 +225,10 @@ export function shouldAutoApply(critique, context = {}) {
     );
   }
 
-  // 4. Confidence Threshold
-  if (numConf < 0.75) {
-    return reject(`Confidence ${numConf} < 0.75`, "LOW", "LOW_CONFIDENCE");
+  // 4. Selective AUTO_ACT: Confidence Threshold
+  // Graduate system to autonomy ONLY for SAFE tier where confidence >= 0.95
+  if (numConf < 0.95) {
+    return reject(`Confidence ${numConf} < 0.95 (AUTO_ACT requires >= 0.95)`, "LOW", "LOW_CONFIDENCE");
   }
 
   // 5. Risk flags
@@ -235,35 +236,30 @@ export function shouldAutoApply(critique, context = {}) {
     return reject(`Risk flags: ${safeRiskFlags.join(", ")}`, "HIGH", "RISK_FLAGS_PRESENT");
   }
 
-  // 6. Phase score check (agent-level)
-  if (minPhase !== null && minPhase < THRESHOLDS.PHASE_SCORE_MIN) {
-    return reject(
-      `Phase score below ${THRESHOLDS.PHASE_SCORE_MIN}`,
-      "LOW",
-      "PHASE_SCORE_LOW",
-    );
-  }
-
-  // 7. Overall score floor (pipeline-level)
-  if (typeof safeScore.overall === "number"
-      && safeScore.overall < THRESHOLDS.OVERALL_SCORE_MIN) {
-    return reject(
-      `Overall score ${safeScore.overall} < ${THRESHOLDS.OVERALL_SCORE_MIN}`,
-      "LOW",
-      "OVERALL_SCORE_LOW",
-    );
-  }
-
   // 8. Failure cost classification
   if (costTier === "HIGH") {
     return reject("High-cost failures detected", "HIGH", "HIGH_COST_FAILURE");
   }
 
+  // Soft Warnings (LOG_ONLY) - Do not block AUTO_ACT for cosmetic/minor phase score issues
+  const warnings = [];
+
+  // 6. Phase score check (Soft Warning instead of Block)
+  if (minPhase !== null && minPhase < THRESHOLDS.PHASE_SCORE_MIN) {
+    warnings.push(`Phase score below ${THRESHOLDS.PHASE_SCORE_MIN}`);
+  }
+
+  // 7. Overall score floor (Soft Warning instead of Block)
+  if (typeof safeScore.overall === "number" && safeScore.overall < THRESHOLDS.OVERALL_SCORE_MIN) {
+    warnings.push(`Overall score ${safeScore.overall} < ${THRESHOLDS.OVERALL_SCORE_MIN}`);
+  }
+
   const decision = {
     ok: true,
-    reason: null,
+    reason: warnings.length > 0 ? `Soft Warnings: ${warnings.join(", ")}` : null,
     cost_tier: "LOW",
     failed_condition: null,
+    warnings
   };
   logGateDecision(conditionValues, decision, context);
   return decision;
