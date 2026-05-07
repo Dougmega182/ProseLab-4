@@ -34,6 +34,7 @@ if not exist "!ENV_FILE!" (
 :: Parse .env for diagnostics
 for /f "tokens=1,2 delims==" %%a in (!ENV_FILE!) do (
     if "%%a"=="VITE_OPENAI_KEY" set "OKEY=%%b"
+    if "%%a"=="VITE_GEMINI_KEY" set "GKEY=%%b"
     if "%%a"=="VITE_OLLAMA_MODEL" set "OMODEL=%%b"
 )
 
@@ -41,6 +42,12 @@ if "!OKEY!"=="" (
     echo         [WARNING] OpenAI Key missing in .env. Refinement will fail.
 ) else (
     echo         [OK] OpenAI Configuration detected.
+)
+
+if "!GKEY!"=="" (
+    echo         [WARNING] Gemini Key missing in .env. Challenger Agent disabled.
+) else (
+    echo         [OK] Gemini Configuration detected.
 )
 
 :: Check Ollama
