@@ -124,7 +124,13 @@ export function DocumentSidebar({
   return (
     <div className="doc-sidebar">
       <div className="sidebar-header">
-        <h3>PROSELAB</h3>
+        <div className="sidebar-brand">
+          <img className="sidebar-brand-mark" src="/logo.png" alt="ProseLab" />
+          <div className="sidebar-brand-copy">
+            <h3>PROSELAB</h3>
+            <span>Precision Analytical Engine</span>
+          </div>
+        </div>
         <div className="sidebar-project-row">
           <select
             value={selectedProjectId || ""}

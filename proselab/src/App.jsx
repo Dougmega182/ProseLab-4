@@ -754,7 +754,7 @@ export default function ProseLabV4() {
             {/* HEADER */}
             <header className="header">
               <div className="header-left">
-                <div className="logo-mark">P</div>
+                <img className="logo-mark" src="/logo.png" alt="ProseLab" />
                 <div>
                   <div className="header-title">ProseLab <span style={{ color: "var(--accent-primary)", fontWeight: 800 }}>V4</span></div>
                   <div className="header-subtitle">Precision Analytical Engine</div>

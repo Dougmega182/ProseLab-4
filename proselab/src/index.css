@@ -264,17 +264,11 @@ body {
 }
 
 .logo-mark {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background: var(--accent-gradient);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 800;
-  color: #fff;
-  box-shadow: var(--shadow-glow);
+  width: 52px;
+  height: 52px;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(111, 45, 255, 0.18));
 }
 
 .header-title {
@@ -501,11 +495,40 @@ body {
 }
 
 .sidebar-header h3 {
-  margin: 0 0 12px 0;
+  margin: 0;
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.25rem;
   color: #444;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sidebar-brand-mark {
+  width: 42px;
+  height: 42px;
+  display: block;
+  object-fit: contain;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 14px rgba(111, 45, 255, 0.22));
+}
+
+.sidebar-brand-copy {
+  min-width: 0;
+}
+
+.sidebar-brand-copy span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.58rem;
+  letter-spacing: 0.16rem;
+  text-transform: uppercase;
+  color: #7a6d94;
 }
 
 .sidebar-project-row {
