@@ -31,7 +31,7 @@ export default function EntityList({
     onUpdate(entityId, {
       name: editForm.name,
       type: editForm.type,
-      aliases: editForm.aliases.split(',').map(a => a.trim()).filter(Boolean),
+      aliases: editForm.aliases.split(',').map((alias) => alias.trim()).filter(Boolean),
       attributes: {
         description: editForm.description,
       },
@@ -60,17 +60,19 @@ export default function EntityList({
 
   return (
     <div className="entity-list">
-      {entities.map(entity => {
+      {entities.map((entity) => {
         const isSelected = selectedEntity?.id === entity.id;
         const isEditing = editingId === entity.id;
         const entityRels = relationships.filter(
-          r => r.sourceId === entity.id || r.targetId === entity.id
+          (relationship) => relationship.sourceId === entity.id || relationship.targetId === entity.id
         );
+        const needsReview = !entity.verified || entity.confidence < 0.6;
+        const reviewLabel = !entity.verified ? 'Unverified' : (entity.confidence < 0.6 ? 'Low confidence' : '');
 
         return (
           <div
             key={entity.id}
-            className={`entity-card ${isSelected ? 'selected' : ''} ${entity.verified ? 'verified' : ''}`}
+            className={`entity-card ${isSelected ? 'selected' : ''} ${entity.verified ? 'verified' : ''} ${needsReview ? 'needs-review' : ''}`}
             onClick={() => onSelect(isSelected ? null : entity)}
           >
             <div className="entity-header">
@@ -84,9 +86,9 @@ export default function EntityList({
               {isEditing ? (
                 <input
                   value={editForm.name}
-                  onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                  onChange={(event) => setEditForm({ ...editForm, name: event.target.value })}
                   className="edit-input"
-                  onClick={e => e.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
                 />
               ) : (
                 <span className="entity-name">{entity.name}</span>
@@ -97,13 +99,17 @@ export default function EntityList({
                   {(entity.confidence * 100).toFixed(0)}%
                 </span>
                 <span className="mentions-badge" title="Mentions">
-                  ×{entity.mentions}
+                  x{entity.mentions}
                 </span>
                 {entity.verified && (
-                  <span className="verified-badge" title="Verified">✓</span>
+                  <span className="verified-badge" title="Verified">Verified</span>
                 )}
               </div>
             </div>
+
+            {needsReview && !isEditing && (
+              <div className="entity-review-banner">{reviewLabel}</div>
+            )}
 
             {entity.aliases && entity.aliases.length > 0 && !isEditing && (
               <div className="entity-aliases">
@@ -118,7 +124,7 @@ export default function EntityList({
             )}
 
             {isSelected && !isEditing && (
-              <div className="entity-details" onClick={e => e.stopPropagation()}>
+              <div className="entity-details" onClick={(event) => event.stopPropagation()}>
                 {entity.attributes && Object.keys(entity.attributes).length > 0 && (
                   <div className="attributes-section">
                     <h4>Attributes</h4>
@@ -134,17 +140,17 @@ export default function EntityList({
                 {entityRels.length > 0 && (
                   <div className="relationships-section">
                     <h4>Relationships ({entityRels.length})</h4>
-                    {entityRels.map(rel => {
-                      const otherId = rel.sourceId === entity.id ? rel.targetId : rel.sourceId;
-                      const other = allEntities.find(e => e.id === otherId);
-                      const direction = rel.sourceId === entity.id ? '→' : '←';
+                    {entityRels.map((relationship) => {
+                      const otherId = relationship.sourceId === entity.id ? relationship.targetId : relationship.sourceId;
+                      const other = allEntities.find((candidate) => candidate.id === otherId);
+                      const direction = relationship.sourceId === entity.id ? '->' : '<-';
                       return (
-                        <div key={rel.id} className="rel-row">
+                        <div key={relationship.id} className="rel-row">
                           <span className="rel-direction">{direction}</span>
-                          <span className="rel-type">{rel.subtype || rel.type}</span>
+                          <span className="rel-type">{relationship.subtype || relationship.type}</span>
                           <span className="rel-target">{other?.name || 'Unknown'}</span>
                           <span className="rel-confidence">
-                            {(rel.confidence * 100).toFixed(0)}%
+                            {(relationship.confidence * 100).toFixed(0)}%
                           </span>
                         </div>
                       );
@@ -155,9 +161,9 @@ export default function EntityList({
                 {entity.contexts && entity.contexts.length > 0 && (
                   <div className="contexts-section">
                     <h4>Contexts</h4>
-                    {entity.contexts.slice(-3).map((ctx, i) => (
-                      <div key={i} className="context-snippet">
-                        "...{ctx}..."
+                    {entity.contexts.slice(-3).map((context, index) => (
+                      <div key={index} className="context-snippet">
+                        "...{context}..."
                       </div>
                     ))}
                   </div>
@@ -166,32 +172,32 @@ export default function EntityList({
                 <div className="entity-actions">
                   {!entity.verified && (
                     <button className="action-btn verify" onClick={() => onVerify(entity.id)}>
-                      ✓ Verify
+                      Verify
                     </button>
                   )}
                   <button className="action-btn edit" onClick={() => handleEdit(entity)}>
-                    ✎ Edit
+                    Edit
                   </button>
                   <button className="action-btn merge" onClick={() => handleStartMerge(entity.id)}>
-                    ⊕ Merge
+                    Merge
                   </button>
                   <button className="action-btn remove" onClick={() => onRemove(entity.id)}>
-                    ✕ Remove
+                    Remove
                   </button>
                 </div>
               </div>
             )}
 
             {isEditing && (
-              <div className="edit-form" onClick={e => e.stopPropagation()}>
+              <div className="edit-form" onClick={(event) => event.stopPropagation()}>
                 <div className="form-row">
                   <label>Type:</label>
                   <select
                     value={editForm.type}
-                    onChange={e => setEditForm({ ...editForm, type: e.target.value })}
+                    onChange={(event) => setEditForm({ ...editForm, type: event.target.value })}
                   >
-                    {['character', 'location', 'item', 'event', 'faction', 'concept', 'creature', 'unknown'].map(t => (
-                      <option key={t} value={t}>{t}</option>
+                    {['character', 'location', 'item', 'event', 'faction', 'concept', 'creature', 'unknown'].map((type) => (
+                      <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
                 </div>
@@ -199,7 +205,7 @@ export default function EntityList({
                   <label>Aliases:</label>
                   <input
                     value={editForm.aliases}
-                    onChange={e => setEditForm({ ...editForm, aliases: e.target.value })}
+                    onChange={(event) => setEditForm({ ...editForm, aliases: event.target.value })}
                     placeholder="Comma-separated aliases"
                   />
                 </div>
@@ -207,7 +213,7 @@ export default function EntityList({
                   <label>Description:</label>
                   <textarea
                     value={editForm.description}
-                    onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                    onChange={(event) => setEditForm({ ...editForm, description: event.target.value })}
                   />
                 </div>
                 <div className="form-actions">
@@ -218,14 +224,16 @@ export default function EntityList({
             )}
 
             {mergeTarget === entity.id && (
-              <div className="merge-panel" onClick={e => e.stopPropagation()}>
+              <div className="merge-panel" onClick={(event) => event.stopPropagation()}>
                 <p>Select entity to merge with:</p>
-                <select onChange={e => handleCompleteMerge(e.target.value)}>
+                <select onChange={(event) => handleCompleteMerge(event.target.value)}>
                   <option value="">-- Select --</option>
                   {allEntities
-                    .filter(e => e.id !== entity.id)
-                    .map(e => (
-                      <option key={e.id} value={e.id}>{e.name} ({e.type})</option>
+                    .filter((candidate) => candidate.id !== entity.id)
+                    .map((candidate) => (
+                      <option key={candidate.id} value={candidate.id}>
+                        {candidate.name} ({candidate.type})
+                      </option>
                     ))}
                 </select>
                 <button onClick={() => setMergeTarget(null)}>Cancel</button>

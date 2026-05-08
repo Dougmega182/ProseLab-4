@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import * as db from "../services/db.js";
 import { migrateIfNeeded } from "../services/migration.js";
+import { loadProjectStateBundle } from "../services/projectState.js";
 
 export function useDocumentManager() {
   const [projects, setProjects] = useState([]);
@@ -19,12 +20,36 @@ export function useDocumentManager() {
   const [rules, setRules] = useState([]);
   const [beats, setBeats] = useState([]);
   const [voice, setVoice] = useState({});
+  const [shadowActions, setShadowActions] = useState([]);
+  const [compositionMetrics, setCompositionMetrics] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const applyLoadedProjectState = useCallback((bundle) => {
+    setChapters(bundle.chapters || []);
+    setScenes(bundle.scenes || []);
+    setSelectedSceneId(bundle.selectedSceneId || null);
+
+    if (bundle.project) {
+      setCore(bundle.project.core || {});
+      setChars(bundle.project.chars || []);
+      setRules(bundle.project.rules || []);
+      setBeats(bundle.project.beats || []);
+      setVoice(bundle.project.voice || {});
+    } else {
+      setCore({});
+      setChars([]);
+      setRules([]);
+      setBeats([]);
+      setVoice({});
+    }
+  }, []);
 
   // Build tree structure for sidebar
   const tree = useMemo(() => {
     if (!selectedProjectId) return [];
-    return chapters.map(chapter => ({
+    return [...chapters]
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map(chapter => ({
       ...chapter,
       scenes: scenes.filter(s => s.chapterId === chapter.id)
         .sort((a, b) => (a.order || 0) - (b.order || 0))
@@ -45,27 +70,16 @@ export function useDocumentManager() {
         if (allProjects.length > 0) {
           const defaultProject = migration?.projectId || allProjects[0].id;
           setSelectedProjectId(defaultProject);
+          const bundle = await loadProjectStateBundle(db, defaultProject, migration?.sceneId || null);
+          applyLoadedProjectState(bundle);
 
-          const [projectChapters, projectScenes] = await Promise.all([
-            db.listChaptersByProject(defaultProject),
-            db.listScenesByProject(defaultProject)
+          // Load Shadow Actions and Metrics
+          const [actions, metrics] = await Promise.all([
+            db.perform("shadow_actions", "readonly", s => s.getAll()),
+            db.perform("composition_metrics", "readonly", s => s.getAll())
           ]);
-
-          setChapters(projectChapters);
-          setScenes(projectScenes);
-
-          const activeProj = allProjects.find(p => p.id === defaultProject);
-          if (activeProj) {
-            setCore(activeProj.core || {});
-            setChars(activeProj.chars || []);
-            setRules(activeProj.rules || []);
-            setBeats(activeProj.beats || []);
-            setVoice(activeProj.voice || {});
-          }
-
-          if (projectScenes.length > 0) {
-            setSelectedSceneId(migration?.sceneId || projectScenes[0].id);
-          }
+          setShadowActions(actions || []);
+          setCompositionMetrics(metrics || []);
         }
       } catch (err) {
         console.error("Failed to initialize document manager", err);
@@ -78,30 +92,28 @@ export function useDocumentManager() {
 
   // Load data when project changes
   useEffect(() => {
-    if (selectedProjectId) {
-      Promise.all([
-        db.listChaptersByProject(selectedProjectId),
-        db.listScenesByProject(selectedProjectId)
-      ]).then(([newChapters, newScenes]) => {
-        setChapters(newChapters);
-        setScenes(newScenes);
-        db.getProject(selectedProjectId).then(p => {
-          if (p) {
-            setCore(p.core || {});
-            setChars(p.chars || []);
-            setRules(p.rules || []);
-            setBeats(p.beats || []);
-            setVoice(p.voice || {});
-          }
-        });
+    if (!selectedProjectId) return;
+
+    loadProjectStateBundle(db, selectedProjectId)
+      .then(applyLoadedProjectState)
+      .catch((error) => {
+        console.error("Failed to load selected project state", error);
       });
-    }
-  }, [selectedProjectId]);
+  }, [selectedProjectId, applyLoadedProjectState]);
 
   const selectProject = useCallback((id) => {
     setSelectedProjectId(id);
     setSelectedSceneId(null);
   }, []);
+
+  const refreshProjectState = useCallback(async (projectId, preferredSceneId = null) => {
+    if (!projectId) return;
+    const bundle = await loadProjectStateBundle(db, projectId, preferredSceneId);
+
+    setProjects(await db.listProjects());
+    setSelectedProjectId(projectId);
+    applyLoadedProjectState(bundle);
+  }, [applyLoadedProjectState]);
 
   const createProject = useCallback(async (data = {}) => {
     const newProject = {
@@ -125,14 +137,39 @@ export function useDocumentManager() {
     setSelectedSceneId(id);
   }, []);
 
+  const deleteProject = useCallback(async (projectId) => {
+    const resolvedProjectId = projectId || selectedProjectId;
+    if (!resolvedProjectId) return;
+
+    await db.deleteProjectCascade(resolvedProjectId);
+
+    const remainingProjects = await db.listProjects();
+    setProjects(remainingProjects);
+
+    if (remainingProjects.length === 0) {
+      setSelectedProjectId(null);
+      setSelectedSceneId(null);
+      setChapters([]);
+      setScenes([]);
+      setCore({});
+      setChars([]);
+      setRules([]);
+      setBeats([]);
+      setVoice({});
+      return;
+    }
+
+    await refreshProjectState(remainingProjects[0].id, null);
+  }, [selectedProjectId, refreshProjectState]);
+
   const createChapter = useCallback(async (arg1 = "New Chapter") => {
-    if (!selectedProjectId) return;
-    
     let chapterData = typeof arg1 === 'object' ? arg1 : { title: arg1 };
+    const resolvedProjectId = chapterData.projectId || selectedProjectId;
+    if (!resolvedProjectId) return null;
     
     const newChapter = {
       id: crypto.randomUUID(),
-      projectId: chapterData.projectId || selectedProjectId,
+      projectId: resolvedProjectId,
       title: chapterData.title || "New Chapter",
       order: chapterData.order ?? chapters.length,
       ...chapterData
@@ -146,13 +183,13 @@ export function useDocumentManager() {
   }, [selectedProjectId, chapters.length]);
 
   const createScene = useCallback(async (arg1, arg2 = "New Scene") => {
-    if (!selectedProjectId) return;
-    
     let sceneData = typeof arg1 === 'object' ? arg1 : { chapterId: arg1, title: arg2 };
+    const resolvedProjectId = sceneData.projectId || selectedProjectId;
+    if (!resolvedProjectId) return null;
     
     const newScene = {
       id: crypto.randomUUID(),
-      projectId: sceneData.projectId || selectedProjectId,
+      projectId: resolvedProjectId,
       chapterId: sceneData.chapterId,
       title: sceneData.title || "New Scene",
       text: sceneData.content || sceneData.text || "",
@@ -192,6 +229,11 @@ export function useDocumentManager() {
     await db.updateScene(id, { text });
     // Update local state optimistically
     setScenes(prev => prev.map(s => s.id === id ? { ...s, text } : s));
+  }, []);
+
+  const saveSceneDraft = useCallback(async (id, updates) => {
+    await db.updateScene(id, updates);
+    setScenes(prev => prev.map(scene => scene.id === id ? { ...scene, ...updates } : scene));
   }, []);
 
   const reorderScene = useCallback(async (sceneId, targetChapterId, newIndex) => {
@@ -248,6 +290,21 @@ export function useDocumentManager() {
     if (updates.beats) setBeats(updates.beats);
     if (updates.voice) setVoice(prev => ({ ...prev, ...updates.voice }));
     setProjects(prev => prev.map(p => p.id === selectedProjectId ? { ...p, ...updates } : p));
+  }, [selectedProjectId]);
+
+  const updateProjectData = useCallback(async (projectId, updates) => {
+    if (!projectId) return;
+    await db.updateProject(projectId, updates);
+    const refreshed = await db.listProjects();
+    setProjects(refreshed);
+
+    if (projectId === selectedProjectId) {
+      if (updates.core) setCore(prev => ({ ...prev, ...updates.core }));
+      if (updates.chars) setChars(updates.chars);
+      if (updates.rules) setRules(updates.rules);
+      if (updates.beats) setBeats(updates.beats);
+      if (updates.voice) setVoice(prev => ({ ...prev, ...updates.voice }));
+    }
   }, [selectedProjectId]);
 
   const saveCharacter = useCallback(async (char) => {
@@ -318,38 +375,50 @@ export function useDocumentManager() {
   }, []);
 
   const updateCharacter = useCallback(async (projectId, id, updates) => {
-    const existing = chars.find(c => c.id === id);
+    const project = await db.getProject(projectId || selectedProjectId);
+    const existingChars = project?.chars || [];
+    const existing = existingChars.find(c => c.id === id);
     if (existing) {
-      await saveCharacter({ ...existing, ...updates, id });
+      const nextChars = existingChars.map(c => c.id === id ? { ...c, ...updates, id } : c);
+      await updateProjectData(projectId || selectedProjectId, { chars: nextChars });
     }
-  }, [chars, saveCharacter]);
+  }, [selectedProjectId, updateProjectData]);
 
   const getCharacter = useCallback(async (projectId, id) => {
     return chars.find(c => c.id === id);
   }, [chars]);
 
   const updateWorldRule = useCallback(async (projectId, id, updates) => {
-    const existing = rules.find(r => r.id === id);
+    const project = await db.getProject(projectId || selectedProjectId);
+    const existingRules = project?.rules || [];
+    const existing = existingRules.find(r => r.id === id);
     if (existing) {
-      await saveRule({ ...existing, ...updates, id });
+      const nextRules = existingRules.map(r => r.id === id ? { ...r, ...updates, id } : r);
+      await updateProjectData(projectId || selectedProjectId, { rules: nextRules });
     }
-  }, [rules, saveRule]);
+  }, [selectedProjectId, updateProjectData]);
 
   const getWorldRule = useCallback(async (projectId, id) => {
     return rules.find(r => r.id === id);
   }, [rules]);
 
   const getBeats = useCallback(async (projectId) => {
-    return beats;
-  }, [beats]);
+    if (!projectId || projectId === selectedProjectId) return beats;
+    const project = await db.getProject(projectId);
+    return project?.beats || [];
+  }, [beats, selectedProjectId]);
 
   const getWorldRules = useCallback(async (projectId) => {
-    return rules;
-  }, [rules]);
+    if (!projectId || projectId === selectedProjectId) return rules;
+    const project = await db.getProject(projectId);
+    return project?.rules || [];
+  }, [rules, selectedProjectId]);
 
   const getCharacters = useCallback(async (projectId) => {
-    return chars;
-  }, [chars]);
+    if (!projectId || projectId === selectedProjectId) return chars;
+    const project = await db.getProject(projectId);
+    return project?.chars || [];
+  }, [chars, selectedProjectId]);
 
   // --- NEW GENERIC DOCUMENT METHODS ---
 
@@ -370,13 +439,20 @@ export function useDocumentManager() {
     return await db.createDocument({ ...note, projectId, type: 'note', createdAt: Date.now(), updatedAt: Date.now() });
   }, []);
 
-  const getChapters = useCallback(async (projectId) => {
-    return await db.listChaptersByProject(projectId || selectedProjectId);
+  const getProject = useCallback(async (projectId) => {
+    const resolvedProjectId = projectId || selectedProjectId;
+    if (!resolvedProjectId) return null;
+    return await db.getProject(resolvedProjectId);
   }, [selectedProjectId]);
 
-  const getScenes = useCallback(async (chapterIdOrProjectId) => {
-    // If it looks like a projectId, list all scenes for that project
-    // This is a bit ambiguous in the requested code, but we'll support both.
+  const listChapters = useCallback(async (projectId) => {
+    const resolvedProjectId = projectId || selectedProjectId;
+    if (!resolvedProjectId) return [];
+    return await db.listChaptersByProject(resolvedProjectId);
+  }, [selectedProjectId]);
+
+  const listScenes = useCallback(async (chapterIdOrProjectId) => {
+    if (!chapterIdOrProjectId) return [];
     if (chapterIdOrProjectId === selectedProjectId || chapters.find(c => c.projectId === chapterIdOrProjectId)) {
         return await db.listScenesByProject(chapterIdOrProjectId);
     }
@@ -391,6 +467,85 @@ export function useDocumentManager() {
     });
   }, []);
 
+  // --- SHADOW ACTIONS & METRICS ---
+
+  const logShadowAction = useCallback(async (action) => {
+    const newAction = {
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      ...action
+    };
+    await db.perform("shadow_actions", "readwrite", s => s.add(newAction));
+    setShadowActions(prev => [...prev, newAction]);
+    return newAction;
+  }, []);
+
+  const removeShadowAction = useCallback(async (id, resolution = 'dismissed', reason = 'n/a', extra = {}) => {
+    const action = shadowActions.find(a => a.id === id);
+    if (!action) return;
+
+    const metric = {
+      id: crypto.randomUUID(),
+      actionId: id,
+      agent: action.meta?.agent || 'unknown',
+      res: resolution.toUpperCase(),
+      reason,
+      timestamp: Date.now(),
+      ...extra
+    };
+
+    await Promise.all([
+      db.perform("shadow_actions", "readwrite", s => s.delete(id)),
+      db.perform("composition_metrics", "readwrite", s => s.add(metric))
+    ]);
+
+    setShadowActions(prev => prev.filter(a => a.id !== id));
+    setCompositionMetrics(prev => [...prev, metric]);
+  }, [shadowActions]);
+
+  const clearShadowActions = useCallback(async () => {
+    await db.perform("shadow_actions", "readwrite", s => s.clear());
+    setShadowActions([]);
+  }, []);
+
+  const generateValidationReport = useCallback(() => {
+    if (compositionMetrics.length === 0) return null;
+    
+    return {
+      total: compositionMetrics.length,
+      approvals: compositionMetrics.filter(m => m.res === 'APPROVED').length,
+      rejections: compositionMetrics.filter(m => m.res === 'REJECTED').length,
+      dismissals: compositionMetrics.filter(m => m.res === 'DISMISSED').length,
+    };
+  }, [compositionMetrics]);
+
+  // Orchestrator compatibility aliases (STABLE - NOT CALLING HOOKS)
+  const orchestratorAliases = useMemo(() => ({
+    createChapter: (projectId, data) => createChapter({ ...data, projectId }),
+    createScene: (projectId, data) => createScene({ ...data, projectId }),
+    createCharacter: async (projectId, data) => {
+      const project = await db.getProject(projectId);
+      if (!project) throw new Error("Project not found");
+      const nextChars = [...(project.chars || []), { ...data, id: data.id || crypto.randomUUID() }];
+      await updateProjectData(projectId, { chars: nextChars });
+      return nextChars[nextChars.length - 1];
+    },
+    createWorldRule: async (projectId, data) => {
+      const project = await db.getProject(projectId);
+      if (!project) throw new Error("Project not found");
+      const nextRules = [...(project.rules || []), { ...data, id: data.id || crypto.randomUUID() }];
+      await updateProjectData(projectId, { rules: nextRules });
+      return nextRules[nextRules.length - 1];
+    },
+    createBeat: async (projectId, data) => {
+      const project = await db.getProject(projectId);
+      if (!project) throw new Error("Project not found");
+      const nextBeats = [...(project.beats || []), { ...data, id: data.id || crypto.randomUUID() }];
+      await updateProjectData(projectId, { beats: nextBeats });
+      return nextBeats[nextBeats.length - 1];
+    }
+  }), [createChapter, createScene, updateProjectData]);
+
   return {
     projects,
     selectedProjectId,
@@ -398,15 +553,19 @@ export function useDocumentManager() {
     tree,
     loading,
     selectProject,
+    refreshProjectState,
     selectScene,
     createProject,
+    deleteProject,
     createChapter,
     createScene,
     deleteChapter,
     deleteScene,
     updateSceneText,
+    saveSceneDraft,
     updateSceneMetadata,
     updateProjectMetadata,
+    updateProjectData,
     saveCharacter,
     deleteCharacter,
     saveRule,
@@ -425,9 +584,16 @@ export function useDocumentManager() {
     saveDocument,
     updateDocument,
     findDocuments,
-    getChapters,
-    getScenes,
+    getProject,
+    getChapters: listChapters,
+    getScenes: listScenes,
     findCharacterByName,
+    shadowActions,
+    compositionMetrics,
+    logShadowAction,
+    removeShadowAction,
+    generateValidationReport,
+    clearShadowActions,
     saveChapter,
     saveScene,
     saveWorldRule,
@@ -438,13 +604,10 @@ export function useDocumentManager() {
     updateCharacter,
     updateWorldRule,
     getWorldRule,
+    getCharacters,
+    getWorldRules,
     getBeats,
     createNote,
-    // High-level Orchestrator compatibility aliases
-    createChapter: useCallback((projectId, data) => createChapter({ ...data, projectId }), [createChapter]),
-    createScene: useCallback((projectId, data) => createScene({ ...data, projectId }), [createScene]),
-    createCharacter: useCallback((projectId, data) => saveCharacter({ ...data, projectId }), [saveCharacter]),
-    createWorldRule: useCallback((projectId, data) => saveRule({ ...data, projectId }), [saveRule]),
-    createBeat: useCallback((projectId, data) => saveBeat({ ...data, projectId }), [saveBeat])
+    ...orchestratorAliases
   };
 }

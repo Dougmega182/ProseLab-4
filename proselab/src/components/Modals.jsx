@@ -1,102 +1,251 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-export function CharModal({ char, onSave, onClose, onDelete }) {
-  const [data, setData] = useState(char || { name: "", archetype: "", motivation: "", Physiology: "", Psychology: "" });
-  
+function normalizeCharacterInput(char) {
+  return {
+    id: char?.id || null,
+    name: char?.name || "",
+    role: char?.role || "",
+    trait: char?.trait || "",
+    archetype: char?.archetype || "",
+    motivation: char?.motivation || "",
+    description: char?.description || char?.notes || "",
+    physiology: char?.physiology || char?.Physiology || "",
+    psychology: char?.psychology || char?.Psychology || "",
+    constraints: char?.constraints || ""
+  };
+}
+
+function normalizeSceneInput(scene) {
+  return {
+    id: scene?.id || null,
+    title: scene?.title || "",
+    chapter: scene?.chapter || 1,
+    location: scene?.location || "",
+    time: scene?.time || "",
+    chars: scene?.chars || "",
+    objects: scene?.objects || "",
+    summary: scene?.summary || "",
+    causalityType: scene?.causalityType || "linear",
+    causality: scene?.causality || "",
+    output: scene?.output || "",
+    stakes: scene?.stakes || "",
+    status: scene?.status || "draft",
+    notes: scene?.notes || ""
+  };
+}
+
+function ModalFrame({ title, subtitle, children, onClose, maxWidth = 760 }) {
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>{char ? "Edit Character" : "New Character"}</h3>
-        <div className="form-group">
-          <label>Name</label>
-          <input value={data.name} onChange={e => setData({...data, name: e.target.value})} />
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal-shell" style={{ maxWidth }} onClick={(event) => event.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-kicker">Preproduction Editor</div>
+            <div className="modal-title">{title}</div>
+            {subtitle ? <div className="modal-subtitle">{subtitle}</div> : null}
+          </div>
+          <button className="modal-close" onClick={onClose}>Close</button>
         </div>
-        <div className="form-group">
-          <label>Archetype</label>
-          <input value={data.archetype} onChange={e => setData({...data, archetype: e.target.value})} />
-        </div>
-        <div className="form-group">
-          <label>Motivation</label>
-          <textarea value={data.motivation} onChange={e => setData({...data, motivation: e.target.value})} />
-        </div>
-        <div className="form-group">
-          <label>Physiology (Physical markers)</label>
-          <textarea value={data.Physiology} onChange={e => setData({...data, Physiology: e.target.value})} />
-        </div>
-        <div className="form-group">
-          <label>Psychology (Internal logic)</label>
-          <textarea value={data.Psychology} onChange={e => setData({...data, Psychology: e.target.value})} />
-        </div>
-        <div className="modal-actions">
-          <button className="btn" onClick={onClose}>Cancel</button>
-          {char && <button className="btn btn-danger" onClick={() => onDelete(char.id)}>Delete</button>}
-          <button className="btn btn-primary" onClick={() => onSave(data)}>Save</button>
-        </div>
+        {children}
       </div>
     </div>
   );
 }
 
-export function SceneModal({ scene, onSave, onClose, onDelete }) {
-  const [data, setData] = useState(scene || { 
-    title: "", chapter: 1, location: "", time: "", objects: "", causality: "", output: "", stakes: "", status: "draft", causalityType: "linear" 
-  });
+export function CharModal({ char, onSave, onClose, onDelete }) {
+  const [data, setData] = useState(() => normalizeCharacterInput(char));
+
+  useEffect(() => {
+    setData(normalizeCharacterInput(char));
+  }, [char]);
+
+  const updateField = (key, value) => {
+    setData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = () => {
+    onSave({
+      ...char,
+      ...data,
+      Physiology: data.physiology,
+      Psychology: data.psychology
+    });
+  };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: "600px" }}>
-        <h3>{scene ? "Edit Scene" : "New Scene"}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-          <div className="form-group">
-            <label>Title</label>
-            <input value={data.title} onChange={e => setData({...data, title: e.target.value})} />
-          </div>
-          <div className="form-group">
-            <label>Chapter</label>
-            <input type="number" value={data.chapter} onChange={e => setData({...data, chapter: parseInt(e.target.value)})} />
-          </div>
+    <ModalFrame
+      title={char?.id ? "Character dossier" : "New character dossier"}
+      subtitle="Refine motivation, pressure, and voice so imported cast members become editable story assets."
+      onClose={onClose}
+      maxWidth={860}
+    >
+      <div className="modal-grid modal-grid-two">
+        <div className="field-group">
+          <label className="field-label">Name</label>
+          <input className="field-input" value={data.name} onChange={e => updateField("name", e.target.value)} />
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-          <div className="form-group">
-            <label>Location</label>
-            <input value={data.location} onChange={e => setData({...data, location: e.target.value})} />
-          </div>
-          <div className="form-group">
-            <label>Story Time</label>
-            <input value={data.time} onChange={e => setData({...data, time: e.target.value})} />
-          </div>
-        </div>
-        <div className="form-group">
-          <label>Function Type</label>
-          <select value={data.causalityType} onChange={e => setData({...data, causalityType: e.target.value})}>
-            <option value="linear">Linear (Sequential)</option>
-            <option value="reversal">Reversal (Assumption Inverted)</option>
-            <option value="reveal">Reveal (Information Unlocked)</option>
-            <option value="set-piece">Set-Piece (Mechanical Test)</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label>Carried Objects (Planted/Props)</label>
-          <input value={data.objects} onChange={e => setData({...data, objects: e.target.value})} placeholder="e.g. Broken watch, cold coffee" />
-        </div>
-        <div className="form-group">
-          <label>Causality (Why does this happen?)</label>
-          <textarea value={data.causality} onChange={e => setData({...data, causality: e.target.value})} />
-        </div>
-        <div className="form-group">
-          <label>Required Output (What must change?)</label>
-          <textarea value={data.output} onChange={e => setData({...data, output: e.target.value})} />
-        </div>
-        <div className="form-group">
-          <label>Stakes (What happens if it fails?)</label>
-          <textarea value={data.stakes} onChange={e => setData({...data, stakes: e.target.value})} />
-        </div>
-        <div className="modal-actions">
-          <button className="btn" onClick={onClose}>Cancel</button>
-          {scene && <button className="btn btn-danger" onClick={() => onDelete(scene.id)}>Delete</button>}
-          <button className="btn btn-primary" onClick={() => onSave(data)}>Save</button>
+        <div className="field-group">
+          <label className="field-label">Narrative Role</label>
+          <input className="field-input" value={data.role} onChange={e => updateField("role", e.target.value)} placeholder="Protagonist, foil, mentor, antagonist..." />
         </div>
       </div>
-    </div>
+
+      <div className="modal-grid modal-grid-three">
+        <div className="field-group">
+          <label className="field-label">Signature Trait</label>
+          <input className="field-input" value={data.trait} onChange={e => updateField("trait", e.target.value)} placeholder="What is legible on the page immediately?" />
+        </div>
+        <div className="field-group">
+          <label className="field-label">Archetype</label>
+          <input className="field-input" value={data.archetype} onChange={e => updateField("archetype", e.target.value)} />
+        </div>
+        <div className="field-group">
+          <label className="field-label">Constraint / Wound</label>
+          <input className="field-input" value={data.constraints} onChange={e => updateField("constraints", e.target.value)} placeholder="Fear, wound, blind spot, vow..." />
+        </div>
+      </div>
+
+      <div className="field-group">
+        <label className="field-label">Motivation</label>
+        <textarea className="field-textarea" value={data.motivation} onChange={e => updateField("motivation", e.target.value)} placeholder="What does this character want badly enough to distort behavior?" />
+      </div>
+
+      <div className="modal-grid modal-grid-two">
+        <div className="field-group">
+          <label className="field-label">Physiology</label>
+          <textarea className="field-textarea" value={data.physiology} onChange={e => updateField("physiology", e.target.value)} placeholder="Physical markers, movement, visible stress tells..." />
+        </div>
+        <div className="field-group">
+          <label className="field-label">Psychology</label>
+          <textarea className="field-textarea" value={data.psychology} onChange={e => updateField("psychology", e.target.value)} placeholder="Internal logic, contradiction, defense mechanism..." />
+        </div>
+      </div>
+
+      <div className="field-group">
+        <label className="field-label">Dossier Notes</label>
+        <textarea className="field-textarea" value={data.description} onChange={e => updateField("description", e.target.value)} placeholder="Observed detail, backstory fragments, tension with other cast..." />
+      </div>
+
+      <div className="modal-footer">
+        <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+        {char?.id ? <button className="btn btn-danger" onClick={() => onDelete(char.id)}>Delete</button> : null}
+        <button className="btn btn-primary" onClick={handleSave}>Save Dossier</button>
+      </div>
+    </ModalFrame>
+  );
+}
+
+export function SceneModal({ scene, onSave, onClose, onDelete }) {
+  const [data, setData] = useState(() => normalizeSceneInput(scene));
+
+  useEffect(() => {
+    setData(normalizeSceneInput(scene));
+  }, [scene]);
+
+  const updateField = (key, value) => {
+    setData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = () => {
+    onSave({
+      ...scene,
+      ...data
+    });
+  };
+
+  return (
+    <ModalFrame
+      title={scene?.id ? "Scene brief" : "New scene brief"}
+      subtitle="This is the control surface for intent, causality, and preflight readiness."
+      onClose={onClose}
+      maxWidth={960}
+    >
+      <div className="modal-grid modal-grid-two">
+        <div className="field-group">
+          <label className="field-label">Scene Title</label>
+          <input className="field-input" value={data.title} onChange={e => updateField("title", e.target.value)} />
+        </div>
+        <div className="field-group">
+          <label className="field-label">Chapter Number</label>
+          <input className="field-input" type="number" value={data.chapter} onChange={e => updateField("chapter", Number.parseInt(e.target.value || "1", 10))} />
+        </div>
+      </div>
+
+      <div className="modal-grid modal-grid-three">
+        <div className="field-group">
+          <label className="field-label">Location Lock</label>
+          <input className="field-input" value={data.location} onChange={e => updateField("location", e.target.value)} placeholder="Where can this scene happen?" />
+        </div>
+        <div className="field-group">
+          <label className="field-label">Story Time</label>
+          <input className="field-input" value={data.time} onChange={e => updateField("time", e.target.value)} placeholder="When does it happen?" />
+        </div>
+        <div className="field-group">
+          <label className="field-label">Scene Status</label>
+          <select className="field-select" value={data.status} onChange={e => updateField("status", e.target.value)}>
+            <option value="draft">Draft</option>
+            <option value="ready">Ready</option>
+            <option value="polish">Polish</option>
+            <option value="approved">Approved</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="modal-grid modal-grid-two">
+        <div className="field-group">
+          <label className="field-label">Characters Present</label>
+          <input className="field-input" value={data.chars} onChange={e => updateField("chars", e.target.value)} placeholder="Comma-separated cast in scene" />
+        </div>
+        <div className="field-group">
+          <label className="field-label">Planted Objects / Props</label>
+          <input className="field-input" value={data.objects} onChange={e => updateField("objects", e.target.value)} placeholder="Watch, coffee cup, knife, ledger..." />
+        </div>
+      </div>
+
+      <div className="field-group">
+        <label className="field-label">Function Type</label>
+        <select className="field-select" value={data.causalityType} onChange={e => updateField("causalityType", e.target.value)}>
+          <option value="linear">Linear</option>
+          <option value="reversal">Reversal</option>
+          <option value="reveal">Reveal</option>
+          <option value="set-piece">Set-piece</option>
+          <option value="confrontation">Confrontation</option>
+          <option value="transition">Transition</option>
+        </select>
+      </div>
+
+      <div className="field-group">
+        <label className="field-label">Scene Summary</label>
+        <textarea className="field-textarea" value={data.summary} onChange={e => updateField("summary", e.target.value)} placeholder="One sharp sentence for what the scene actually does." />
+      </div>
+
+      <div className="modal-grid modal-grid-two">
+        <div className="field-group">
+          <label className="field-label">Causality</label>
+          <textarea className="field-textarea" value={data.causality} onChange={e => updateField("causality", e.target.value)} placeholder="Why does this scene happen now?" />
+        </div>
+        <div className="field-group">
+          <label className="field-label">Required Output</label>
+          <textarea className="field-textarea" value={data.output} onChange={e => updateField("output", e.target.value)} placeholder="What must change before the next scene?" />
+        </div>
+      </div>
+
+      <div className="modal-grid modal-grid-two">
+        <div className="field-group">
+          <label className="field-label">Stakes</label>
+          <textarea className="field-textarea" value={data.stakes} onChange={e => updateField("stakes", e.target.value)} placeholder="What failure costs emotionally, narratively, or practically?" />
+        </div>
+        <div className="field-group">
+          <label className="field-label">Scene Notes</label>
+          <textarea className="field-textarea" value={data.notes} onChange={e => updateField("notes", e.target.value)} placeholder="Continuity notes, voice risks, unresolved pressure..." />
+        </div>
+      </div>
+
+      <div className="modal-footer">
+        <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+        {scene?.id ? <button className="btn btn-danger" onClick={() => onDelete(scene.id)}>Delete</button> : null}
+        <button className="btn btn-primary" onClick={handleSave}>Save Scene</button>
+      </div>
+    </ModalFrame>
   );
 }

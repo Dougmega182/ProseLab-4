@@ -8,30 +8,60 @@ Welcome to **ProseLab V4**, a high-fidelity editorial workstation designed to fo
 
 Follow this workflow to move from an idea to a polished, verified manuscript.
 
-### 1. Define Narrative Intent (The Sidebar)
+### 1. Project Initialization & Import
+ProseLab V4 uses a hierarchical IndexedDB storage system. To bring existing work in:
+- **The Import Wizard**: Click the **[Import]** button in the Document Sidebar.
+- **Format Support**: Upload `.md` or `.txt` files. 
+- **Structure Parsing**: 
+  - Use `#` for Chapters.
+  - Use `---` or `***` for Scene breaks.
+  - The Wizard will automatically chunk your text into the Project/Chapter/Scene tree.
+- **Manual Setup**: Create a Project/Chapter manually and paste text directly into the **ProseEditor**.
+
+### 2. Define Narrative Intent (The Metadata Panel)
 ProseLab requires **Intent** before it allows **Execution**.
-- Open the **Sidebar** (left panel).
-- Under the **Chapters** tab, select your current scene or create a new one.
+- Select your scene in the **Document Sidebar**.
+- Open the **Metadata** panel in the Write tab.
 - Define the **Causality**, **Stakes**, and **Required Output**.
-- *Tip: The engine will reject prose that fails to physically manifest the "Required Output."*
+- *Tip: The Critic Agent will reject prose that fails to physically manifest the "Required Output" defined here.*
 
-### 2. Drafting (The High-Performance Editor)
+### 3. Drafting (The High-Performance Editor)
 Switch to the **Write** workspace mode in the top toolbar.
-- Use **Focus Mode** (in Settings) to dim non-active paragraphs and maintain concentration.
-- Use **Typewriter Mode** to keep your active line centered in the viewport.
-- *Note: Every character you type is automatically tracked (Ln/Col) and word counts are aggregated in the Status Bar.*
+- Use **Focus Mode** (in the top status bar) to dim non-active UI and maintain concentration.
+- Every character you type is automatically tracked, and word counts are aggregated in the Dashboard Stats.
+- *Note: Auto-save is active and persists directly to your browser's IndexedDB.*
 
-### 3. The Editorial Engine (The Toolbar)
-Once a draft exists, move to the **Edit** workspace.
-- **ANALYSE**: Run this first. Margaret (Voice) and Rafael (Rhythm) will diagnose your prose.
-- **ENGINEER**: Once you've edited your text post-analysis, this mode becomes available. It performs a structural "Surgical Rewrite" to fix rhythm and grounding.
-- **VERDICT**: The final gate. The Critic Agent and the Gemini Challenger evaluate the scene. Only "Approved" prose should proceed to publication.
+### 4. The Editorial Engine (Modes)
+ProseLab forces a progression to ensure quality:
+- **CREATE**: The primary generation/refinement loop. Uses **Ollama -> OpenAI -> Critic**.
+- **ANALYSE**: Run this first for diagnostics. Margaret (Voice) and Rafael (Rhythm) will diagnose your prose.
+- **ENGINEER**: Becomes available after editing post-analysis. It performs a structural "Surgical Rewrite."
+- **MARKET & VERDICT**: The final gates. The Critic Agent and the Gemini Challenger evaluate the scene for publication readiness.
 
-### 4. Working with AI (The AI Panel)
-The right-hand panel provides three distinct assistants:
-- **Chat**: Conversational brainstorming with context-aware logic.
-- **Suggest**: Get 3-5 variations for a specific sentence or paragraph.
-- **Analyze**: Request deep structural diagnostics on specific narrative beats.
+### 5. Running the Orchestration Loop
+The full power of ProseLab is in the automated loop:
+- Click the **[RUN] RUN ORCHESTRATION LOOP** button in the header.
+- This triggers the full pipeline: **Drafting -> Refinement -> Critique**.
+- If the Critic gives a `REWRITE` verdict, the system will automatically retry (up to 3 times) with specific instructions injected into the next generation.
+- Rejection traces are kept in the **Logs** tab for inspection.
+
+---
+
+## 📂 Importing Your Manuscript
+(Detailed Workflow)
+1. Prepare your markdown file with standard headers.
+2. Launch the **Import Wizard** from the sidebar.
+3. Review the parsed tree in the preview.
+4. Click **Apply Import** to commit to the local database.
+
+---
+
+## ⚖️ How to Get Your Manuscript Critiqued
+1. Ensure your **API Keys** are valid in `proselab/.env`.
+2. Select a scene and ensure its **Required Output** metadata is set.
+3. Click the **VERDICT** tab.
+4. Click **Start VERDICT Mode**.
+5. Inspect the **Pipeline Trace** in the Logs tab to see the Critic's specific reasoning for Approval or Rejection.
 
 ---
 
@@ -40,37 +70,24 @@ The right-hand panel provides three distinct assistants:
 ### The Toolbar
 - **Format Select**: Manage H1-H6, Blockquotes, and Paragraphs.
 - **Style Controls**: Bold, Italic, Lists, and Indentation.
-- **Entity Insertion**: Quick-add Links, Images, and Horizontal Rules.
-- **Mode Toggle**: Switch between **Write** (Drafting), **Edit** (Engine), and **Preview** (Reading).
+- **Mode Toggle**: Switch between **CREATE**, **ANALYSE**, **ENGINEER**, etc.
 
-### The Sidebar
-- **Chapters**: Drag-and-drop reordering, renaming, and word count tracking.
-- **Notes**: Chapter-specific annotations that don't clutter your manuscript.
-- **Outline**: Automated navigation tree based on your H1/H2 headings.
+### The Document Sidebar
+- **Hierarchy**: Manage Projects > Chapters > Scenes.
+- **Organization**: Drag-and-drop reordering of scenes within or between chapters.
+- **Import/Export**: Central hub for manuscript movement.
 
-### The Status Bar
-- **Save Status**: Real-time feedback on IndexedDB persistence (Saved/Saving/Unsaved).
-- **Writing Goals**: Track your daily progress against a set word target.
-- **Telemetry**: Word/Char/Paragraph counts and estimated Reading Time.
-
----
-
-## ⌨️ Essential Shortcuts
-
-| Shortcut | Action |
-| :--- | :--- |
-| **Ctrl + S** | Manual Save / Snapshot |
-| **Ctrl + B / I / U** | Bold / Italic / Underline |
-| **Ctrl + Z / Y** | Undo / Redo (with selection recovery) |
-| **Tab** | Insert Narrative Indent (Em-Space) |
-| **Esc** | Close Search / Modals |
+### The Status Bar (Env Status)
+- **API Status**: Real-time checks for OpenAI and Ollama connectivity.
+- **Cache Control**: Toggle and clear inference caching to reset AI memory.
+- **Costs**: Live tracking of token usage and estimated USD costs.
 
 ---
 
 ## 🛡 Principles of ProseLab
 
 1.  **Defaults to Rejection**: The engine is designed to find flaws, not to validate your ego.
-2.  **Show, Don't Tell**: Abstract emotional labels are banned. The engine will flag words like "felt," "anxious," or "happy" and request physical evidence.
+2.  **Show, Don't Tell**: Abstract emotional labels are banned. The engine will flag words like "felt," "anxious," or "happy."
 3.  **Adversarial Truth**: We use multiple AI architectures (OpenAI, Gemini, Ollama) to ensure that if one model misses a flaw, the other catches it.
 
 > "If the system cannot reject bad output, it will produce average output."

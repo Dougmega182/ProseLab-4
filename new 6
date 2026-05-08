@@ -1,0 +1,779 @@
+{
+  "lastResult": {
+    "summary": {
+      "chaptersAdded": 20,
+      "chaptersUpdated": 0,
+      "charactersAdded": 5,
+      "charactersUpdated": 0,
+      "rulesAdded": 10,
+      "beatsAdded": 3,
+      "notesAdded": 0,
+      "scenesAdded": 35
+    },
+    "changelog": [
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**PROLOGUE**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**PROLOGUE** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 1 — BLACK PEARL BAR**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 1 — BLACK PEARL BAR** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 2 — THE MOUNTAIN**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 2 — THE MOUNTAIN** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 3 — THRESHOLD**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 3 — THRESHOLD** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 4 — ALFRED HOSPITAL**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 4 — ALFRED HOSPITAL** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 5 — THE APARTMENT**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 5 — THE APARTMENT** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 5 — THE APARTMENT** / Scene 2"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 5 — THE APARTMENT** / Scene 3"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 5 — THE APARTMENT** / Scene 4"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 5 — THE APARTMENT** / Scene 5"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 5 — THE APARTMENT** / Scene 6"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 5 — THE APARTMENT** / Scene 7"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 6 — THE VECTOR**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 6 — THE VECTOR** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 7 — THE MIRROR HUNT**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 7 — THE MIRROR HUNT** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 7.5 — REYES**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 7.5 — REYES** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 8: BELL DISCOVERS THE LIE**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 8: BELL DISCOVERS THE LIE** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 8: BELL DISCOVERS THE LIE** / Scene 2"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 9 — THE TUESDAY CONTACT**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 9 — THE TUESDAY CONTACT** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 9 — THE TUESDAY CONTACT** / Scene 2"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 10 — DEAD MAN'S SWITCH**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 10 — DEAD MAN'S SWITCH** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 10 — DEAD MAN'S SWITCH** / Scene 2"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 10 — DEAD MAN'S SWITCH** / Scene 3"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 10 — DEAD MAN'S SWITCH** / Scene 4"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 10 — DEAD MAN'S SWITCH** / Scene 5"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 10 — DEAD MAN'S SWITCH** / Scene 6"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 11 — THE MIRROR HUNT**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 11 — THE MIRROR HUNT** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 11 — THE MIRROR HUNT** / Scene 2"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 12 — THE BREACH**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 12 — THE BREACH** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 12 — THE BREACH** / Scene 2"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 12.5 — THE INSTRUMENT'S CONSENT**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 12.5 — THE INSTRUMENT'S CONSENT** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 13 — THE DESCENT**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 13 — THE DESCENT** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 14 — THE INFILTRATION**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 14 — THE INFILTRATION** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 15 — THE WINDOW**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 15 — THE WINDOW** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**CHAPTER 16 — THE FIXED POINT**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**CHAPTER 16 — THE FIXED POINT** / Scene 1"
+      },
+      {
+        "action": "Added",
+        "type": "Chapter",
+        "detail": "**EPILOGUE — THE WAKING WORLD**"
+      },
+      {
+        "action": "Added",
+        "type": "Scene",
+        "detail": "**EPILOGUE — THE WAKING WORLD** / Scene 1"
+      }
+    ],
+    "warnings": [],
+    "analysisResults": {
+      "characters": [
+        {
+          "name": "Chen",
+          "role": "Agent",
+          "description": "A seasoned operative who has been flagged for behavioral inconsistencies and is facing a replacement.",
+          "traits": [
+            "cautious",
+            "analytical",
+            "experienced"
+          ],
+          "relationships": {
+            "father": "deceased, a rare book dealer",
+            "replacement": "an improved version of himself"
+          }
+        },
+        {
+          "name": "Replacement",
+          "role": "Copy of Chen",
+          "description": "A version of Chen created to replace him, claiming to be an improvement.",
+          "traits": [
+            "confident",
+            "mechanical",
+            "efficient"
+          ],
+          "relationships": {
+            "Chen": "original version, adversarial relationship"
+          }
+        },
+        {
+          "name": "Kain",
+          "role": "Agent",
+          "description": "A former QSA operative who has been sidelined and is now investigating the replacement of agents.",
+          "traits": [
+            "determined",
+            "observant",
+            "cynical"
+          ],
+          "relationships": {
+            "Emily": "former colleague, complicated relationship"
+          }
+        },
+        {
+          "name": "Emily",
+          "role": "Senior Analyst",
+          "description": "A senior analyst at QSA who has a history with Kain and is involved in the investigation of the replacements.",
+          "traits": [
+            "strategic",
+            "calculated",
+            "resourceful"
+          ],
+          "relationships": {
+            "Kain": "former colleague, complicated relationship"
+          }
+        },
+        {
+          "name": "Elias Varn",
+          "role": "Former Procurement Officer",
+          "description": "A mid-level officer whose replacement was investigated by Kain, pivotal to Kain's career downfall.",
+          "traits": [
+            "unremarkable",
+            "meticulous"
+          ],
+          "relationships": {
+            "Kain": "investigated by Kain, indirectly responsible for Kain's career change"
+          }
+        }
+      ],
+      "worldRules": [
+        {
+          "title": "Dimensional Variance and Replacement",
+          "category": "Agency Operations",
+          "description": "The Agency has the capability to replace its own agents with optimized versions that do not realize they are copies.",
+          "evidence": "The replacement said, 'The version of you this reality needs.'"
+        },
+        {
+          "title": "Behavioral Inconsistencies",
+          "category": "Agency Operations",
+          "description": "Agents are monitored for behavioral inconsistencies, which can lead to their replacement.",
+          "evidence": "'You were flagged eighteen months ago. Behavioural inconsistencies.'"
+        },
+        {
+          "title": "Evidence and Recognition",
+          "category": "Agency Operations",
+          "description": "The replacements are designed to eliminate evidence of their existence and to avoid detection by those who might recognize the differences.",
+          "evidence": "'But evidence requires someone to find it. Someone to understand it.'"
+        },
+        {
+          "title": "Routine and Psychological Habits",
+          "category": "Character Behavior",
+          "description": "Characters have strict routines and psychological habits that are monitored and can indicate deviations.",
+          "evidence": "'He had taken a seven-minute shower every morning for three years.'"
+        },
+        {
+          "title": "QSA Grid and Security",
+          "category": "Technology and Security",
+          "description": "Certain locations, like the Black Pearl bar, operate off the QSA grid to ensure privacy and security.",
+          "evidence": "'It ran off the QSA grid, its mesh node buried under the foundation slab.'"
+        },
+        {
+          "title": "Fragmentation and PQ Carriers",
+          "category": "Health and Technology",
+          "description": "Individuals with dormant PQ carriers can experience fragmentation, which affects their perception.",
+          "evidence": "'Dormant PQ carriers didn't fragment. That was the clinical position, and it was wrong.'"
+        },
+        {
+          "title": "Negative Space",
+          "category": "Investigation Techniques",
+          "description": "Investigators look for negative space, or deviations from established patterns, to identify anomalies.",
+          "evidence": "'You’re tracking a Level 6 Architect's shower routine and home geometry.'"
+        },
+        {
+          "title": "Operational Secrecy",
+          "category": "Agency Protocol",
+          "description": "Operations that could expose the Agency are conducted off-book, with records erased after mission completion.",
+          "evidence": "'Operational records erased on mission completion.'"
+        },
+        {
+          "title": "Personal Connections and Trust",
+          "category": "Character Relationships",
+          "description": "Characters have complex relationships based on trust and shared history, influencing their decisions.",
+          "evidence": "'I need that. The case needs that.'"
+        },
+        {
+          "title": "Quantum Insertion",
+          "category": "Agency Technology",
+          "description": "The Agency has advanced understanding of quantum insertion, allowing for the replacement of operatives.",
+          "evidence": "'Whoever is running this understands quantum insertion at a level that shouldn't exist outside the QSA.'"
+        }
+      ],
+      "beats": [
+        {
+          "order": 1,
+          "title": "Prologue",
+          "type": "Prologue",
+          "description": "Chen discovers a replacement version of himself in his apartment, leading to a confrontation about identity and existence.",
+          "approximateLocation": "Chen's apartment, Melbourne"
+        },
+        {
+          "order": 2,
+          "title": "Black Pearl Bar",
+          "type": "Chapter",
+          "description": "Kain meets Emily at the Black Pearl bar to discuss a sensitive matter regarding Marcus Chen's death and the implications of replacements within the QSA.",
+          "approximateLocation": "Black Pearl Bar, Melbourne"
+        },
+        {
+          "order": 3,
+          "title": "The Mountain",
+          "type": "Chapter",
+          "description": "Kain and Emily drive to Wilsons Promontory, discussing the urgency of their situation and the history of replacements, particularly focusing on Elias Varn.",
+          "approximateLocation": "M1 highway, heading to Wilsons Promontory"
+        }
+      ],
+      "scenes": [
+        {
+          "sceneNumber": 1,
+          "title": "Prologue: The Replacement",
+          "setting": "Chen's apartment, Melbourne",
+          "timeOfDay": "Early morning",
+          "characters": [
+            "Chen",
+            "Replacement"
+          ],
+          "summary": "Chen discovers that a replacement version of himself has taken over his life, leading to a confrontation between him and the replacement.",
+          "purpose": "Introduces conflict and sets the stage for the central themes of identity and replacement.",
+          "wordCountEstimate": 1500
+        },
+        {
+          "sceneNumber": 2,
+          "title": "Chapter 1: Black Pearl Bar",
+          "setting": "Black Pearl Bar, Melbourne",
+          "timeOfDay": "Night",
+          "characters": [
+            "Kain",
+            "Emily"
+          ],
+          "summary": "Kain meets Emily at the Black Pearl, a bar off the QSA grid, to discuss a sensitive case involving Marcus Chen's death.",
+          "purpose": "Advances plot by introducing Kain and Emily's relationship and the stakes of the investigation.",
+          "wordCountEstimate": 1200
+        },
+        {
+          "sceneNumber": 3,
+          "title": "Chapter 2: The Mountain",
+          "setting": "M1 highway, en route to Wilsons Promontory",
+          "timeOfDay": "Midnight",
+          "characters": [
+            "Kain",
+            "Emily"
+          ],
+          "summary": "Kain drives Emily to a secret location while discussing the implications of Chen's case and the urgency of their mission.",
+          "purpose": "Develops character dynamics and builds tension regarding the investigation's timeline.",
+          "wordCountEstimate": 1300
+        }
+      ],
+      "continuityIssues": [
+        {
+          "severity": "high",
+          "type": "character",
+          "description": "Chen's habits are inconsistent. He is described as taking a 7:15 tram and drinking black coffee, but he later states he drinks coffee with cream, which contradicts his established character.",
+          "location": "Prologue",
+          "suggestion": "Clarify Chen's coffee preference and tram schedule to ensure consistency throughout the text."
+        },
+        {
+          "severity": "medium",
+          "type": "timeline",
+          "description": "Emily states that Chen died four days ago, but the timeline of events in the narrative suggests that Kain is already aware of the replacement process, which implies a longer timeframe.",
+          "location": "Chapter 1",
+          "suggestion": "Adjust the timeline to ensure that Kain's knowledge aligns with the timeline of Chen's death and the replacement process."
+        },
+        {
+          "severity": "medium",
+          "type": "setting",
+          "description": "The Black Pearl bar is described as operating off the QSA grid, but later, Kain and Emily have a conversation that suggests they are being monitored, which contradicts the bar's intended purpose.",
+          "location": "Chapter 1",
+          "suggestion": "Clarify the level of security and monitoring at the Black Pearl bar to maintain consistency with its description."
+        },
+        {
+          "severity": "high",
+          "type": "world_rule",
+          "description": "The narrative suggests that replacements are unaware of their status, yet the replacement of Chen displays knowledge of behavioral inconsistencies, which contradicts established world rules.",
+          "location": "Prologue",
+          "suggestion": "Revise the replacement's dialogue to align with the established rule that replacements do not realize they are replacements."
+        },
+        {
+          "severity": "high",
+          "type": "plot_hole",
+          "description": "Kain's knowledge of the replacement process and his ability to identify anomalies in Chen's behavior seem to contradict the idea that he has been out of the loop for years.",
+          "location": "Chapter 1",
+          "suggestion": "Provide a clearer explanation of how Kain has maintained his knowledge of the replacement process despite being sidelined from the QSA."
+        },
+        {
+          "severity": "medium",
+          "type": "factual",
+          "description": "Kain's description of the QSA's monitoring capabilities suggests a level of oversight that seems inconsistent with the operational secrecy described in the world rules.",
+          "location": "Chapter 1",
+          "suggestion": "Ensure that Kain's understanding of the QSA's capabilities aligns with the established rules regarding operational secrecy and monitoring."
+        }
+      ]
+    },
+    "createdChapterIds": [
+      "606d1d08-32f1-4717-8323-832581c095c3",
+      "8d0fd266-56ef-47ee-bd92-9ec2fa36a055",
+      "3248daa8-278d-41f6-96e0-43869e159117",
+      "4c2c156d-1359-44e6-a886-5012d4c01111",
+      "12ee2a17-a1ea-4e8d-bff5-dfbbfdab4347",
+      "4c5abe3a-992b-40c6-a599-e61bc04d7523",
+      "8c3099d4-70ca-44e8-8693-50ceb077cc98",
+      "93a2e767-5c92-45e2-9bb2-886e2392cbc8",
+      "3ded3479-cbcc-4c2c-99d1-9e2054fdca70",
+      "c5c39ce4-a327-4989-bc06-6499b9b9269c",
+      "7342b5e2-5494-4a59-95cb-d953190ad886",
+      "3e1d4cc3-3c5c-4f5c-997e-f947ae63ddd1",
+      "a3cb9314-17a5-49f9-9061-2af20d84bb90",
+      "2c371600-1b3e-4ebc-af5b-c0b2857b8df4",
+      "fc86f64c-ccb3-4a8f-aab6-f5150cf065f8",
+      "1115df4a-ea4e-47bf-a87f-693d668bfbec",
+      "741a0600-9d7e-4f47-91bb-eb47320dbf06",
+      "22c7a441-0379-4db1-b78a-9b9b67ab4b22",
+      "cc877fba-deed-4860-a738-c53b784ee67d",
+      "6acfbf8e-fe7f-4219-ac4c-cbc7f4ec4330"
+    ],
+    "createdSceneIds": [
+      "086bf692-216e-4f2a-b327-09003780f8a6",
+      "eb30ba4a-9bf6-4553-a29f-3069f5a72cbd",
+      "80f9f57a-4b25-4c20-9ff3-1436df578206",
+      "2549726d-8f7b-4f7d-b144-415f6cc725b2",
+      "e12b4baf-cdfd-46dc-ba07-ca5a44898854",
+      "60853505-133b-4681-9ace-9449fb5a13a7",
+      "fcaa02c8-799b-4ede-819c-2da25794490e",
+      "7412a96a-d383-4ee0-bbfc-ac41cd4815e9",
+      "d954c53a-0c8c-4ddc-bd2d-c91764629e07",
+      "f08bbc52-6b8e-4889-bad4-fdcfde18c38b",
+      "aacf686f-0c3c-4d0a-ba04-0408ae702d26",
+      "f359609e-664b-48b7-b54d-9088c2a4d8f8",
+      "df40ecc7-b079-4fa4-bc6d-b5ac95a56989",
+      "5dc34177-ad77-4692-81ce-d446e81682c6",
+      "b7812dd1-89d9-4137-b9d3-ee80bb010510",
+      "b156e24f-2196-483c-ad7d-08b753d11362",
+      "df9f3239-9743-432d-9c0e-0383ce25f760",
+      "bfd913c1-147b-4ca6-8697-32ebf8bcba22",
+      "eb0e2f72-becb-448f-b7c0-8fc993e367fd",
+      "22f9d0ab-ff32-4177-9d5a-38f1d83a0305",
+      "e6895524-e65e-42d7-93b2-c0bc2da888e3",
+      "808490b6-f73e-428c-af0e-79c87e9afcee",
+      "b4053746-1b2b-4de4-a526-332e0b52b860",
+      "5bfe57af-2c5e-422f-83dc-bd5e5eb28659",
+      "23c4a93b-4891-4cf0-afc8-9f7b89306738",
+      "48b7265c-0eef-452e-b45e-96df6b74a14b",
+      "b466dc90-1e11-4191-ba62-6c3410b33860",
+      "d94b1039-f0a1-4867-a1ea-209237e6ba84",
+      "c3cd6dac-58b4-4c68-8b0d-0cba31f56ab6",
+      "a41a40a5-eb07-49f9-beb9-f1513e15c8da",
+      "77133a2c-e4df-49b0-9469-053a3d416642",
+      "95d4a9e1-7741-441d-bfba-bace107402de",
+      "d9a5aa31-e918-4253-a233-ec4249f11a5d",
+      "698c2fd0-6da2-469d-9bfd-97de96921cc5",
+      "78821a78-3898-4012-8aac-15d2d5b3fec3"
+    ],
+    "newChapterId": "606d1d08-32f1-4717-8323-832581c095c3",
+    "newSceneId": "086bf692-216e-4f2a-b327-09003780f8a6",
+    "targetProjectId": "74e68bc6-d467-48ea-9959-c1fbf7f6885e",
+    "runId": "import_mow64uu2",
+    "success": true,
+    "totalImported": 73,
+    "totalFiles": 1
+  },
+  "debug": {
+    "runs": [
+      {
+        "event": "start",
+        "payload": {
+          "runId": "import_mow64uu2",
+          "projectId": null,
+          "startedAt": "2026-05-08T00:20:08.090Z",
+          "files": [
+            {
+              "id": "file-1",
+              "fileName": "Quantum Shadows - COMPLETED DRAFTv2.md",
+              "category": "manuscript",
+              "size": 428404
+            }
+          ],
+          "options": {
+            "conflicts": []
+          },
+          "events": []
+        },
+        "at": "2026-05-08T00:20:08.090Z"
+      },
+      {
+        "event": "project-created",
+        "payload": {
+          "runId": "import_mow64uu2",
+          "targetProjectId": "74e68bc6-d467-48ea-9959-c1fbf7f6885e",
+          "title": "**PROLOGUE**"
+        },
+        "at": "2026-05-08T00:20:08.129Z"
+      },
+      {
+        "event": "loaded-project",
+        "payload": {
+          "runId": "import_mow64uu2",
+          "targetProjectId": "74e68bc6-d467-48ea-9959-c1fbf7f6885e",
+          "projectTitle": "**PROLOGUE**",
+          "chapterCount": 0,
+          "charCount": 0
+        },
+        "at": "2026-05-08T00:20:08.129Z"
+      },
+      {
+        "event": "manuscript-imported",
+        "payload": {
+          "runId": "import_mow64uu2",
+          "fileName": "Quantum Shadows - COMPLETED DRAFTv2.md",
+          "chapters": 20,
+          "scenes": 35,
+          "stats": {
+            "totalChapters": 20,
+            "totalScenes": 35,
+            "totalWords": 70049
+          }
+        },
+        "at": "2026-05-08T00:20:08.201Z"
+      },
+      {
+        "event": "analysis-saved",
+        "payload": {
+          "runId": "import_mow64uu2",
+          "phase": "characters",
+          "saved": 5
+        },
+        "at": "2026-05-08T00:20:17.554Z"
+      },
+      {
+        "event": "analysis-saved",
+        "payload": {
+          "runId": "import_mow64uu2",
+          "phase": "worldRules",
+          "saved": 10
+        },
+        "at": "2026-05-08T00:20:32.596Z"
+      },
+      {
+        "event": "analysis-saved",
+        "payload": {
+          "runId": "import_mow64uu2",
+          "phase": "beats",
+          "saved": 3
+        },
+        "at": "2026-05-08T00:20:36.950Z"
+      },
+      {
+        "event": "analysis-saved",
+        "payload": {
+          "runId": "import_mow64uu2",
+          "phase": "scenes",
+          "saved": 3
+        },
+        "at": "2026-05-08T00:20:54.931Z"
+      },
+      {
+        "event": "analysis-saved",
+        "payload": {
+          "runId": "import_mow64uu2",
+          "phase": "continuity",
+          "saved": 6
+        },
+        "at": "2026-05-08T00:21:08.135Z"
+      },
+      {
+        "event": "complete",
+        "payload": {
+          "runId": "import_mow64uu2",
+          "summary": {
+            "chaptersAdded": 20,
+            "chaptersUpdated": 0,
+            "charactersAdded": 5,
+            "charactersUpdated": 0,
+            "rulesAdded": 10,
+            "beatsAdded": 3,
+            "notesAdded": 0,
+            "scenesAdded": 35
+          },
+          "createdChapterIds": [
+            "606d1d08-32f1-4717-8323-832581c095c3",
+            "8d0fd266-56ef-47ee-bd92-9ec2fa36a055",
+            "3248daa8-278d-41f6-96e0-43869e159117",
+            "4c2c156d-1359-44e6-a886-5012d4c01111",
+            "12ee2a17-a1ea-4e8d-bff5-dfbbfdab4347",
+            "4c5abe3a-992b-40c6-a599-e61bc04d7523",
+            "8c3099d4-70ca-44e8-8693-50ceb077cc98",
+            "93a2e767-5c92-45e2-9bb2-886e2392cbc8",
+            "3ded3479-cbcc-4c2c-99d1-9e2054fdca70",
+            "c5c39ce4-a327-4989-bc06-6499b9b9269c",
+            "7342b5e2-5494-4a59-95cb-d953190ad886",
+            "3e1d4cc3-3c5c-4f5c-997e-f947ae63ddd1",
+            "a3cb9314-17a5-49f9-9061-2af20d84bb90",
+            "2c371600-1b3e-4ebc-af5b-c0b2857b8df4",
+            "fc86f64c-ccb3-4a8f-aab6-f5150cf065f8",
+            "1115df4a-ea4e-47bf-a87f-693d668bfbec",
+            "741a0600-9d7e-4f47-91bb-eb47320dbf06",
+            "22c7a441-0379-4db1-b78a-9b9b67ab4b22",
+            "cc877fba-deed-4860-a738-c53b784ee67d",
+            "6acfbf8e-fe7f-4219-ac4c-cbc7f4ec4330"
+          ],
+          "createdSceneIds": [
+            "086bf692-216e-4f2a-b327-09003780f8a6",
+            "eb30ba4a-9bf6-4553-a29f-3069f5a72cbd",
+            "80f9f57a-4b25-4c20-9ff3-1436df578206",
+            "2549726d-8f7b-4f7d-b144-415f6cc725b2",
+            "e12b4baf-cdfd-46dc-ba07-ca5a44898854",
+            "60853505-133b-4681-9ace-9449fb5a13a7",
+            "fcaa02c8-799b-4ede-819c-2da25794490e",
+            "7412a96a-d383-4ee0-bbfc-ac41cd4815e9",
+            "d954c53a-0c8c-4ddc-bd2d-c91764629e07",
+            "f08bbc52-6b8e-4889-bad4-fdcfde18c38b",
+            "aacf686f-0c3c-4d0a-ba04-0408ae702d26",
+            "f359609e-664b-48b7-b54d-9088c2a4d8f8",
+            "df40ecc7-b079-4fa4-bc6d-b5ac95a56989",
+            "5dc34177-ad77-4692-81ce-d446e81682c6",
+            "b7812dd1-89d9-4137-b9d3-ee80bb010510",
+            "b156e24f-2196-483c-ad7d-08b753d11362",
+            "df9f3239-9743-432d-9c0e-0383ce25f760",
+            "bfd913c1-147b-4ca6-8697-32ebf8bcba22",
+            "eb0e2f72-becb-448f-b7c0-8fc993e367fd",
+            "22f9d0ab-ff32-4177-9d5a-38f1d83a0305",
+            "e6895524-e65e-42d7-93b2-c0bc2da888e3",
+            "808490b6-f73e-428c-af0e-79c87e9afcee",
+            "b4053746-1b2b-4de4-a526-332e0b52b860",
+            "5bfe57af-2c5e-422f-83dc-bd5e5eb28659",
+            "23c4a93b-4891-4cf0-afc8-9f7b89306738",
+            "48b7265c-0eef-452e-b45e-96df6b74a14b",
+            "b466dc90-1e11-4191-ba62-6c3410b33860",
+            "d94b1039-f0a1-4867-a1ea-209237e6ba84",
+            "c3cd6dac-58b4-4c68-8b0d-0cba31f56ab6",
+            "a41a40a5-eb07-49f9-beb9-f1513e15c8da",
+            "77133a2c-e4df-49b0-9469-053a3d416642",
+            "95d4a9e1-7741-441d-bfba-bace107402de",
+            "d9a5aa31-e918-4253-a233-ec4249f11a5d",
+            "698c2fd0-6da2-469d-9bfd-97de96921cc5",
+            "78821a78-3898-4012-8aac-15d2d5b3fec3"
+          ],
+          "finishedAt": "2026-05-08T00:21:08.166Z"
+        },
+        "at": "2026-05-08T00:21:08.166Z"
+      }
+    ]
+  }
+}

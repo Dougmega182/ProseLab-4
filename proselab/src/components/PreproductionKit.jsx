@@ -1,13 +1,100 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { PreflightBrief } from "./Dashboard.jsx";
 
-export function PreproductionKit({ 
-  core, 
-  chars, 
-  rules, 
-  beats, 
-  voice, 
-  scenes, 
+const PRE_TABS = ["core", "world", "dossiers", "beats", "inventory", "preflight", "settings"];
+
+function cleanText(value, fallback = "Not set") {
+  if (value === undefined || value === null) return fallback;
+  const text = String(value).trim();
+  return text || fallback;
+}
+
+function firstFilled(...values) {
+  return values.find(value => String(value || "").trim()) || "";
+}
+
+function getRoleTone(role = "") {
+  const normalized = String(role).toLowerCase();
+  if (normalized.includes("protagon")) return "protagonist";
+  if (normalized.includes("antagon")) return "antagonist";
+  if (normalized.includes("support")) return "supporting";
+  return "secondary";
+}
+
+function inferSceneLabel(scene = {}) {
+  return firstFilled(scene.title, scene.summary, scene.hook, `Scene ${scene.order || ""}`) || "Untitled scene";
+}
+
+function formatSourceLabel(source = "") {
+  const normalized = String(source || "").trim().toLowerCase();
+  if (!normalized) return "manual";
+  return normalized.replace(/[_-]+/g, " ");
+}
+
+function formatImportedAt(value) {
+  if (!value) return "Unknown";
+  const stamp = typeof value === "number" ? value : Date.parse(value);
+  if (Number.isNaN(stamp)) return "Unknown";
+  return new Date(stamp).toLocaleString("en-AU", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+}
+
+function getCharacterReviewIssues(char = {}) {
+  const issues = [];
+  if (!String(char.role || "").trim()) issues.push("role");
+  if (!String(firstFilled(char.motivation, char.goal, char.desire) || "").trim()) issues.push("motivation");
+  if (!String(firstFilled(char.psychology, char.Psychology, char.traits) || "").trim()) issues.push("psychology");
+  return issues;
+}
+
+function getRuleReviewIssues(rule = {}) {
+  const issues = [];
+  if (!String(rule.rule || rule.title || "").trim()) issues.push("rule");
+  if (!String(rule.consequence || rule.description || "").trim()) issues.push("consequence");
+  if (!String(rule.limit || "").trim()) issues.push("limit");
+  return issues;
+}
+
+function getBeatReviewIssues(beat = {}) {
+  const issues = [];
+  if (!String(beat.title || "").trim()) issues.push("title");
+  if (!String(beat.description || "").trim()) issues.push("description");
+  if (!String(beat.type || "").trim()) issues.push("type");
+  return issues;
+}
+
+function getSceneReviewIssues(scene = {}) {
+  const issues = [];
+  if (!String(scene.location || "").trim()) issues.push("location");
+  if (!String(scene.time || "").trim()) issues.push("time");
+  if (!String(scene.causality || "").trim()) issues.push("causality");
+  if (!String(scene.output || "").trim()) issues.push("output");
+  if (!String(scene.stakes || "").trim()) issues.push("stakes");
+  if (!String(scene.summary || scene.notes || "").trim()) issues.push("summary");
+  return issues;
+}
+
+function getSceneReadiness(scene = {}) {
+  const required = ["location", "time", "causality", "output", "stakes", "summary"];
+  const present = required.filter((field) => {
+    if (field === "summary") return String(scene.summary || scene.notes || "").trim();
+    return String(scene[field] || "").trim();
+  }).length;
+  return Math.round((present / required.length) * 100);
+}
+
+export function PreproductionKit({
+  core,
+  chars,
+  rules,
+  beats,
+  voice,
+  scenes,
   shadowActions,
   applyAgentAction,
   removeShadowAction,
@@ -26,66 +113,138 @@ export function PreproductionKit({
   const [preflightId, setPreflightId] = useState("");
 
   const updatePre = (section, key, value) => {
-    updateProjectMetadata({ [section]: { ...((section === 'core' ? core : voice) || {}), [key]: value } });
+    updateProjectMetadata({ [section]: { ...((section === "core" ? core : voice) || {}), [key]: value } });
   };
+
+  const sortedBeats = useMemo(
+    () => [...beats].sort((a, b) => Number(a.pct || 0) - Number(b.pct || 0)),
+    [beats]
+  );
+
+  const sortedScenes = useMemo(
+    () => [...scenes].sort((a, b) => Number(a.order || 0) - Number(b.order || 0)),
+    [scenes]
+  );
+
+  const topRoles = useMemo(() => {
+    const counts = chars.reduce((acc, char) => {
+      const key = cleanText(char.role, "Unassigned");
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
+  }, [chars]);
+
+  const ruleCategories = useMemo(() => {
+    const counts = rules.reduce((acc, rule) => {
+      const key = cleanText(rule.category, "Uncategorized");
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
+  }, [rules]);
+
+  const sceneStatusCounts = useMemo(() => {
+    const counts = sortedScenes.reduce((acc, scene) => {
+      const key = cleanText(scene.status, "Unknown");
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  }, [sortedScenes]);
+
+  const characterReviewCount = useMemo(
+    () => chars.filter((char) => getCharacterReviewIssues(char).length > 0).length,
+    [chars]
+  );
+
+  const ruleReviewCount = useMemo(
+    () => rules.filter((rule) => getRuleReviewIssues(rule).length > 0).length,
+    [rules]
+  );
+
+  const beatReviewCount = useMemo(
+    () => beats.filter((beat) => getBeatReviewIssues(beat).length > 0).length,
+    [beats]
+  );
+
+  const importedSourceSummary = useMemo(() => {
+    const items = [...chars, ...rules, ...beats];
+    const counts = items.reduce((acc, item) => {
+      const key = formatSourceLabel(item.source);
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  }, [chars, rules, beats]);
+
+  const sceneReviewCount = useMemo(
+    () => sortedScenes.filter((scene) => getSceneReviewIssues(scene).length > 0).length,
+    [sortedScenes]
+  );
 
   return (
     <div className="preproduction-kit">
       {shadowActions && shadowActions.length > 0 && (
-        <div className="constraints-panel" style={{ marginBottom: "20px", background: "rgba(139, 92, 246, 0.1)", borderColor: "var(--accent-purple)" }}>
+        <div className="constraints-panel preproduction-alert">
           <div className="panel-header">
-            <span className="panel-title">🤖 PENDING AGENT PROPOSALS ({shadowActions.length})</span>
+            <span className="panel-title">Pending Agent Proposals ({shadowActions.length})</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "12px" }}>
+          <div className="preproduction-alert-list">
             {shadowActions.map(a => (
-              <div key={a.id} className="shadow-proposal" style={{ padding: "10px", border: "1px solid var(--border-subtle)", borderRadius: "4px", background: "rgba(0,0,0,0.2)" }}>
-                <div style={{ fontSize: "11px", color: "var(--accent-purple)", fontWeight: "bold", marginBottom: "4px" }}>
-                  {a.meta?.agent.toUpperCase()} | Scene: {a.payload?.id} 
-                  {a.meta?.entities_used?.length > 0 && ` | Entities: ${a.meta.entities_used.join(", ")}`}
+              <div key={a.id} className="shadow-proposal preproduction-alert-card">
+                <div className="preproduction-alert-meta">
+                  {cleanText(a.meta?.agent, "agent").toUpperCase()} | Scene: {cleanText(a.payload?.id, "n/a")}
+                  {a.meta?.entities_used?.length > 0 ? ` | Entities: ${a.meta.entities_used.join(", ")}` : ""}
                 </div>
-                <div style={{ fontSize: "12px", marginBottom: "8px" }}>{a.analysis}</div>
-                <div className="grid-1" style={{ fontSize: "11px", background: "rgba(255,255,255,0.05)", padding: "10px", marginBottom: "8px", borderLeft: `3px solid ${a.meta?.agent === 'generator' ? 'var(--success)' : 'var(--accent-purple)'}`, borderRadius: "0 4px 4px 0" }}>
-                  {a.payload?.patch?.title && <div><strong>NEW TITLE:</strong> {a.payload.patch.title}</div>}
-                  {a.payload?.patch?.causality && <div><strong>NEW CAUSALITY:</strong> {a.payload.patch.causality}</div>}
-                  {a.payload?.patch?.description && <div><strong>NEW DESCRIPTION:</strong> {a.payload.patch.description}</div>}
-                  
-                  {a.payload?.blocks && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                      <strong>PROPOSED NARRATIVE STRUCTURE:</strong>
+                <div className="preproduction-alert-copy">{a.analysis}</div>
+                <div className={`preproduction-alert-patch ${a.meta?.agent === "generator" ? "is-generator" : ""}`}>
+                  {a.payload?.patch?.title ? <div><strong>New title:</strong> {a.payload.patch.title}</div> : null}
+                  {a.payload?.patch?.causality ? <div><strong>New causality:</strong> {a.payload.patch.causality}</div> : null}
+                  {a.payload?.patch?.description ? <div><strong>New description:</strong> {a.payload.patch.description}</div> : null}
+                  {a.payload?.blocks ? (
+                    <div className="preproduction-alert-blocks">
+                      <strong>Proposed narrative structure</strong>
                       {Object.entries(a.payload.blocks).map(([phase, text]) => (
-                        <div key={phase} style={{ paddingLeft: "8px", borderLeft: "1px solid rgba(255,255,255,0.1)", marginBottom: "4px" }}>
-                          <span style={{ color: "var(--text-muted)", fontSize: "9px", textTransform: "uppercase" }}>{phase.replace(/_/g, ' ')}</span>
-                          <div style={{ color: "var(--text-primary)", fontStyle: "italic" }}>{text}</div>
+                        <div key={phase} className="preproduction-alert-block">
+                          <span>{phase.replace(/_/g, " ")}</span>
+                          <div>{text}</div>
                         </div>
                       ))}
                     </div>
-                  )}
-
-                  {a.payload?.phase && (
+                  ) : null}
+                  {a.payload?.phase ? (
                     <div>
-                      <strong>UPDATE {a.payload.phase.toUpperCase()}:</strong>
-                      <div style={{ fontStyle: "italic", marginTop: "4px" }}>{a.payload.text}</div>
+                      <strong>Update {a.payload.phase}:</strong>
+                      <div>{a.payload.text}</div>
                     </div>
-                  )}
+                  ) : null}
                 </div>
-
-                {a.meta?.confidence !== undefined && (
-                  <div style={{ marginBottom: "10px" }}>
-                    <div className="metric-bar-container" style={{ height: "4px", background: "rgba(255,255,255,0.1)", borderRadius: "2px" }}>
-                      <div className="metric-bar-fill" style={{ width: `${(a.meta.confidence / 10) * 100}%`, height: "100%", background: "var(--success)", borderRadius: "2px" }} />
+                {a.meta?.confidence !== undefined ? (
+                  <div className="preproduction-meter">
+                    <div className="metric-bar-container">
+                      <div className="metric-bar-fill" style={{ width: `${(a.meta.confidence / 10) * 100}%` }} />
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px", fontSize: "9px", color: "var(--text-muted)" }}>
-                      <span>Agent Confidence</span>
+                    <div className="preproduction-meter-meta">
+                      <span>Agent confidence</span>
                       <span>{a.meta.confidence}/10</span>
                     </div>
                   </div>
-                )}
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button className="btn btn-primary" style={{ fontSize: "10px", padding: "4px 10px" }} onClick={() => { applyAgentAction(a.id, { humanOverride: true }); }}>Approve & Apply</button>
-                  <button className="btn btn-ghost" style={{ fontSize: "10px", padding: "4px 10px" }} onClick={() => {
-                    const r = prompt("Reason for dismissal?");
-                    if (r) removeShadowAction(a.id, 'rejected', r);
-                  }}>Dismiss</button>
+                ) : null}
+                <div className="preproduction-alert-actions">
+                  <button className="btn btn-primary btn-compact" onClick={() => { applyAgentAction(a.id, { humanOverride: true }); }}>
+                    Approve & Apply
+                  </button>
+                  <button className="btn btn-ghost btn-compact" onClick={() => {
+                    const reason = prompt("Reason for dismissal?");
+                    if (reason) removeShadowAction(a.id, "rejected", reason);
+                  }}>
+                    Dismiss
+                  </button>
                 </div>
               </div>
             ))}
@@ -93,11 +252,10 @@ export function PreproductionKit({
         </div>
       )}
 
-      {/* SUB NAV */}
-      <div className="tabs-container" style={{ borderBottom: "1px solid var(--border-subtle)", marginBottom: "20px" }}>
-        {["core", "world", "dossiers", "beats", "inventory", "preflight", "settings"].map(t => (
-          <button key={t} className={`tab-trigger ${preTab === t ? "active" : ""}`} onClick={() => setPreTab(t)} style={{ fontSize: "10px" }}>
-            {t.toUpperCase()}
+      <div className="tabs-container preproduction-tabs">
+        {PRE_TABS.map(t => (
+          <button key={t} className={`tab-trigger ${preTab === t ? "active" : ""}`} onClick={() => setPreTab(t)}>
+            {t}
           </button>
         ))}
       </div>
@@ -105,7 +263,70 @@ export function PreproductionKit({
       <div className="preproduction-content">
         {preTab === "core" && (
           <div className="preproduction-section">
-            <div className="preproduction-title">01 CORE LOCK</div>
+            <div className="preproduction-header">
+              <div>
+                <div className="preproduction-kicker">Story Core</div>
+                <div className="preproduction-title">Core lock and voice profile</div>
+              </div>
+              <div className="preproduction-summary-strip">
+                <div className="summary-chip">
+                  <span>Characters</span>
+                  <strong>{chars.length}</strong>
+                </div>
+                <div className="summary-chip">
+                  <span>World rules</span>
+                  <strong>{rules.length}</strong>
+                </div>
+                <div className="summary-chip">
+                  <span>Beats</span>
+                  <strong>{beats.length}</strong>
+                </div>
+                <div className="summary-chip">
+                  <span>Scenes</span>
+                  <strong>{scenes.length}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="preproduction-overview-grid">
+              <div className="overview-panel">
+                <div className="overview-label">Imported foundation</div>
+                <div className="overview-value">{cleanText(core.title, "Untitled project")}</div>
+                <div className="overview-meta">
+                  <span>{cleanText(core.genre, "Genre not set")}</span>
+                  <span>{cleanText(core.subtitle, "No working subtitle")}</span>
+                </div>
+              </div>
+              <div className="overview-panel">
+                <div className="overview-label">Narrative pressure</div>
+                <div className="overview-value">{cleanText(core.constraint, "No central constraint defined yet")}</div>
+                <div className="overview-meta">
+                  <span>{cleanText(core.theme, "Theme not set")}</span>
+                  <span>{cleanText(core.falseBelief, "False belief not set")}</span>
+                </div>
+              </div>
+              <div className="overview-panel">
+                <div className="overview-label">Extraction audit</div>
+                <div className="overview-value">{characterReviewCount + ruleReviewCount + beatReviewCount} items need editorial review</div>
+                <div className="overview-meta">
+                  <span>{characterReviewCount} dossiers incomplete</span>
+                  <span>{ruleReviewCount} rules need hard limits</span>
+                  <span>{beatReviewCount} beats need clarification</span>
+                </div>
+              </div>
+              <div className="overview-panel">
+                <div className="overview-label">Source mix</div>
+                <div className="overview-value">
+                  {importedSourceSummary.length > 0
+                    ? importedSourceSummary.map(([label, count]) => `${label} (${count})`).join(" | ")
+                    : "No imported analysis yet"}
+                </div>
+                <div className="overview-meta">
+                  <span>Use this to distinguish AI-derived structure from manual edits.</span>
+                </div>
+              </div>
+            </div>
+
             <div className="grid-2">
               <div className="field-group">
                 <label className="field-label">Project Title</label>
@@ -116,36 +337,47 @@ export function PreproductionKit({
                 <input className="field-input" value={core.subtitle || ""} onChange={e => updatePre("core", "subtitle", e.target.value)} />
               </div>
             </div>
-            <div className="grid-3" style={{ marginTop: "12px" }}>
+
+            <div className="grid-3">
               <div className="field-group">
                 <label className="field-label">Genre</label>
                 <input className="field-input" value={core.genre || ""} onChange={e => updatePre("core", "genre", e.target.value)} />
               </div>
               <div className="field-group">
-                <label className="field-label">Target WC</label>
+                <label className="field-label">Target Word Count</label>
                 <input className="field-input" value={core.wc || ""} onChange={e => updatePre("core", "wc", e.target.value)} />
               </div>
               <div className="field-group">
-                <label className="field-label">Current WC</label>
+                <label className="field-label">Current Word Count</label>
                 <input className="field-input" value={core.wcCurrent || ""} onChange={e => updatePre("core", "wcCurrent", e.target.value)} />
               </div>
             </div>
-            <div className="field-group" style={{ marginTop: "12px" }}>
-              <label className="field-label">The Central Constraint (The "Core Hook")</label>
+
+            <div className="field-group">
+              <label className="field-label">Central Constraint / Core Hook</label>
               <textarea className="field-textarea" value={core.constraint || ""} onChange={e => updatePre("core", "constraint", e.target.value)} />
             </div>
-            <div className="grid-2" style={{ marginTop: "12px" }}>
+
+            <div className="grid-2">
               <div className="field-group">
                 <label className="field-label">Primary Theme</label>
                 <textarea className="field-textarea" value={core.theme || ""} onChange={e => updatePre("core", "theme", e.target.value)} />
               </div>
               <div className="field-group">
-                <label className="field-label">Protagonist's False Belief</label>
+                <label className="field-label">Protagonist False Belief</label>
                 <textarea className="field-textarea" value={core.falseBelief || ""} onChange={e => updatePre("core", "falseBelief", e.target.value)} />
               </div>
             </div>
 
-            <div className="preproduction-title" style={{ marginTop: "32px" }}>VOICE PROFILE</div>
+            <div className="preproduction-divider" />
+
+            <div className="preproduction-header">
+              <div>
+                <div className="preproduction-kicker">Voice Profile</div>
+                <div className="preproduction-title">Lock the prose behavior before drafting</div>
+              </div>
+            </div>
+
             <div className="grid-4">
               <div className="field-group">
                 <label className="field-label">Sentence Length</label>
@@ -185,128 +417,359 @@ export function PreproductionKit({
 
         {preTab === "world" && (
           <div className="preproduction-section">
-            <div className="preproduction-title">02 WORLD RULES</div>
-            <div className="rules-list">
-              {rules.map(r => (
-                <div key={r.id} className="rule-card">
-                  <div className="grid-1">
-                    <input className="field-input" style={{ fontWeight: "bold" }} value={r.rule} onChange={e => saveRule({ ...r, rule: e.target.value })} placeholder="The Rule (e.g. Magic costs blood)" />
-                    <textarea className="field-textarea" value={r.consequence} onChange={e => saveRule({ ...r, consequence: e.target.value })} placeholder="Consequence of violation..." />
+            <div className="preproduction-header">
+              <div>
+                <div className="preproduction-kicker">World Model</div>
+                <div className="preproduction-title">Rules, limits, and consequences</div>
+              </div>
+              <div className="preproduction-summary-strip">
+                {ruleCategories.length > 0 ? ruleCategories.map(([label, count]) => (
+                  <div key={label} className="summary-chip">
+                    <span>{label}</span>
+                    <strong>{count}</strong>
                   </div>
-                  <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div className="grid-2" style={{ gap: "8px" }}>
-                      <select className="field-select" value={r.category} onChange={e => saveRule({ ...r, category: e.target.value })}>
-                        <option value="physics">Physics/Magic</option>
-                        <option value="social">Social/Law</option>
+                )) : (
+                  <div className="summary-chip">
+                    <span>Status</span>
+                    <strong>Empty</strong>
+                  </div>
+                )}
+                <div className="summary-chip summary-chip--review">
+                  <span>Needs review</span>
+                  <strong>{ruleReviewCount}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="rules-grid">
+              {rules.map(r => {
+                const reviewIssues = getRuleReviewIssues(r);
+                return (
+                <div key={r.id} className="rule-card">
+                  <div className="rule-card-head">
+                    <div className="asset-card-head-meta">
+                      <span className="rule-category">{cleanText(r.category, "uncategorized")}</span>
+                      <div className="asset-provenance">
+                        <span>{formatSourceLabel(r.source)}</span>
+                        <span>Imported {formatImportedAt(r.importedAt)}</span>
+                      </div>
+                    </div>
+                    <button className="btn btn-ghost btn-compact" onClick={() => deleteRule(r.id)}>Delete</button>
+                  </div>
+                  {reviewIssues.length > 0 && (
+                    <div className="review-flags">
+                      {reviewIssues.map((issue) => (
+                        <span key={issue} className="review-flag">Review {issue}</span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="field-group">
+                    <label className="field-label">Rule</label>
+                    <input className="field-input rule-title-input" value={r.rule || ""} onChange={e => saveRule({ ...r, rule: e.target.value })} placeholder="What must remain true in this world?" />
+                  </div>
+                  <div className="field-group">
+                    <label className="field-label">Consequence</label>
+                    <textarea className="field-textarea" value={r.consequence || ""} onChange={e => saveRule({ ...r, consequence: e.target.value })} placeholder="What happens when the rule is violated?" />
+                  </div>
+                  <div className="grid-2">
+                    <div className="field-group">
+                      <label className="field-label">Category</label>
+                      <select className="field-select" value={r.category || "physics"} onChange={e => saveRule({ ...r, category: e.target.value })}>
+                        <option value="physics">Physics / Magic</option>
+                        <option value="social">Social / Law</option>
                         <option value="personal">Personal Oath</option>
                       </select>
-                      <input className="field-input" value={r.limit} onChange={e => saveRule({ ...r, limit: e.target.value })} placeholder="Hard Limit" />
                     </div>
-                    <button className="btn btn-ghost" onClick={() => deleteRule(r.id)}>Delete</button>
+                    <div className="field-group">
+                      <label className="field-label">Hard Limit</label>
+                      <input className="field-input" value={r.limit || ""} onChange={e => saveRule({ ...r, limit: e.target.value })} placeholder="Boundary, cost, or prohibition" />
+                    </div>
                   </div>
+                  {String(r.evidence || "").trim() && (
+                    <div className="asset-evidence">
+                      <span>Evidence</span>
+                      <p>{r.evidence}</p>
+                    </div>
+                  )}
                 </div>
-              ))}
-              {rules.length === 0 && <div className="output-placeholder">No world rules defined.</div>}
+              )})}
             </div>
-            <button className="btn btn-primary" style={{ marginTop: "20px" }} onClick={() => saveRule({ id: Date.now(), rule: "", consequence: "", category: "physics", limit: "" })}>+ ADD RULE</button>
+            {rules.length === 0 ? <div className="output-placeholder">No world rules defined.</div> : null}
+            <button className="btn btn-primary" onClick={() => saveRule({ id: Date.now(), rule: "", consequence: "", category: "physics", limit: "" })}>
+              + Add Rule
+            </button>
           </div>
         )}
 
         {preTab === "dossiers" && (
           <div className="preproduction-section">
-            <div className="preproduction-title">03 CHARACTER DOSSIERS</div>
-            <div className="chars-grid">
-              {chars.map(c => (
-                <div key={c.id} className="char-card" onClick={() => onEditChar(c)}>
-                  <div className="char-name">{c.name}</div>
-                  <div className="char-role">{c.role}</div>
-                  <div className="char-trait-pill">{c.trait}</div>
+            <div className="preproduction-header">
+              <div>
+                <div className="preproduction-kicker">Character Dossiers</div>
+                <div className="preproduction-title">Imported cast with motive and pressure</div>
+              </div>
+              <div className="preproduction-summary-strip">
+                {topRoles.length > 0 ? topRoles.map(([label, count]) => (
+                  <div key={label} className="summary-chip">
+                    <span>{label}</span>
+                    <strong>{count}</strong>
+                  </div>
+                )) : (
+                  <div className="summary-chip">
+                    <span>Status</span>
+                    <strong>Empty</strong>
+                  </div>
+                )}
+                <div className="summary-chip summary-chip--review">
+                  <span>Needs review</span>
+                  <strong>{characterReviewCount}</strong>
                 </div>
-              ))}
+              </div>
             </div>
-            {chars.length === 0 && <div className="output-placeholder">No characters defined.</div>}
-            <button className="btn btn-primary" style={{ marginTop: "20px" }} onClick={() => onEditChar({ name: "New Character", role: "", trait: "", description: "", constraints: "" })}>+ ADD CHARACTER</button>
+
+            <div className="chars-grid dossiers-grid">
+              {chars.map(c => {
+                const reviewIssues = getCharacterReviewIssues(c);
+                return (
+                <div key={c.id} className={`char-card dossier-card ${getRoleTone(c.role)}`} onClick={() => onEditChar(c)}>
+                  <div className="dossier-card-head">
+                    <div>
+                      <div className="char-name">{cleanText(c.name, "Unnamed character")}</div>
+                      <div className="char-role">{cleanText(c.role, "Role not set")}</div>
+                    </div>
+                    <div className="char-trait-pill">{cleanText(firstFilled(c.trait, c.archetype), "Unlabeled")}</div>
+                  </div>
+                  <div className="asset-provenance">
+                    <span>{formatSourceLabel(c.source)}</span>
+                    <span>Imported {formatImportedAt(c.importedAt)}</span>
+                  </div>
+                  {reviewIssues.length > 0 && (
+                    <div className="review-flags">
+                      {reviewIssues.map((issue) => (
+                        <span key={issue} className="review-flag">Review {issue}</span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="dossier-stats">
+                    <div className="dossier-stat">
+                      <span>Archetype</span>
+                      <strong>{cleanText(c.archetype, "Not set")}</strong>
+                    </div>
+                    <div className="dossier-stat">
+                      <span>Motivation</span>
+                      <strong>{cleanText(c.motivation, "Not set")}</strong>
+                    </div>
+                  </div>
+                  <div className="dossier-copy">
+                    <div>
+                      <span>Physiology</span>
+                      <p>{cleanText(firstFilled(c.physiology, c.Physiology), "No physical profile captured.")}</p>
+                    </div>
+                    <div>
+                      <span>Psychology</span>
+                      <p>{cleanText(firstFilled(c.psychology, c.Psychology), "No psychological profile captured.")}</p>
+                    </div>
+                  </div>
+                  <div className="dossier-footer">
+                    <div className="dossier-description">{cleanText(firstFilled(c.description, c.notes), "Open dossier to add more detail.")}</div>
+                    <button
+                      className="btn btn-ghost btn-compact"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        deleteCharacter(c.id);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )})}
+            </div>
+            {chars.length === 0 ? <div className="output-placeholder">No characters defined.</div> : null}
+            <button className="btn btn-primary" onClick={() => onEditChar({ name: "New Character", role: "", trait: "", archetype: "", motivation: "", description: "", constraints: "" })}>
+              + Add Character
+            </button>
           </div>
         )}
 
         {preTab === "beats" && (
           <div className="preproduction-section">
-            <div className="preproduction-title">04 ACT BEAT MAP</div>
-            <div className="beats-list">
-              {beats.map(b => (
-                <div key={b.id} className="beat-row">
-                  <div className="beat-pct">{b.pct}%</div>
-                  <input className="beat-title-input" value={b.title} onChange={e => saveBeat({ ...b, title: e.target.value })} />
-                  <input className="beat-type-pill" value={b.type} onChange={e => saveBeat({ ...b, type: e.target.value })} />
-                  <button className="btn btn-ghost" onClick={() => deleteBeat(b.id)}>×</button>
+            <div className="preproduction-header">
+              <div>
+                <div className="preproduction-kicker">Beat Map</div>
+                <div className="preproduction-title">Narrative timing and pressure points</div>
+              </div>
+              <div className="preproduction-summary-strip">
+                <div className="summary-chip summary-chip--review">
+                  <span>Needs review</span>
+                  <strong>{beatReviewCount}</strong>
                 </div>
-              ))}
+              </div>
             </div>
-            <button className="btn btn-primary" style={{ marginTop: "20px" }} onClick={() => saveBeat({ id: Date.now(), pct: "50", title: "New Beat", type: "Pinch" })}>+ ADD BEAT</button>
+
+            <div className="beats-timeline">
+              {sortedBeats.map(b => {
+                const reviewIssues = getBeatReviewIssues(b);
+                return (
+                <div key={b.id} className="beat-card">
+                  <div className="beat-card-rail">
+                    <div className="beat-pct">{cleanText(b.pct, "0")}%</div>
+                  </div>
+                  <div className="beat-card-body">
+                    <div className="asset-provenance">
+                      <span>{formatSourceLabel(b.source)}</span>
+                      <span>Imported {formatImportedAt(b.importedAt)}</span>
+                    </div>
+                    {reviewIssues.length > 0 && (
+                      <div className="review-flags">
+                        {reviewIssues.map((issue) => (
+                          <span key={issue} className="review-flag">Review {issue}</span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="beat-card-head">
+                      <input className="beat-title-input" value={b.title || ""} onChange={e => saveBeat({ ...b, title: e.target.value })} />
+                      <input className="beat-type-pill" value={b.type || ""} onChange={e => saveBeat({ ...b, type: e.target.value })} />
+                    </div>
+                    <textarea
+                      className="field-textarea beat-description"
+                      value={b.description || ""}
+                      onChange={e => saveBeat({ ...b, description: e.target.value })}
+                      placeholder="What changes here, and why does it matter?"
+                    />
+                  </div>
+                  <button className="btn btn-ghost btn-compact" onClick={() => deleteBeat(b.id)}>Delete</button>
+                </div>
+              )})}
+            </div>
+            {beats.length === 0 ? <div className="output-placeholder">No beats defined.</div> : null}
+            <button className="btn btn-primary" onClick={() => saveBeat({ id: Date.now(), pct: "50", title: "New Beat", type: "Pinch", description: "" })}>
+              + Add Beat
+            </button>
           </div>
         )}
 
         {preTab === "inventory" && (
           <div className="preproduction-section">
-            <div className="preproduction-title">05 SCENE INVENTORY</div>
-            <div className="inventory-table">
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <div className="preproduction-header">
+              <div>
+                <div className="preproduction-kicker">Scene Inventory</div>
+                <div className="preproduction-title">Scene ledger with status and causality</div>
+              </div>
+              <div className="preproduction-summary-strip">
+                {sceneStatusCounts.length > 0 ? sceneStatusCounts.slice(0, 3).map(([label, count]) => (
+                  <div key={label} className="summary-chip">
+                    <span>{label}</span>
+                    <strong>{count}</strong>
+                  </div>
+                )) : null}
+                <div className="summary-chip summary-chip--review">
+                  <span>Needs review</span>
+                  <strong>{sceneReviewCount}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="inventory-table scene-table-wrap">
+              <table className="scene-table">
                 <thead>
-                  <tr style={{ textAlign: "left", fontSize: "11px", color: "var(--text-muted)" }}>
-                    <th style={{ padding: "8px" }}>ID</th>
-                    <th style={{ padding: "8px" }}>TITLE</th>
-                    <th style={{ padding: "8px" }}>CAUSALITY</th>
-                    <th style={{ padding: "8px" }}>STATUS</th>
+                  <tr>
+                    <th>Scene</th>
+                    <th>Title</th>
+                    <th>Readiness</th>
+                    <th>Causality</th>
+                    <th>Review</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {scenes.map(s => (
-                    <tr key={s.id} style={{ borderBottom: "1px solid var(--border-subtle)", cursor: "pointer" }} onClick={() => onEditScene(s)}>
-                      <td style={{ padding: "8px", fontSize: "10px" }}>{String(s.id).substring(0, 8)}</td>
-                      <td style={{ padding: "8px", fontWeight: "bold" }}>{s.title}</td>
-                      <td style={{ padding: "8px", fontSize: "11px", color: "var(--text-secondary)" }}>{s.causality}</td>
-                      <td style={{ padding: "8px" }}><span className={`status-pill ${s.status === 'Draft' ? 'draft' : 'polish'}`}>{s.status}</span></td>
+                  {sortedScenes.map(s => {
+                    const reviewIssues = getSceneReviewIssues(s);
+                    const readiness = getSceneReadiness(s);
+                    return (
+                    <tr key={s.id} onClick={() => onEditScene(s)} className={reviewIssues.length > 0 ? "scene-row-needs-review" : ""}>
+                      <td>#{cleanText(s.order, "?")}</td>
+                      <td>
+                        <div className="scene-table-title">{inferSceneLabel(s)}</div>
+                        <div className="scene-table-subtitle">{cleanText(firstFilled(s.location, s.time), "No location or time lock")}</div>
+                      </td>
+                      <td>
+                        <span className={`readiness-pill ${readiness >= 80 ? "ready" : readiness >= 50 ? "partial" : "weak"}`}>
+                          {readiness}%
+                        </span>
+                      </td>
+                      <td>{cleanText(s.causality, "Not defined")}</td>
+                      <td>
+                        {reviewIssues.length > 0 ? (
+                          <div className="scene-review-flags">
+                            {reviewIssues.slice(0, 3).map((issue) => (
+                              <span key={issue} className="review-flag">{issue}</span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="scene-table-subtitle">Ready for audit</span>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`status-pill ${String(s.status).toLowerCase() === "draft" ? "draft" : "polish"}`}>
+                          {cleanText(s.status, "Unknown")}
+                        </span>
+                      </td>
                     </tr>
-                  ))}
+                  )})}
                 </tbody>
               </table>
             </div>
-            {scenes.length === 0 && <div className="output-placeholder">No scenes defined.</div>}
+            {scenes.length === 0 ? <div className="output-placeholder">No scenes defined.</div> : null}
           </div>
         )}
 
         {preTab === "preflight" && (
           <div className="preproduction-section">
-            <div className="preproduction-title">06 PREFLIGHT BRIEF</div>
-            <div className="grid-1" style={{ gap: "20px" }}>
+            <div className="preproduction-header">
+              <div>
+                <div className="preproduction-kicker">Preflight Brief</div>
+                <div className="preproduction-title">Audit a scene before it enters the drafting loop</div>
+              </div>
+            </div>
+
+            <div className="grid-1 preflight-stack">
               <select className="field-select" value={preflightId} onChange={e => setPreflightId(e.target.value)}>
-                <option value="">Select Scene to Audit...</option>
-                {scenes.map(s => (
-                  <option key={s.id} value={s.id}>{s.title}</option>
+                <option value="">Select scene to audit...</option>
+                {sortedScenes.map(s => (
+                  <option key={s.id} value={s.id}>{inferSceneLabel(s)}</option>
                 ))}
               </select>
 
-              {preflightId && (
-                <PreflightBrief scene={scenes.find(s => String(s.id) === String(preflightId))} core={core} chars={chars} rules={rules} />
-              )}
+              {preflightId ? (
+                <PreflightBrief
+                  scene={sortedScenes.find(s => String(s.id) === String(preflightId))}
+                  preproduction={{ core, chars, rules, beats, voice }}
+                />
+              ) : null}
             </div>
           </div>
         )}
 
         {preTab === "settings" && (
           <div className="preproduction-section">
-            <div className="preproduction-title">PIPELINE SETTINGS</div>
+            <div className="preproduction-header">
+              <div>
+                <div className="preproduction-kicker">Pipeline Settings</div>
+                <div className="preproduction-title">Model targeting and drafting constraints</div>
+              </div>
+            </div>
             <div className="grid-2">
               <div className="field-group">
                 <label className="field-label">Ollama Model</label>
                 <input className="field-input" value={voice.ollamaModel || "qwen3:8b"} onChange={e => updatePre("voice", "ollamaModel", e.target.value)} />
-                <div style={{ marginTop: "4px", fontSize: "10px", color: envStatusState.ollamaReachable ? "var(--success)" : "var(--error)" }}>
-                  {envStatusState.ollamaReachable ? "● Reachable" : "○ Unreachable"}
+                <div className={`pipeline-status ${envStatusState.ollamaReachable ? "is-live" : "is-down"}`}>
+                  {envStatusState.ollamaReachable ? "Live" : "Unreachable"}
                 </div>
               </div>
               <div className="field-group">
                 <label className="field-label">Banned Word List (CSV)</label>
-                <input className="field-input" value={(voice.banned || []).join(", ")} onChange={e => updatePre("voice", "banned", e.target.value.split(",").map(w => w.trim()))} />
+                <input className="field-input" value={(voice.banned || []).join(", ")} onChange={e => updatePre("voice", "banned", e.target.value.split(",").map(w => w.trim()).filter(Boolean))} />
               </div>
             </div>
           </div>

@@ -1,154 +1,155 @@
-# ProseLab 4 — Roadmap
+# ProseLab 4 - Roadmap
 
-## Current State (Reality Check)
+## Reality Check
 
-You have:
+ProseLab is already beyond the "single textarea + rewrite button" stage.
 
-✅ Strong analysis engine  
-✅ Functional rewrite pipeline  
-✅ Multi-model orchestration  
-✅ Critic Agent rejection system
-✅ Lore Intelligence Dashboard
-✅ High-performance Editorial Engine (Slash Commands, Image Handler, History)
-❌ Scene intent validation (Core/Beats)
-❌ Local-first file persistence
+Implemented now:
+- critique-based create pipeline
+- bounded orchestration / retries
+- project/chapter/scene document model
+- IndexedDB-backed manuscript persistence
+- manuscript import with structural and planning extraction
+- preproduction workspace
+- lore graph, timeline, and consistency tooling
 
-This is a **prototype engine**, not a product.
+The roadmap now needs to focus on hardening, coherence, and architectural cleanup rather than pretending those systems do not exist.
 
----
+## Completed Phases
 
-## Phase 1 — Core Engine Completion (DONE)
+### Phase 1 - Core Quality Gate
+Status: done
 
-### Goal:
-Make the system capable of **saying “this is not good enough.”**
+Delivered:
+- analysis and delta flow
+- critique verdicting
+- approval vs rewrite handling
+- bounded retry/orchestration
 
-### Tasks:
+### Phase 2 - Writing Workflow Foundation
+Status: done
 
-1. Build Critic Agent
-   - Score output
-   - Detect failure modes
-   - Return APPROVE / REWRITE
+Delivered:
+- document tree
+- project/chapter/scene workflow
+- manuscript export
+- sidebar navigation
+- clearer project naming/history cues in the sidebar
+- IndexedDB persistence replacing the old single-storage assumption
 
-2. Add Loop Control
-   - Max 2–3 retries
-   - Prevent infinite loops
+### Phase 3 - Lore Intelligence
+Status: done
 
-3. Surface Feedback in UI
-   - Show why text was rejected
-   - Show what changed
+Delivered:
+- lore extraction
+- relationship graph
+- timeline view
+- consistency checking
+- lore querying/export support
+- review-focused lore triage for low-confidence entities, contradictions, duplicates, and timeline pressure
 
-### Outcome:
-System becomes **quality-enforcing**, not just generative.
+### Phase 4 - Manuscript Ingest and Planning Surface
+Status: done, with polish still ongoing
 
----
+Delivered:
+- import wizard
+- named manuscript project creation
+- chapter/scene creation from manuscript
+- imported population of:
+  - title/core data
+  - character dossiers
+  - world rules
+  - beats
+  - scene inventory
+- project deletion
+- first-class local reset/maintenance path for recovery and debugging
+- import debugging and repair paths
+- review-oriented preproduction and scene-audit surfaces for evaluating imported manuscripts
+- an import result screen that immediately triages trustworthy extracted sections vs sections needing review
 
-## Phase 2 — Writing Workflow (IN PROGRESS)
+## Current Active Phase
 
-### Goal:
-Turn engine into usable writing tool.
+### Phase 5 - UX Coherence and Hardening
+Status: in progress
 
-### Tasks:
+Goal:
+- make the implemented system feel reliable and readable for real use
 
-1. ✅ Add Document Tree
-   - Project → Chapter → Scene
+Work remaining:
+1. clean remaining mojibake and stale UI copy
+2. continue polishing preproduction and sidebar UX
+3. strengthen post-import and post-reload confidence with tests
+4. reduce single-file complexity in `App.jsx`
+5. clarify runtime truth for Gemini/challenger behavior
+6. continue reducing inline styling and duplicated presentation code
 
-2. ✅ Markdown Editor
-   - Replace single textarea
-   - Persist per document
+## Next Major Phase
 
-3. ❌ File Storage (Local-first)
-   - Move beyond localStorage
-   - Use file structure or IndexedDB
+### Phase 6 - Architecture and Reliability
+Goal:
+- make the codebase safer to evolve
 
-### Outcome:
-You can actually write a book inside it.
+Target work:
+1. refactor orchestration/state logic out of `App.jsx`
+2. add regression coverage for:
+   - import persistence
+   - hydration after reload
+   - delete cascade behavior
+   - critique/retry flow
+   - mode gating
+3. centralize provider diagnostics and runtime status messaging
 
----
+Outcome:
+- lower change risk
+- fewer regressions
+- easier future feature work
 
-## Phase 3 — Lore Intelligence System (DONE)
+## Strategic Options Still Open
 
-### Goal:
-Enable contextual writing through narrative metadata.
+### Challenger / Gemini
+Decision pending:
+- make Gemini/adjudication a clearly enforced stage in the main pipeline
+- or treat it as optional infrastructure and document it honestly
 
-### Tasks:
-✅ Multi-Agent Lore Extraction
-✅ High-performance Graph Visualization
-✅ Entity Consistency Checker
-✅ Relationship Mapping Engine
+### File-System-Level Persistence
+Decision:
+- IndexedDB remains the canonical live persistence layer for the current product
 
-### Outcome:
-Deep narrative awareness and structural consistency.
+Why:
+- the app is local-first and browser-hosted
+- current risk has been hydration and schema correctness, not lack of file access
+- import/export already provides the file boundary the product actually uses today
 
----
+Revisit only if:
+- versioned project bundles become a requirement
+- automatic backup/snapshotting is added
+- cross-machine sync or collaboration becomes real scope
 
-## Phase 4 — True Differentiator
+## Explicitly Outstanding
 
-### Goal:
-Become a **writing intelligence system**
+- UI copy/encoding cleanup
+- stronger tests
+- more maintainable architecture boundaries
+- deeper provider diagnostics
+- clearer advanced pipeline documentation
+- continued shell/presentation cleanup outside the refreshed manuscript surfaces
 
-### Tasks:
+## Explicitly No Longer Outstanding
 
-1. Generator + Critic dual-model setup
-2. RAG over user's own writing
-3. Style enforcement (optional)
-
-### Outcome:
-System improves with usage.
-
----
-
-## Phase 5 — Export + Polish
-
-### Goal:
-Make output usable professionally
-
-### Tasks:
-- Export to DOCX / PDF
-- Clean formatting pipeline
-- Basic compile options
-
----
-
-- Multi-user sync
-- Full Scrivener clone features
-
-These will kill momentum.
-
----
-
-## Strategic Positioning
-
-You are NOT building:
-
-❌ Writing software  
-❌ Worldbuilding tool  
-
-You ARE building:
-
-✅ AI writing engine with enforced quality control  
-
----
+These older roadmap items are already completed and should not be treated as future work:
+- Critic Agent
+- retry loop/orchestrator basics
+- document tree
+- IndexedDB-backed structured persistence
+- lore graph/timeline
+- manuscript import workflow
+- imported population of dossiers/world/beats/inventory
 
 ## Success Criteria
 
-You win if:
-
-- Output is consistently better than input
-- System rejects weak writing
-- Users trust the suggestions
-
-You fail if:
-
-- It becomes another text editor
-- AI output feels generic
-- You build features instead of improving quality
-
----
-
-## Immediate Next Step
-
-Implement:
-
-→ Scene Validator + Story Core Alignment
-
-Ensure that every generated scene aligns with the high-level intent, causality, and character arcs defined in the Preproduction workspace.
+The next stage succeeds when:
+- manuscript import feels dependable end-to-end
+- reloads preserve and hydrate project state correctly
+- preproduction surfaces are readable and useful without extra decoding by the user
+- critique/orchestration behavior is clear in both UI and docs
+- the codebase is easier to change without breaking persistence or workflow state

@@ -1,4 +1,4 @@
-import { getState, logShadowAction, removeShadowAction } from "../store/appStore.js";
+// runAgent.js
 import * as db from "../services/db.js";
 import { criticAgent } from "./criticAgent.js";
 import { generatorAgent } from "./generatorAgent.js";
@@ -104,7 +104,7 @@ function validateAction(action, state) {
 
 // shouldAutoApply imported from engine/autoApplyGate.js
 // Single source of truth — no inline reimplementation.
-export async function runCriticAgent({ openaiKey, project, scenes, contextPatch = null }) {
+export async function runCriticAgent({ openaiKey, project, scenes, logShadowAction, contextPatch = null }) {
   const state = { project: { ...project, scenes } };
   
   console.log("🤖 AGENT: Starting Critic loop...");
@@ -178,21 +178,20 @@ export async function runCriticAgent({ openaiKey, project, scenes, contextPatch 
     
     if (autonomy.ok && !SHADOW_MODE) {
       console.log(`🚀 AUTONOMY: Auto-applying action with confidence ${action.confidence}`);
-      logShadowAction(action); // Still log for audit
-      const shadowActions = getState().shadowActions;
-      const logged = shadowActions[shadowActions.length - 1];
-      applyAgentAction(logged.id);
-      return { ok: true, message: `AUTONOMY: Auto-applied to scene ${action.payload.id}`, action: logged };
+      const logged = await logShadowAction(action); // Still log for audit
+      // Note: Auto-apply is handled by the caller or a specialized effect in this architecture
+      // For now, we return the action to let the orchestrator decide.
+      return { ok: true, message: `AUTONOMY: Proposal logged for scene ${action.payload.id}`, action: logged, autoApply: true };
     }
 
     if (SHADOW_MODE) {
-      logShadowAction(action);
-      return { ok: true, message: `Shadow: Logged proposal (${action.type}) for scene ${action.payload.id}`, gate: autonomy };
+      const logged = await logShadowAction(action);
+      return { ok: true, message: `Shadow: Logged proposal (${action.type}) for scene ${action.payload.id}`, gate: autonomy, action: logged };
     }
 
     // Manual fallback if SHADOW_MODE is false but autonomy failed
-    logShadowAction(action);
-    return { ok: true, message: `Queued for review: ${autonomy.reason}`, gate: autonomy };
+    const logged = await logShadowAction(action);
+    return { ok: true, message: `Queued for review: ${autonomy.reason}`, gate: autonomy, action: logged };
   }
 
   if (action.type === "NO_OP") {
@@ -205,7 +204,7 @@ export async function runCriticAgent({ openaiKey, project, scenes, contextPatch 
 /**
  * RUN GENERATOR AGENT
  */
-export async function runGeneratorAgent({ openaiKey, project, scenes }) {
+export async function runGeneratorAgent({ openaiKey, project, scenes, logShadowAction }) {
   const state = { project: { ...project, scenes } };
   
   console.log("🤖 AGENT: Starting Generator loop...");
@@ -241,8 +240,8 @@ export async function runGeneratorAgent({ openaiKey, project, scenes }) {
       entities_used: action.payload?.patch?.description?.match(/\b[A-Z][a-z]+\b/g) || []
     };
 
-    logShadowAction(action);
-    return { ok: true, message: `Logged proposal (${action.type}) for scene ${action.payload.id}`, action };
+    const logged = await logShadowAction(action);
+    return { ok: true, message: `Logged proposal (${action.type}) for scene ${action.payload.id}`, action: logged };
   }
 
   if (action.type === "NO_OP") {
@@ -264,9 +263,8 @@ export async function runGeneratorAgent({ openaiKey, project, scenes }) {
  *   "Approve & Apply" in the UI. Bypasses the gate but is logged.
  * @returns {boolean} True if applied, false if blocked.
  */
-export function applyAgentAction(id, { humanOverride = false } = {}) {
-  const state = getState();
-  const action = state.shadowActions.find(a => a.id === id);
+export function applyAgentAction(id, { shadowActions, scenes, removeShadowAction, humanOverride = false } = {}) {
+  const action = shadowActions.find(a => a.id === id);
 
   if (!action) return false;
 
@@ -290,7 +288,7 @@ export function applyAgentAction(id, { humanOverride = false } = {}) {
   }
 
   const { id: sceneId, patch, blocks, phase, text } = action.payload;
-  const scene = state.project.scenes.find(
+  const scene = scenes.find(
     s => String(s.id) === String(sceneId)
   );
 

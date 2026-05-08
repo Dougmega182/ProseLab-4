@@ -4,12 +4,113 @@ import { useImportWizard } from '../../hooks/useImportWizard';
 import './ImportWizard.css';
 
 const CATEGORY_OPTIONS = [
-  { value: 'chapters', label: 'Chapters', icon: '📖' },
-  { value: 'characters', label: 'Characters', icon: '👤' },
-  { value: 'worldRules', label: 'World Rules', icon: '🌍' },
-  { value: 'beats', label: 'Story Beats', icon: '🎯' },
+  { value: 'manuscript', label: 'Manuscript', icon: '📖' },
   { value: 'notes', label: 'Notes', icon: '📝' },
+  { value: 'characters', label: 'Characters', icon: '👤' },
+  { value: 'scenes', label: 'Scenes', icon: '🎬' },
+  { value: 'worldbuilding', label: 'World Building', icon: '🌍' },
+  { value: 'outline', label: 'Outline', icon: '📋' },
 ];
+
+// Map orchestrator types to UI categories (if they differ, but we'll align them now)
+const MAP_CATEGORY = (cat) => {
+  if (cat === 'chapters') return 'manuscript';
+  if (cat === 'worldRule') return 'worldbuilding';
+  if (cat === 'beatMap') return 'outline';
+  return cat;
+};
+
+const asArray = (value) => Array.isArray(value) ? value : [];
+
+const isHeuristic = (item) => String(item?.source || '').toLowerCase().includes('heuristic');
+
+function buildAnalysisTrustSummary(importResult) {
+  const analysis = importResult?.analysisResults || {};
+  const warnings = asArray(importResult?.warnings);
+
+  const characters = asArray(analysis.characters);
+  const worldRules = asArray(analysis.worldRules);
+  const beats = asArray(analysis.beats);
+  const scenes = asArray(analysis.scenes);
+  const continuityIssues = asArray(analysis.continuityIssues);
+
+  const sections = [
+    {
+      key: 'characters',
+      label: 'Characters',
+      total: characters.length,
+      trustworthy: characters.filter((item) =>
+        !isHeuristic(item) && String(item?.name || '').trim() && String(item?.role || '').trim()
+      ).length,
+      review: characters.filter((item) =>
+        isHeuristic(item) || !String(item?.role || '').trim() || !String(item?.motivation || item?.relationships || '').trim()
+      ).length,
+      examples: characters.slice(0, 3).map((item) => `${item.name || 'Unnamed'} - ${item.role || 'role missing'}`)
+    },
+    {
+      key: 'worldRules',
+      label: 'World Rules',
+      total: worldRules.length,
+      trustworthy: worldRules.filter((item) =>
+        !isHeuristic(item) && String(item?.title || item?.rule || '').trim() && String(item?.description || item?.consequence || '').trim()
+      ).length,
+      review: worldRules.filter((item) =>
+        isHeuristic(item) || !String(item?.description || item?.consequence || '').trim()
+      ).length,
+      examples: worldRules.slice(0, 3).map((item) => item.title || item.rule || 'Untitled rule')
+    },
+    {
+      key: 'beats',
+      label: 'Beats',
+      total: beats.length,
+      trustworthy: beats.filter((item) =>
+        !isHeuristic(item) && String(item?.title || '').trim() && String(item?.description || '').trim()
+      ).length,
+      review: beats.filter((item) =>
+        isHeuristic(item) || !String(item?.description || '').trim()
+      ).length,
+      examples: beats.slice(0, 3).map((item) => item.title || 'Untitled beat')
+    },
+    {
+      key: 'scenes',
+      label: 'Scene Inventory',
+      total: scenes.length,
+      trustworthy: scenes.filter((item) =>
+        !isHeuristic(item) && String(item?.summary || '').trim() && String(item?.setting || item?.location || '').trim()
+      ).length,
+      review: scenes.filter((item) =>
+        isHeuristic(item) || !String(item?.summary || '').trim() || !String(item?.setting || item?.location || '').trim()
+      ).length,
+      examples: scenes.slice(0, 3).map((item, index) => `Scene ${index + 1} - ${item.title || item.setting || 'summary/location missing'}`)
+    },
+    {
+      key: 'continuity',
+      label: 'Continuity',
+      total: continuityIssues.length,
+      trustworthy: continuityIssues.length === 0 ? 1 : 0,
+      review: continuityIssues.length,
+      examples: continuityIssues.slice(0, 3).map((item) => `[${item.severity || 'info'}] ${item.description || item.message || 'Issue detected'}`)
+    }
+  ];
+
+  return {
+    sections,
+    warnings,
+    analysisTotal: sections.reduce((sum, section) => sum + section.total, 0),
+    trustworthyTotal: sections.reduce((sum, section) => sum + section.trustworthy, 0),
+    reviewTotal: sections.reduce((sum, section) => sum + section.review, 0) + warnings.length
+  };
+}
+
+function getTrustTone(section) {
+  if (section.key === 'continuity') {
+    return section.review > 0 ? 'review' : 'strong';
+  }
+  if (section.total === 0) return 'empty';
+  if (section.review === 0) return 'strong';
+  if (section.trustworthy > 0) return 'mixed';
+  return 'review';
+}
 
 export default function ImportWizard({ projectId, existingData, onImportComplete, onClose, storage, llm }) {
   const wizard = useImportWizard({ projectId, existingData, onImportComplete, storage, llm });
@@ -97,7 +198,7 @@ export default function ImportWizard({ projectId, existingData, onImportComplete
                     )}
                     {file.status === 'ready' && (
                       <span className="file-category-hint">
-                        {' '}— Auto-detected: {CATEGORY_OPTIONS.find(c => c.value === file.category)?.label || file.category}
+                        {' '}— Auto-detected: {CATEGORY_OPTIONS.find(c => c.value === MAP_CATEGORY(file.category))?.label || file.category}
                       </span>
                     )}
                   </span>
@@ -117,10 +218,6 @@ export default function ImportWizard({ projectId, existingData, onImportComplete
           ))}
         </div>
       )}
-
-      {wizard.error && (
-        <div className="error-message">{wizard.error}</div>
-      )}
     </div>
   );
 
@@ -131,13 +228,14 @@ export default function ImportWizard({ projectId, existingData, onImportComplete
       
       <div className="file-grid">
         {wizard.importFiles.filter(f => f.status === 'ready').map(file => (
-          <div key={file.id} className="classify-card">
-            <div className="card-header">
+          <div key={file.id} className="classify-item">
+            <div className="classify-file-info">
               <span className="card-filename" title={file.fileName}>{file.fileName}</span>
             </div>
-            <div className="card-body">
+            <div className="classify-select-wrapper">
               <select 
-                value={wizard.classifications[file.id] || file.category}
+                className="classify-select"
+                value={wizard.classifications[file.id] || MAP_CATEGORY(file.category)}
                 onChange={(e) => wizard.updateClassification(file.id, e.target.value)}
               >
                 {CATEGORY_OPTIONS.map(opt => (
@@ -146,7 +244,7 @@ export default function ImportWizard({ projectId, existingData, onImportComplete
                   </option>
                 ))}
               </select>
-              <div className="card-preview">
+              <div className="content-preview">
                 {file.content?.substring(0, 150)}...
               </div>
             </div>
@@ -272,6 +370,21 @@ export default function ImportWizard({ projectId, existingData, onImportComplete
     <div className="step-content">
       <h3>Final Review</h3>
       <p className="step-description">Ready to commit these changes to your project.</p>
+
+      {wizard.importFiles.some(f => f.status === 'ready' && (wizard.classifications[f.id] || f.category) === 'manuscript') && (
+        <div className="field-group" style={{ marginBottom: '18px' }}>
+          <label className="field-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+            Manuscript Project Name
+          </label>
+          <input
+            type="text"
+            className="search-input"
+            value={wizard.projectName}
+            onChange={(e) => wizard.setProjectName(e.target.value)}
+            placeholder="Enter manuscript name"
+          />
+        </div>
+      )}
       
       <div className="review-summary">
         <div className="summary-card">
@@ -287,7 +400,7 @@ export default function ImportWizard({ projectId, existingData, onImportComplete
       <div className="review-list">
         {wizard.importFiles.filter(f => f.status === 'ready').map(file => (
           <div key={file.id} className="review-item">
-            <span className="item-icon">{CATEGORY_OPTIONS.find(c => c.value === (wizard.classifications[file.id] || file.category))?.icon}</span>
+            <span className="item-icon">{CATEGORY_OPTIONS.find(c => c.value === (wizard.classifications[file.id] || MAP_CATEGORY(file.category)))?.icon}</span>
             <span className="item-name">{file.fileName}</span>
             <span className="item-action">
               {wizard.conflicts.some(c => c.fileId === file.id) ? (
@@ -302,32 +415,109 @@ export default function ImportWizard({ projectId, existingData, onImportComplete
     </div>
   );
 
-  const renderResultStep = () => (
-    <div className="step-content result-step">
-      <div className="result-animation">🎉</div>
-      <h3>Import Successful</h3>
-      
-      <div className="result-stats">
-        {Object.entries(wizard.importResult?.summary || {}).map(([key, val]) => (
-          val > 0 && (
-            <div key={key} className="result-stat-card">
-              <span className="stat-val">{val}</span>
-              <span className="stat-key">{key.replace(/([A-Z])/g, ' $1')}</span>
-            </div>
-          )
-        ))}
-      </div>
+  const renderResultStep = () => {
+    const trust = buildAnalysisTrustSummary(wizard.importResult);
 
-      <div className="result-changelog">
-        <h4>Changelog</h4>
-        <ul>
-          {wizard.importResult?.changelog.map((log, i) => <li key={i}>{log}</li>)}
-        </ul>
-      </div>
+    return (
+      <div className="step-content result-step result-step--analysis">
+        <div className="result-animation">Import complete</div>
+        <h3>Import Complete</h3>
+        <p className="step-description result-description">
+          This is the first trust pass on your imported manuscript analysis. Strong sections can be explored immediately. Mixed and review sections should be checked before you rely on them.
+        </p>
 
-      <button className="btn-primary full-width" onClick={onClose}>Done</button>
-    </div>
-  );
+        <div className="result-stats">
+          {Object.entries(wizard.importResult?.summary || {}).map(([key, val]) => (
+            val > 0 && (
+              <div key={key} className="result-stat-card">
+                <span className="stat-val">{val}</span>
+                <span className="stat-key">{key.replace(/([A-Z])/g, ' $1')}</span>
+              </div>
+            )
+          ))}
+        </div>
+
+        <div className="result-trust-grid">
+          <div className="result-trust-card">
+            <span>Analysis items</span>
+            <strong>{trust.analysisTotal}</strong>
+          </div>
+          <div className="result-trust-card result-trust-card--strong">
+            <span>Looks strong</span>
+            <strong>{trust.trustworthyTotal}</strong>
+          </div>
+          <div className="result-trust-card result-trust-card--review">
+            <span>Needs review</span>
+            <strong>{trust.reviewTotal}</strong>
+          </div>
+        </div>
+
+        <div className="result-analysis-sections">
+          {trust.sections.map((section) => {
+            const tone = getTrustTone(section);
+            return (
+              <div key={section.key} className={`result-analysis-card is-${tone}`}>
+                <div className="result-analysis-card__head">
+                  <div>
+                    <h4>{section.label}</h4>
+                    <p>
+                      {tone === 'strong' && 'Trustworthy enough to inspect in-app now.'}
+                      {tone === 'mixed' && 'Useful, but some extracted items still need editorial review.'}
+                      {tone === 'review' && 'Review this section before you rely on it.'}
+                      {tone === 'empty' && 'No extracted data landed here.'}
+                    </p>
+                  </div>
+                  <span className={`trust-badge trust-badge--${tone}`}>
+                    {tone === 'strong' ? 'Strong' : tone === 'mixed' ? 'Mixed' : tone === 'review' ? 'Review' : 'Empty'}
+                  </span>
+                </div>
+                <div className="result-analysis-card__stats">
+                  <span>{section.total} total</span>
+                  <span>{section.trustworthy} strong</span>
+                  <span>{section.review} review</span>
+                </div>
+                {section.examples.length > 0 && (
+                  <ul className="result-analysis-list">
+                    {section.examples.map((example, index) => (
+                      <li key={index}>{example}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {trust.warnings.length > 0 && (
+          <div className="result-warning-panel">
+            <h4>Warnings</h4>
+            <ul>
+              {trust.warnings.map((warning, index) => (
+                <li key={index}>{warning}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="result-changelog">
+          <h4>Changelog</h4>
+          <ul>
+            {wizard.importResult?.changelog.map((log, i) => (
+              <li key={i}>
+                {typeof log === 'object' ? (
+                  <span>
+                    <strong>{log.action} {log.type}:</strong> {log.detail}
+                  </span>
+                ) : log}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <button className="btn-primary full-width" onClick={onClose}>Done</button>
+      </div>
+    );
+  };
 
   return (
     <div className="import-wizard-overlay">
@@ -351,6 +541,9 @@ export default function ImportWizard({ projectId, existingData, onImportComplete
         </div>
 
         <div className="wizard-body">
+          {wizard.error && (
+            <div className="error-message global-error">{wizard.error}</div>
+          )}
           {wizard.stepName === 'upload' && renderUploadStep()}
           {wizard.stepName === 'classify' && renderClassifyStep()}
           {wizard.stepName === 'conflicts' && renderConflictsStep()}

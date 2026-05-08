@@ -1,3 +1,9 @@
+import {
+  buildProjectCascadeDeletionPlan,
+  normalizeProjectStructureRecords,
+  repairMalformedProjectRefsInRecords
+} from "./projectStructure.js";
+
 /**
  * db.js - IndexedDB Service for ProseLab V4
  * 
@@ -6,7 +12,16 @@
  */
 
 const DB_NAME = "proselab_db";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
+const LOCAL_STORAGE_KEYS = [
+  "proselab_v4",
+  "plab_costs_v1",
+  "plab_cache_v3",
+  "plab_cache_enabled",
+  "plab_cache_version_override",
+  "proselab_shadow_log",
+  "proselab_gate_telemetry"
+];
 
 /**
  * Initializes the database and handles upgrades.
@@ -50,6 +65,18 @@ export function initDB() {
         docStore.createIndex("domain", "domain");
         docStore.createIndex("subdomain", "subdomain");
       }
+
+      // Shadow Actions: Agent proposals
+      if (!db.objectStoreNames.contains("shadow_actions")) {
+        const shadowStore = db.createObjectStore("shadow_actions", { keyPath: "id" });
+        shadowStore.createIndex("timestamp", "timestamp");
+      }
+
+      // Composition Metrics: Validation data
+      if (!db.objectStoreNames.contains("composition_metrics")) {
+        const metricStore = db.createObjectStore("composition_metrics", { keyPath: "id" });
+        metricStore.createIndex("timestamp", "timestamp");
+      }
     };
   });
 }
@@ -57,16 +84,49 @@ export function initDB() {
 /**
  * Generic CRUD wrapper
  */
-async function perform(storeName, mode, callback) {
+/**
+ * Generic CRUD wrapper
+ */
+export async function perform(storeName, mode, callback) {
   const db = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(storeName, mode);
     const store = transaction.objectStore(storeName);
-    const request = callback(store);
-
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    
+    // Support both sync and async callbacks
+    const result = callback(store);
+    
+    if (result instanceof Promise) {
+      result.then(res => resolve(res)).catch(err => reject(err));
+    } else if (result && result.onsuccess !== undefined) {
+      result.onsuccess = () => resolve(result.result);
+      result.onerror = () => reject(result.error);
+    } else {
+      resolve(result);
+    }
   });
+}
+
+export async function resetLocalAppData({ preserveAiConfig = true } = {}) {
+  for (const key of LOCAL_STORAGE_KEYS) {
+    localStorage.removeItem(key);
+  }
+
+  if (!preserveAiConfig) {
+    localStorage.removeItem("storyforge_ai_config");
+  }
+
+  const dbResult = await new Promise((resolve) => {
+    const request = indexedDB.deleteDatabase(DB_NAME);
+    request.onsuccess = () => resolve({ status: "deleted" });
+    request.onerror = () => resolve({ status: "error", error: request.error?.message || "Delete failed" });
+    request.onblocked = () => resolve({ status: "blocked", error: "Close other ProseLab tabs and retry." });
+  });
+
+  return {
+    clearedKeys: [...LOCAL_STORAGE_KEYS, ...(preserveAiConfig ? [] : ["storyforge_ai_config"])],
+    db: dbResult
+  };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -77,11 +137,18 @@ async function perform(storeName, mode, callback) {
 export const createProject = (project) => 
   perform("projects", "readwrite", store => store.add({ ...project, createdAt: Date.now(), updatedAt: Date.now() }));
 
-export const getProject = (id) => 
-  perform("projects", "readonly", store => store.get(id));
+export const getProject = (id) =>
+  id ? perform("projects", "readonly", store => store.get(id)) : Promise.resolve(null);
 
 export const listProjects = () => 
-  perform("projects", "readonly", store => store.getAll());
+  perform("projects", "readonly", async store => {
+    const projects = await new Promise((resolve, reject) => {
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+    return [...projects].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  });
 
 export const updateProject = (id, updates) => 
   perform("projects", "readwrite", async store => {
@@ -93,6 +160,32 @@ export const updateProject = (id, updates) =>
     return store.put({ ...project, ...updates, updatedAt: Date.now() });
   });
 
+export const deleteProjectCascade = async (projectId) => {
+  if (!projectId) return;
+
+  const [chapters, scenes, documents] = await Promise.all([
+    listChaptersByProject(projectId),
+    listScenesByProject(projectId),
+    listDocumentsByProject(projectId)
+  ]);
+
+  const plan = buildProjectCascadeDeletionPlan(projectId, chapters, scenes, documents);
+
+  for (const sceneId of plan.sceneIds) {
+    await deleteScene(sceneId);
+  }
+
+  for (const chapterId of plan.chapterIds) {
+    await deleteChapter(chapterId);
+  }
+
+  for (const documentId of plan.documentIds) {
+    await perform("documents", "readwrite", store => store.delete(documentId));
+  }
+
+  await perform("projects", "readwrite", store => store.delete(projectId));
+};
+
 // SCENES
 export const createScene = (scene) => 
   perform("scenes", "readwrite", store => store.add({ 
@@ -103,8 +196,8 @@ export const createScene = (scene) =>
     updatedAt: Date.now() 
   }));
 
-export const getScene = (id) => 
-  perform("scenes", "readonly", store => store.get(id));
+export const getScene = (id) =>
+  id ? perform("scenes", "readonly", store => store.get(id)) : Promise.resolve(null);
 
 export const listScenesByProject = (projectId) => 
   perform("scenes", "readonly", store => {
@@ -140,8 +233,8 @@ export const createChapter = (chapter) =>
     updatedAt: Date.now() 
   }));
 
-export const getChapter = (id) => 
-  perform("chapters", "readonly", store => store.get(id));
+export const getChapter = (id) =>
+  id ? perform("chapters", "readonly", store => store.get(id)) : Promise.resolve(null);
 
 export const listChaptersByProject = (projectId) => 
   perform("chapters", "readonly", store => {
@@ -161,6 +254,80 @@ export const updateChapter = (id, updates) =>
 
 export const deleteChapter = (id) => 
   perform("chapters", "readwrite", store => store.delete(id));
+
+export const normalizeProjectStructure = async (projectId) => {
+  if (!projectId) return { duplicateChaptersRemoved: 0, duplicateScenesRemoved: 0 };
+
+  const [chapters, scenes] = await Promise.all([
+    listChaptersByProject(projectId),
+    listScenesByProject(projectId)
+  ]);
+
+  const plan = normalizeProjectStructureRecords(chapters, scenes);
+
+  for (const sceneId of plan.sceneIdsToDelete) {
+    await deleteScene(sceneId);
+  }
+
+  for (const chapterId of plan.chapterIdsToDelete) {
+    await deleteChapter(chapterId);
+  }
+
+  for (const sceneUpdate of plan.sceneOrderUpdates) {
+    await updateScene(sceneUpdate.id, { order: sceneUpdate.order });
+  }
+
+  return {
+    duplicateChaptersRemoved: plan.duplicateChaptersRemoved,
+    duplicateScenesRemoved: plan.duplicateScenesRemoved
+  };
+};
+
+export const repairMalformedProjectRefs = async (preferredProjectId = null) => {
+  const repaired = { chapters: 0, scenes: 0 };
+
+  repaired.chapters = await perform("chapters", "readwrite", async store => {
+    const chapters = await new Promise((resolve, reject) => {
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+
+    const plan = repairMalformedProjectRefsInRecords(chapters, preferredProjectId, "chapter");
+    for (const chapter of plan.records) {
+      if (chapter && typeof chapter.projectId !== "object") {
+        await new Promise((resolve, reject) => {
+          const req = store.put(chapter);
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      }
+    }
+    return plan.repairedCount;
+  });
+
+  repaired.scenes = await perform("scenes", "readwrite", async store => {
+    const scenes = await new Promise((resolve, reject) => {
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+
+    const plan = repairMalformedProjectRefsInRecords(scenes, preferredProjectId, "scene");
+    for (const scene of plan.records) {
+      if (scene && typeof scene.projectId !== "object") {
+        await new Promise((resolve, reject) => {
+          const req = store.put(scene);
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      }
+    }
+    return plan.repairedCount;
+  });
+
+  return repaired;
+};
 
 // DOCUMENTS (Generic Assets)
 export const createDocument = (doc) => 

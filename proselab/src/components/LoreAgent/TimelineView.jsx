@@ -38,8 +38,20 @@ export default function TimelineView({ agent, onSelectEntity }) {
     return (a.firstSeen || 0) - (b.firstSeen || 0);
   });
 
+  const lowConfidenceCount = sortedEvents.filter((event) => event.confidence < 0.6).length;
+
   return (
     <div className="timeline-view">
+      <div className="lore-review-strip lore-review-strip--tight timeline-review-strip">
+        <div className="lore-review-card">
+          <span>Total events</span>
+          <strong>{sortedEvents.length}</strong>
+        </div>
+        <div className="lore-review-card issue-tone-warning">
+          <span>Low-confidence events</span>
+          <strong>{lowConfidenceCount}</strong>
+        </div>
+      </div>
       <div className="timeline-line" />
       {sortedEvents.map((event, index) => {
         const isExpanded = expandedEvent === event.id;

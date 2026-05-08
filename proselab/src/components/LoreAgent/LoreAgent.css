@@ -20,11 +20,25 @@
   background: var(--bg-secondary, #252539);
 }
 
+.lore-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
 .lore-panel-header h2 {
   margin: 0;
   font-size: 1.2rem;
   font-weight: 600;
   color: var(--accent-primary, #4A90D9);
+}
+
+.lore-title-block p {
+  margin: 0;
+  color: #999;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  max-width: 68ch;
 }
 
 .process-btn {
@@ -84,6 +98,50 @@
   border-radius: 10px;
   margin-left: 0.4rem;
   vertical-align: middle;
+}
+
+.lore-review-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color, #333);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.lore-review-strip--tight {
+  padding: 0 0 1rem;
+  border-bottom: none;
+  background: transparent;
+}
+
+.lore-review-card {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-color, #333);
+  border-radius: 8px;
+  background: var(--bg-secondary, #252539);
+}
+
+.lore-review-card span {
+  display: block;
+  color: #8d8d9d;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+
+.lore-review-card strong {
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.issue-tone-error {
+  border-color: rgba(231, 76, 60, 0.35);
+}
+
+.issue-tone-warning {
+  border-color: rgba(243, 156, 18, 0.35);
 }
 
 .lore-tab-content {
@@ -166,6 +224,10 @@
   border-left: 3px solid #2ECC71;
 }
 
+.entity-card.needs-review {
+  border-color: rgba(243, 156, 18, 0.35);
+}
+
 .entity-header {
   display: flex;
   align-items: center;
@@ -204,6 +266,20 @@
 .verified-badge {
   color: #2ECC71;
   font-weight: bold;
+}
+
+.entity-review-banner {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-bottom: 0.5rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(243, 156, 18, 0.14);
+  color: #f7c66d;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 .entity-aliases {
@@ -310,6 +386,14 @@
   margin-bottom: 1.5rem;
 }
 
+.issues-subtitle {
+  margin: 0.35rem 0 0;
+  color: #9393a5;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  max-width: 64ch;
+}
+
 .auto-fix-btn {
   background: #F39C12;
   color: white;
@@ -338,6 +422,12 @@
 .issue-severity { font-weight: 800; font-size: 0.7rem; }
 .issue-message { font-weight: 600; }
 
+.issue-group-title {
+  margin: 0 0 0.9rem;
+  color: #ddd;
+  font-size: 0.92rem;
+}
+
 .issue-details {
   font-size: 0.9rem;
   color: #aaa;
@@ -352,6 +442,10 @@
   font-size: 0.8rem;
   margin-right: 0.5rem;
   background: rgba(255,255,255,0.05);
+}
+
+.timeline-review-strip {
+  margin-bottom: 1rem;
 }
 
 /* Query Tab */

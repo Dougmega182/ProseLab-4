@@ -30,15 +30,14 @@ export async function migrateIfNeeded() {
     const projectId = crypto.randomUUID();
     const projectData = {
       id: projectId,
-      title: oldProject.core?.title || "Legacy Project",
-      genre: oldProject.core?.genre || "Unknown",
+      title: oldProject.core?.title || "Imported Project",
+      genre: oldProject.core?.genre || "",
       core: oldProject.core || {},
       voice: oldProject.voice || {},
       settings: oldProject.settings || {},
       chars: oldProject.chars || [],
       rules: oldProject.rules || [],
       beats: oldProject.beats || [],
-      // Keep everything else in metadata for now
       meta: oldProject
     };
 
@@ -49,7 +48,7 @@ export async function migrateIfNeeded() {
     await createChapter({
       id: chapterId,
       projectId: projectId,
-      title: "Drafts",
+      title: "Main",
       order: 0
     });
 
@@ -59,7 +58,7 @@ export async function migrateIfNeeded() {
       id: sceneId,
       projectId: projectId,
       chapterId: chapterId,
-      title: "First Scene",
+      title: "Scene 1",
       text: oldProject.text || "",
       modeFeedback: oldProject.modeFeedback || { ANALYSE: {}, ENGINEER: {}, MARKET: {}, VERDICT: {} },
       order: 0

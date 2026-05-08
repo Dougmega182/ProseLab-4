@@ -1,176 +1,220 @@
-# 📄 AGENTS.md
+# AGENTS.md
 
-# ProseLab 4 — Agent Architecture
+# ProseLab 4 - Agent Architecture Status
 
-## Overview
+## Purpose
 
-ProseLab is transitioning into a **multi-agent writing system**.
+This file describes the current agent/runtime reality of ProseLab 4 and separates it from the longer-term target architecture.
 
-Not all agents exist yet. This defines the target system.
+The codebase is no longer just a single-pass prototype. It now includes:
+- a bounded generate/critique loop
+- a project/chapter/scene document model
+- manuscript import into IndexedDB
+- preproduction enrichment for characters, world rules, beats, and scene inventory
+- a lore/consistency subsystem
 
----
+## Current Runtime Baseline
 
-## Core Agents
+The active app is the Vite project in `proselab/`.
 
-### 1. Generator Agent (EXISTS)
+Primary files:
+- `proselab/src/App.jsx`
+- `proselab/src/hooks/useDocumentManager.js`
+- `proselab/src/services/db.js`
+- `proselab/src/services/importOrchestrator.js`
+- `proselab/src/services/createModeOrchestrator.js`
+- `proselab/src/engine/pipeline.js`
 
-**Role:**
-Produce improved prose from constraints.
+The launcher used locally is:
+- `E:\Ai\ProseLabV2\ProseLab-4.bat`
 
-**Current Implementation:**
-- Ollama (primary rewrite)
-- OpenAI (refinement)
+## Agent Status
 
----
+### 1. Generator Agent
+Status: implemented
 
-### 2. Analyst Agent (EXISTS)
+Role:
+- produce draft prose from scene intent, context, and voice constraints
 
-**Role:**
-Measure writing quality.
+Current implementation:
+- Ollama generation path
+- OpenAI refinement path
 
-**Functions:**
-- Rhythm analysis
-- Emotional concreteness
-- Specificity scoring
+Notes:
+- generation is no longer the only gate; it feeds critique/orchestration
 
-**Output:**
-Structured metrics
+### 2. Analyst Agent
+Status: implemented
 
----
+Role:
+- inspect prose quality and derive craft metrics
 
-### 3. Delta Agent (EXISTS)
+Current functions:
+- rhythm analysis
+- specificity / concreteness style signals
+- scene-level and editorial diagnostics
 
-**Role:**
-Convert analysis into actionable rewrite instructions.
+Outputs:
+- structured analysis used by downstream rewrite stages
 
----
+### 3. Delta Agent
+Status: implemented
 
-### 4. Critic Agent (EXISTS)
+Role:
+- turn analysis into rewrite instructions
 
-**Role:**
-Reject bad writing.
+Current behavior:
+- derives constrained rewrite direction before generation/refinement
 
-**Responsibilities:**
-- Evaluate generated text against rhythm, specificity, and grounding.
-- Detect failure modes (averaging, over-explanation, weak metaphors).
-- Score narrative intent alignment.
-- Return: APPROVE or REWRITE (with feedback).
+### 4. Critic Agent
+Status: implemented
 
----
+Role:
+- reject weak output and return machine-usable feedback
 
-### 5. Challenger Agent (EXISTS)
+Current behavior:
+- returns `APPROVE` or `REWRITE`
+- surfaces score/failures in UI
+- feeds retry logic
+- participates in create-mode orchestration and shadow/action workflows
 
-**Role:**
-Adversarial verification.
+Relevant code:
+- `proselab/src/engine/critic.js`
+- `proselab/src/agents/criticAgent.js`
+- `proselab/src/engine/autoApplyGate.js`
 
-**Current Implementation:**
-- Gemini 1.5 Pro.
+### 5. Challenger / Adjudication Layer
+Status: partial
 
-**Function:**
-Challenges `APPROVE` verdicts from the primary Critic to detect "deceptively clean" but empty prose.
+Role:
+- adversarial verification of approvals
 
----
+Current reality:
+- Gemini support exists in the provider layer
+- critique guardrails and truth/adjudication scaffolding exist
+- documentation previously overstated Gemini as an always-active final stage
 
-### 6. Orchestrator (EXISTS)
+What is still missing:
+- one explicit, always-on challenger pass in the main create pipeline with clear UI visibility
 
-**Role:**
-Control the pipeline loop.
+### 6. Orchestrator
+Status: implemented, still evolving
 
-**Behavior:**
-Generate → Critique → Challenger → (Pass?)
-YES → Accept
-NO → Rewrite → Retry (max 3)
+Role:
+- control the bounded generate -> critique -> retry flow
 
----
+Current behavior:
+- blocks `CREATE` if scene intent is incomplete
+- runs analysis, delta, generation, validation, critique
+- records attempts and final disposition
+- enforces bounded retry behavior
 
-## Target Loop
+Relevant code:
+- `proselab/src/services/createModeOrchestrator.js`
+- `proselab/src/engine/pipeline.js`
+- `proselab/src/engine/orchestrator.js`
 
-User Input
-↓
-Analysis
-↓
-Delta
-↓
-Generate
-↓
-Critic (Primary)
-↓
-[REWRITE] → Loop
-[APPROVE] → Challenger
-            ↓
-            [REWRITE] → Loop
-            [APPROVE] → Final Output
+## Current Product Surfaces
 
+### Preproduction Workspace
+Status: implemented
 
----
+Includes:
+- Core lock
+- Voice profile
+- World rules
+- Character dossiers
+- Beat map
+- Scene inventory
+- Preflight brief
+- Pipeline settings
 
-## Design Rules
+Recent state:
+- imported manuscript metadata now lands in these surfaces
+- GUI was refreshed to make dossiers/world/beats more readable
+- evaluation cues now exist across dossiers, world rules, beats, inventory, and preflight:
+  - provenance labels
+  - review flags
+  - scene readiness scoring
 
-- Generator cannot self-approve
-- Critic must be stricter than generator
-- Loop must terminate (max retries)
-- Feedback must be specific, not generic
+### Document System
+Status: implemented
 
----
+Includes:
+- projects
+- chapters
+- scenes
+- scene selection
+- manuscript sidebar tree
+- project naming/history cues for distinguishing repeated imports
+- project deletion
+- manuscript export
 
-## Future Agents (Later)
+Persistence:
+- IndexedDB-backed
+- legacy localStorage migration still exists for older data
+- filesystem-native persistence is not the live authority for the current runtime; file import/export is the explicit boundary
 
-- Lore Agent (✅ Initial implementation: Entity extraction + Graph visualization)
-- Consistency Agent (✅ Initial implementation: Timeline / character validation)
-- Style Agent (Later: voice enforcement)
+Maintenance:
+- a first-class in-app local reset action now clears IndexedDB plus selected local support storage for debugging/recovery
 
----
+### Manuscript Import
+Status: implemented, recently stabilized
 
-## Non-Negotiable Principle
+Current behavior:
+- imports manuscript files into a named project
+- creates chapters/scenes
+- derives and saves:
+  - characters
+  - world rules
+  - beats
+  - scene inventory / continuity metadata
+- refreshes project state after import
+- shows a post-import result screen that separates:
+  - trustworthy extracted sections
+  - sections needing editorial review
+- exposes debug objects in browser console for diagnostics
 
-> If the system cannot reject bad output, it will produce average output.
+### Lore / Consistency
+Status: implemented with follow-up work still available
 
-The Critic Agent is mandatory.
+Includes:
+- lore extraction
+- relationship graph
+- timeline view
+- consistency issue tracking
+- export/clear/query surfaces
 
-# ProseLab V2 Agent Guide
+Recent state:
+- Lore now acts as a manuscript review surface, not just a data browser:
+  - low-confidence and unverified entity cues
+  - issue severity summaries
+  - timeline review counts
 
-The app is a local-first prose workstation with:
-- A preproduction workspace for story core, voice, rules, characters, beats, scenes, and preflight briefs.
-- A `CREATE` mode that currently runs `analysis -> delta -> Ollama draft -> OpenAI refinement`.
-- Editorial modes: `ANALYSE`, `ENGINEER`, `MARKET`, and `VERDICT`.
-- LocalStorage persistence for text, preproduction state, cache entries, and token/cost stats.
+## Non-Negotiable Rules
 
-## Current Runtime Reality
-- There is no user account system, no session management, and no login flow.
-- API access is driven by local Vite env vars in `proselab/.env`.
-- The app reads:
-  - `VITE_OPENAI_KEY`
-  - `VITE_GEMINI_KEY`
-  - `VITE_OLLAMA_MODEL`
-- `CREATE` currently depends on Ollama plus OpenAI.
-- Editorial modes currently depend on OpenAI.
-- Gemini is surfaced in settings/status, but the current `runPipeline` implementation does not call `callGemini`.
+- Generator cannot self-approve.
+- Retry loops must terminate.
+- Provider/config failures must be distinguishable from quality rejection.
+- Docs must describe current runtime honestly, not just the target vision.
+- No fake login/auth UX should be introduced without real auth.
 
-## Important Product Behavior
-- `ENGINEER` is intentionally locked until `ANALYSE` has run and the editor text has changed afterward.
-- `VERDICT` is intentionally locked until both `ANALYSE` and `ENGINEER` have feedback.
-- `ANALYSE` is diagnosis-only by prompt design.
-- The app has inference caching keyed by normalized prompt content.
+## Known Gaps
 
-## Main Files
-- `proselab/src/App.jsx`: primary application logic and UI.
-- `proselab/src/index.css`: design system and layout styles.
-- `proselab/preproduction-kit.html`: likely source/reference material for the preproduction surface.
-- `archieve/`: historical versions and craft notes. Treat as reference, not active app code.
+- Some UI copy and icons still contain mojibake / encoding damage.
+- The broader shell still has layout inconsistency outside the refreshed import/preproduction surfaces.
+- The main `App.jsx` remains too large and still carries too much orchestration/state/UI coupling.
+- Gemini/challenger behavior still needs one clean, documented truth path in the main runtime.
+- Tests are still lighter than they should be for orchestration, imports, and mode gating.
 
-## Constraints For Future Changes
-- Preserve the current mode progression unless the user explicitly asks to relax it.
-- Do not introduce fake auth/UI copy suggesting users should sign in unless a real auth flow is added.
-- Keep provider diagnostics explicit. Missing config should be visible before mode execution.
-- Treat `proselab/.env` as sensitive local configuration and never print secret values back to the user.
+## Near-Term Priorities
 
-## Known Mismatches
-- UI copy still implies a Gemini final stage in places, but the active pipeline stops after OpenAI refinement.
-- The root workspace `.env` is not the Vite env file used by the React app; `proselab/.env` is the active file.
-- The repository root is a Git repository.
-
-## Recommended Next Engineering Priorities
-- Make provider diagnostics deeper by probing Ollama availability instead of only checking model text.
-- Either wire Gemini back into `runPipeline` or remove Gemini from the advertised active pipeline.
-- Replace mojibake characters in UI strings with clean ASCII/UTF-8 text.
-- Add basic tests around mode gating and provider requirements.
+1. Finish aligning UI copy and provider messaging with the real pipeline.
+2. Continue breaking orchestration/state concerns out of `App.jsx`.
+3. Add regression coverage for:
+   - import persistence
+   - project/chapter/scene hydration
+   - create-mode gating
+   - critic/retry behavior
+4. Continue improving preproduction and sidebar UX coherence.
+5. Decide whether challenger/Gemini becomes a first-class enforced stage or remains optional infrastructure.

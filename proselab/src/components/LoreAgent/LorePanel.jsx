@@ -103,7 +103,12 @@ export default function LorePanel({ agent: externalAgent, text, onProcessText })
         (e.aliases && e.aliases.some(a => a.toLowerCase().includes(q)))
       );
     }
-    return result;
+    return [...result].sort((a, b) => {
+      const aNeedsReview = (!a.verified ? 1 : 0) + (a.confidence < 0.6 ? 1 : 0);
+      const bNeedsReview = (!b.verified ? 1 : 0) + (b.confidence < 0.6 ? 1 : 0);
+      if (bNeedsReview !== aNeedsReview) return bNeedsReview - aNeedsReview;
+      return (b.mentions || 0) - (a.mentions || 0);
+    });
   }, [entities, typeFilter, searchQuery]);
 
   const entityTypes = useMemo(() => {
@@ -114,10 +119,29 @@ export default function LorePanel({ agent: externalAgent, text, onProcessText })
     return types;
   }, [entities]);
 
+  const reviewStats = useMemo(() => {
+    const severityCounts = issues.reduce((acc, issue) => {
+      const key = issue.severity || 'info';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    return {
+      lowConfidenceEntities: entities.filter(entity => entity.confidence < 0.6).length,
+      unverifiedEntities: entities.filter(entity => !entity.verified).length,
+      timelineEvents: entities.filter(entity => entity.type === 'event').length,
+      criticalIssues: (severityCounts.error || 0) + (severityCounts.warning || 0),
+      severityCounts
+    };
+  }, [entities, issues]);
+
   return (
     <div className="lore-panel">
       <div className="lore-panel-header">
-        <h2>Lore Tracker</h2>
+        <div className="lore-title-block">
+          <h2>Lore Tracker</h2>
+          <p>Use lore review to validate continuity, entity confidence, and timeline coherence before trusting manuscript analysis.</p>
+        </div>
         <button
           className="process-btn"
           onClick={handleProcess}
@@ -125,6 +149,25 @@ export default function LorePanel({ agent: externalAgent, text, onProcessText })
         >
           {processing ? 'Processing...' : 'Extract Lore'}
         </button>
+      </div>
+
+      <div className="lore-review-strip">
+        <div className="lore-review-card">
+          <span>Critical issues</span>
+          <strong>{reviewStats.criticalIssues}</strong>
+        </div>
+        <div className="lore-review-card">
+          <span>Low-confidence entities</span>
+          <strong>{reviewStats.lowConfidenceEntities}</strong>
+        </div>
+        <div className="lore-review-card">
+          <span>Unverified entities</span>
+          <strong>{reviewStats.unverifiedEntities}</strong>
+        </div>
+        <div className="lore-review-card">
+          <span>Timeline events</span>
+          <strong>{reviewStats.timelineEvents}</strong>
+        </div>
       </div>
 
       <div className="lore-tabs">

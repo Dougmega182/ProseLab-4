@@ -156,6 +156,39 @@ export async function callOpenAI(key, prompt, options = {}) {
   });
 }
 
+export async function checkOpenAIReachability(key) {
+  if (!key) {
+    return { reachable: false, reason: "Missing API key" };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/models", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${key}`
+      },
+      signal: controller.signal
+    });
+
+    clearTimeout(timer);
+
+    if (!response.ok) {
+      return { reachable: false, reason: `HTTP ${response.status}` };
+    }
+
+    return { reachable: true, reason: "API reachable" };
+  } catch (error) {
+    clearTimeout(timer);
+    return {
+      reachable: false,
+      reason: error?.name === "AbortError" ? "Timeout" : (error?.message || "Request failed")
+    };
+  }
+}
+
 export async function callGemini(key, prompt, options = {}) {
   const {
     model = "gemini-1.5-pro",
@@ -206,6 +239,36 @@ export async function callGemini(key, prompt, options = {}) {
   }
 }
 
+export async function checkGeminiReachability(key) {
+  if (!key) {
+    return { reachable: false, reason: "Missing API key" };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`, {
+      method: "GET",
+      signal: controller.signal
+    });
+
+    clearTimeout(timer);
+
+    if (!response.ok) {
+      return { reachable: false, reason: `HTTP ${response.status}` };
+    }
+
+    return { reachable: true, reason: "API reachable" };
+  } catch (error) {
+    clearTimeout(timer);
+    return {
+      reachable: false,
+      reason: error?.name === "AbortError" ? "Timeout" : (error?.message || "Request failed")
+    };
+  }
+}
+
 export async function callOllama(model, prompt) {
   try {
     const response = await fetch("http://localhost:11434/api/generate", {
@@ -230,13 +293,16 @@ export async function callOllama(model, prompt) {
 }
 
 export async function checkOllamaReachability(modelName) {
-  if (!modelName) return false;
+  if (!modelName) return { reachable: false, reason: "Missing model name" };
   try {
     const res = await fetch("http://localhost:11434/api/tags");
-    if (!res.ok) return false;
+    if (!res.ok) return { reachable: false, reason: `HTTP ${res.status}` };
     const data = await res.json();
-    return data.models?.some(m => m.name === modelName || m.name.startsWith(modelName + ":"));
+    const found = data.models?.some(m => m.name === modelName || m.name.startsWith(modelName + ":"));
+    return found
+      ? { reachable: true, reason: "Model available" }
+      : { reachable: false, reason: "Model not installed" };
   } catch {
-    return false;
+    return { reachable: false, reason: "Ollama offline" };
   }
 }

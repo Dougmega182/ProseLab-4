@@ -1,9 +1,17 @@
 // src/services/importOrchestrator.js
-import { 
-  parseMultipleFiles, 
+import {
+  parseMultipleFiles,
   applyImport,
   CATEGORY_LABELS
 } from './importService.js';
+import { parseManuscript } from './importManuscript.js';
+import {
+  extractCharacters as fallbackExtractCharacters,
+  extractWorldRules as fallbackExtractWorldRules,
+  deriveBeatMap as fallbackDeriveBeatMap,
+  buildSceneInventory as fallbackBuildSceneInventory,
+  checkContinuity as fallbackCheckContinuity
+} from './analysisService.js';
 
 export class ImportOrchestrator {
   constructor(storage, llm) {
@@ -63,70 +71,70 @@ export class ImportOrchestrator {
 
   /**
    * Classify a single file based on its name and content
+   * Implementation based on User's detectFileCategory specification.
    */
-  static classifyFile(fileName, text) {
-    const name = fileName.toLowerCase();
-    const sample = text.substring(0, 3000).toLowerCase();
-    const wordCount = text.split(/\s+/).length;
+  static classifyFile(fileName, content) {
+    const lower = fileName.toLowerCase();
+    const text = content || '';
+    const textLower = text.toLowerCase();
 
-    // Check filename patterns first
-    if (/character|cast|dramatis/i.test(name)) {
-      return { suggestedType: 'character', confidence: 'high', reason: 'Filename suggests character profiles' };
-    }
-    if (/world|lore|magic|setting|rules|bible/i.test(name)) {
-      return { suggestedType: 'worldRule', confidence: 'high', reason: 'Filename suggests world-building document' };
-    }
-    if (/outline|beat|structure|plot|synopsis/i.test(name)) {
-      return { suggestedType: 'beatMap', confidence: 'high', reason: 'Filename suggests outline or beat sheet' };
-    }
-    if (/note|ref|research|idea|brainstorm/i.test(name)) {
-      return { suggestedType: 'note', confidence: 'high', reason: 'Filename suggests notes or reference material' };
-    }
-    if (/chapter|manuscript|draft|novel|story|book/i.test(name)) {
-      return { suggestedType: 'manuscript', confidence: 'high', reason: 'Filename suggests manuscript content' };
-    }
+    // ── Manuscript detection (check FIRST) ──
+    const manuscriptSignals = [
+      /\b(prologue|epilogue)\b/i,
+      /^#{1,3}\s*(chapter|ch\.?\s*\d)/im,
+      /\bCHAPTER\s+[IVXLCDM\d]+/m,
+      /\bPART\s+(ONE|TWO|THREE|FOUR|[IVXLCDM]+|\d+)\b/i,
+      /^#{1,2}\s*\*\*[A-Z]/m,
+    ];
 
-    // Content-based heuristics
-    const dialogueCount = (text.match(/[""\u201C].+?[""\u201D]/g) || []).length;
-    const bulletCount = (text.match(/^[\s]*[-*•]\s+/gm) || []).length;
-    const numberedCount = (text.match(/^\s*\d+[\.\)]\s+/gm) || []).length;
+    const signalHits = manuscriptSignals.filter(rx => rx.test(text)).length;
+    const isLargeFile = text.length > 5000;
+    const hasMultipleHeadings = (text.match(/^#{1,3}\s+/gm) || []).length >= 3;
+    const hasDraftInName = /draft|manuscript|novel|book|complete/i.test(lower);
 
-    // Character profile patterns
-    const charPatterns = /\b(name|age|appearance|personality|backstory|motivation|traits|physical description|occupation|role)\s*[:—-]/gi;
-    const charMatches = (sample.match(charPatterns) || []).length;
-    if (charMatches >= 3) {
-      return { suggestedType: 'character', confidence: 'medium', reason: `Content contains ${charMatches} character-profile fields` };
+    // If it looks like a manuscript, classify it as one
+    if (
+      (signalHits >= 2) ||
+      (signalHits >= 1 && isLargeFile) ||
+      (isLargeFile && hasMultipleHeadings) ||
+      (hasDraftInName && isLargeFile)
+    ) {
+      return { suggestedType: 'manuscript', confidence: 'high', reason: 'Structural signals suggest a full manuscript' };
     }
 
-    // World-building patterns
-    const worldPatterns = /\b(rule|law|magic system|geography|history|culture|species|race|faction|technology|economy|religion|government)\s*[:—-]/gi;
-    const worldMatches = (sample.match(worldPatterns) || []).length;
-    if (worldMatches >= 2) {
-      return { suggestedType: 'worldRule', confidence: 'medium', reason: `Content contains ${worldMatches} world-building descriptors` };
+    // ── Other categories ──
+    if (/character|cast|persona/i.test(lower)) {
+      return { suggestedType: 'characters', confidence: 'high', reason: 'Filename suggests character profiles' };
+    }
+    if (/scene|sequence/i.test(lower)) {
+      return { suggestedType: 'scenes', confidence: 'high', reason: 'Filename suggests scene drafts' };
+    }
+    if (/world|setting|lore|magic|rule|bible/i.test(lower)) {
+      return { suggestedType: 'worldbuilding', confidence: 'high', reason: 'Filename suggests world-building document' };
+    }
+    if (/outline|structure|beat|plot|synopsis/i.test(lower)) {
+      return { suggestedType: 'outline', confidence: 'high', reason: 'Filename suggests outline or beat sheet' };
     }
 
-    // Beat/outline patterns
-    if ((bulletCount + numberedCount) > 10 && dialogueCount < 5) {
-      return { suggestedType: 'beatMap', confidence: 'medium', reason: 'Content is heavily structured with lists' };
+    // Content-based fallbacks
+    if (/\bage\b.*\bappearance\b|\bmotivation\b.*\bflaw\b/i.test(textLower)) {
+      return { suggestedType: 'characters', confidence: 'medium', reason: 'Content contains character-profile keywords' };
     }
-    if (/\b(act\s+[1-3i]+|inciting incident|climax|resolution|midpoint|turning point|pinch point)\b/i.test(sample)) {
-      return { suggestedType: 'beatMap', confidence: 'medium', reason: 'Content contains story structure terminology' };
-    }
-
-    // Manuscript detection
-    if (wordCount > 1000 && dialogueCount > 5) {
-      return { suggestedType: 'manuscript', confidence: 'medium', reason: `Long text with dialogue` };
-    }
-    if (wordCount > 3000) {
-      return { suggestedType: 'manuscript', confidence: 'low', reason: `Long text, assumed to be manuscript` };
+    if (/\bint\.\b|\bext\.\b|\bfade in\b/i.test(textLower)) {
+      return { suggestedType: 'scenes', confidence: 'medium', reason: 'Content contains screenplay-style scene headers' };
     }
 
-    // Short text defaults to notes
-    if (wordCount < 500) {
-      return { suggestedType: 'note', confidence: 'low', reason: 'Short text' };
-    }
+    return { suggestedType: 'notes', confidence: 'low', reason: 'Default fallback' };
+  }
 
-    return { suggestedType: 'manuscript', confidence: 'low', reason: 'Defaulting to manuscript' };
+  static inferProjectTitle(fileName, parsedTitle) {
+    const fileBase = (fileName || "Imported Project").replace(/\.[^.]+$/, "").trim();
+    const candidate = String(parsedTitle || "").trim();
+    if (!candidate) return fileBase;
+
+    const chapterLike = /^(?:\*+\s*)?(prologue|epilogue|chapter\b|part\b)/i.test(candidate);
+    if (chapterLike) return fileBase;
+    return candidate;
   }
 
   /**
@@ -158,7 +166,7 @@ export class ImportOrchestrator {
         }
       }
 
-      if (fileType === 'character') {
+      if (fileType === 'characters') {
         const names = this._extractCharacterNames(file.text);
         for (const name of names) {
           const match = existingCharacters.find(c => c.name && c.name.toLowerCase().trim() === name.toLowerCase().trim());
@@ -175,7 +183,7 @@ export class ImportOrchestrator {
         }
       }
 
-      if (fileType === 'worldRule') {
+      if (fileType === 'worldbuilding') {
         const names = this._extractRuleNames(file.text);
         for (const name of names) {
           const match = existingWorldRules.find(r => r.title && r.title.toLowerCase().trim() === name.toLowerCase().trim());
@@ -200,10 +208,89 @@ export class ImportOrchestrator {
    */
   async executeImport(projectId, files, options, onProgress) {
     this.onProgress = onProgress;
-    
-    // Get current project data for applyImport
-    const project = await this.storage.getProject(projectId);
-    if (!project) throw new Error("Project not found");
+    const runId = `import_${Date.now().toString(36)}`;
+    const debugState = {
+      runId,
+      projectId,
+      startedAt: new Date().toISOString(),
+      files: files.map(file => ({
+        id: file.id,
+        fileName: file.fileName,
+        category: file.category,
+        size: file.fileSize || file.content?.length || 0
+      })),
+      options,
+      events: []
+    };
+    this._debug('start', debugState);
+
+    const manuscriptFiles = files.filter(file => file.category === 'manuscript');
+    const auxiliaryFiles = files.filter(file => file.category !== 'manuscript');
+    let targetProjectId = projectId || null;
+    let targetProject = targetProjectId ? await this.storage.getProject(targetProjectId) : null;
+
+    if (manuscriptFiles.length > 0 && typeof this.storage.createProject === 'function') {
+      const seed = parseManuscript(manuscriptFiles[0].content || manuscriptFiles[0].text || '', {});
+      const manuscriptTitle = String(options?.projectTitle || '').trim() || ImportOrchestrator.inferProjectTitle(manuscriptFiles[0].fileName, seed.title);
+      const createdProject = await this.storage.createProject({
+        title: manuscriptTitle,
+        core: {
+          title: manuscriptTitle,
+          wcCurrent: String(seed.stats?.totalWords || 0),
+          wc: String(seed.stats?.totalWords || 0),
+          constraint: '',
+          genre: '',
+          theme: '',
+          falseBelief: ''
+        },
+        voice: {},
+        chars: [],
+        rules: [],
+        beats: [],
+        metadata: {
+          importedAt: Date.now(),
+          source: 'manuscript-import',
+          manuscriptStats: seed.stats || null
+        }
+      });
+      targetProjectId = createdProject.id;
+      targetProject = await this.storage.getProject(targetProjectId);
+      this._debug('project-created', { runId, targetProjectId, title: manuscriptTitle });
+    }
+
+    if (!targetProject && typeof this.storage.createProject === 'function') {
+      const fallbackTitle = files[0]?.fileName
+        ? files[0].fileName.replace(/\.[^.]+$/, '')
+        : 'Imported Project';
+      const createdProject = await this.storage.createProject({
+        title: fallbackTitle,
+        core: {
+          title: fallbackTitle
+        },
+        voice: {},
+        chars: [],
+        rules: [],
+        beats: [],
+        metadata: {
+          importedAt: Date.now(),
+          source: 'generic-import'
+        }
+      });
+      targetProjectId = createdProject.id;
+      targetProject = await this.storage.getProject(targetProjectId);
+      this._debug('project-created-fallback', { runId, targetProjectId, title: fallbackTitle });
+    }
+
+    if (!targetProject) {
+      throw new Error("No target project available for import");
+    }
+    this._debug('loaded-project', {
+      runId,
+      targetProjectId,
+      projectTitle: targetProject.title,
+      chapterCount: targetProject.chapters?.length || 0,
+      charCount: targetProject.chars?.length || targetProject.characters?.length || 0
+    });
 
     // Map resolutions from options.conflicts
     const resolutions = {};
@@ -215,64 +302,338 @@ export class ImportOrchestrator {
 
     if (onProgress) onProgress({ current: 0, total: 100, message: "Applying import logic..." });
 
-    // Use importService.applyImport for the heavy lifting
-    const { updatedProject, changelog, warnings, summary } = await applyImport(project, files, resolutions);
+    const changelog = [];
+    const warnings = [];
+    const summary = {
+      chaptersAdded: 0,
+      chaptersUpdated: 0,
+      charactersAdded: 0,
+      charactersUpdated: 0,
+      rulesAdded: 0,
+      beatsAdded: 0,
+      notesAdded: 0,
+      scenesAdded: 0
+    };
+    let createdChapterIds = [];
+    let createdSceneIds = [];
+
+    if (manuscriptFiles.length > 0) {
+      for (const manuscriptFile of manuscriptFiles) {
+        const parsed = parseManuscript(manuscriptFile.content || manuscriptFile.text || '', {});
+        const imported = await this._importParsedManuscript(targetProjectId, parsed, manuscriptFile.fileName);
+        createdChapterIds = createdChapterIds.concat(imported.chapterIds);
+        createdSceneIds = createdSceneIds.concat(imported.sceneIds);
+        summary.chaptersAdded += imported.chapterIds.length;
+        summary.scenesAdded += imported.sceneIds.length;
+        changelog.push(...imported.changelog);
+        this._debug('manuscript-imported', {
+          runId,
+          fileName: manuscriptFile.fileName,
+          chapters: imported.chapterIds.length,
+          scenes: imported.sceneIds.length,
+          stats: parsed.stats
+        });
+      }
+    }
+
+    let updatedProject = targetProject;
+    if (auxiliaryFiles.length > 0) {
+      const applied = await applyImport(targetProject, auxiliaryFiles, resolutions);
+      updatedProject = applied.updatedProject;
+      changelog.push(...applied.changelog);
+      warnings.push(...applied.warnings);
+      Object.entries(applied.summary).forEach(([key, value]) => {
+        summary[key] = (summary[key] || 0) + value;
+      });
+      this._debug('apply-import-complete', { runId, summary: applied.summary, warnings: applied.warnings, changelog: applied.changelog });
+    }
 
     // Save updated project back to storage
     if (onProgress) onProgress({ current: 50, total: 100, message: "Saving changes to database..." });
-    
-    await this.storage.updateProjectMetadata({
-      chars: updatedProject.characters,
-      rules: updatedProject.worldRules,
-      beats: updatedProject.beats,
-      voice: updatedProject.voice
-    });
+
+    if (typeof this.storage.updateProjectData === 'function') {
+      await this.storage.updateProjectData(targetProjectId, {
+        chars: updatedProject.characters || updatedProject.chars || [],
+        rules: updatedProject.worldRules || updatedProject.rules || [],
+        beats: updatedProject.beats || [],
+        voice: updatedProject.voice || {},
+        core: updatedProject.core || targetProject.core || {}
+      });
+    } else {
+      await this.storage.updateProjectMetadata({
+        chars: updatedProject.characters || updatedProject.chars || [],
+        rules: updatedProject.worldRules || updatedProject.rules || [],
+        beats: updatedProject.beats || [],
+        voice: updatedProject.voice || {}
+      });
+    }
 
     // Handle manuscript chapters and scenes
     // For simplicity in this implementation, we'll assume applyImport handled the array
     // and we need to persist them to the separate Chapter/Scene stores if they changed.
-    for (const chapter of updatedProject.chapters) {
+    for (const chapter of (updatedProject.chapters || [])) {
       if (chapter.id.startsWith('imp_')) {
         // This is a new chapter from importService
-        const newChapter = await this.storage.createChapter({
+        const newChapter = await this._createChapter(targetProjectId, {
           projectId,
           title: chapter.title,
           order: chapter.order,
           importedAt: chapter.importedAt
         });
-        
+        createdChapterIds.push(newChapter.id);
+        this._debug('chapter-created', { runId, chapterId: newChapter.id, title: newChapter.title });
+
         // Split content into scenes if needed, or just one big scene
-        await this.storage.createScene({
+        const newScene = await this._createScene(targetProjectId, {
           projectId,
           chapterId: newChapter.id,
           title: "Imported Content",
           text: chapter.content,
           order: 0
         });
+        createdSceneIds.push(newScene.id);
+        this._debug('scene-created', { runId, sceneId: newScene.id, chapterId: newChapter.id, title: newScene.title });
       } else {
         // Check if it was updated
         const isUpdated = changelog.find(c => c.type === 'Chapter' && c.detail === chapter.title && (c.action === 'Updated' || c.action === 'Merged'));
         if (isUpdated) {
-          await this.storage.updateChapter(projectId, chapter.id, {
+          await this.storage.updateChapter(targetProjectId, chapter.id, {
             title: chapter.title,
             order: chapter.order
           });
           // Update the first scene's text
-          const scenes = await this.storage.getScenes(chapter.id);
+          const scenes = await this._getScenesForChapter(chapter.id, targetProjectId);
           if (scenes && scenes.length > 0) {
             await this.storage.updateSceneText(scenes[0].id, chapter.content);
+            this._debug('scene-updated', { runId, sceneId: scenes[0].id, chapterId: chapter.id, title: chapter.title });
           }
         }
       }
     }
 
+    const manuscriptText = manuscriptFiles
+      .map(file => file.content || file.text || '')
+      .join('\n\n---\n\n')
+      .trim();
+
+    const analysisResults = {};
+    if (manuscriptText && this.llm?.generate) {
+      const analysisOptions = {
+        autoSaveExtracted: true,
+        extractCharacters: true,
+        extractWorldRules: true,
+        deriveBeatMap: true,
+        buildSceneInventory: true,
+        checkContinuity: true
+      };
+      try {
+        if (onProgress) onProgress({ current: 72, total: 100, message: 'Extracting characters...' });
+        const characterReport = {
+          charactersImported: 0
+        };
+        analysisResults.characters = await this._aiExtractCharacters(targetProjectId, manuscriptText, analysisOptions, characterReport);
+        summary.charactersAdded += characterReport.charactersImported;
+        this._debug('analysis-saved', { runId, phase: 'characters', saved: characterReport.charactersImported });
+      } catch (err) {
+        warnings.push(`Character extraction failed: ${err.message}`);
+        this._debug('analysis-error', { runId, phase: 'characters', error: err.message });
+      }
+
+      try {
+        if (onProgress) onProgress({ current: 78, total: 100, message: 'Extracting world rules...' });
+        const ruleReport = {
+          worldRulesImported: 0
+        };
+        analysisResults.worldRules = await this._aiExtractWorldRules(targetProjectId, manuscriptText, analysisOptions, ruleReport);
+        summary.rulesAdded += ruleReport.worldRulesImported;
+        this._debug('analysis-saved', { runId, phase: 'worldRules', saved: ruleReport.worldRulesImported });
+      } catch (err) {
+        warnings.push(`World rule extraction failed: ${err.message}`);
+        this._debug('analysis-error', { runId, phase: 'worldRules', error: err.message });
+      }
+
+      try {
+        if (onProgress) onProgress({ current: 84, total: 100, message: 'Deriving beat map...' });
+        const beatReport = {
+          beatsImported: 0
+        };
+        analysisResults.beats = await this._aiDeriveBeatMap(targetProjectId, manuscriptText, analysisOptions, beatReport);
+        summary.beatsAdded += beatReport.beatsImported;
+        this._debug('analysis-saved', { runId, phase: 'beats', saved: beatReport.beatsImported });
+      } catch (err) {
+        warnings.push(`Beat-map derivation failed: ${err.message}`);
+        this._debug('analysis-error', { runId, phase: 'beats', error: err.message });
+      }
+
+      try {
+        if (onProgress) onProgress({ current: 90, total: 100, message: 'Building scene inventory...' });
+        analysisResults.scenes = await this._aiBuildSceneInventory(targetProjectId, manuscriptText);
+        await this._applySceneInventory(targetProjectId, createdSceneIds, analysisResults.scenes);
+        this._debug('analysis-saved', { runId, phase: 'scenes', saved: analysisResults.scenes?.length || 0 });
+      } catch (err) {
+        warnings.push(`Scene inventory generation failed: ${err.message}`);
+        this._debug('analysis-error', { runId, phase: 'scenes', error: err.message });
+      }
+
+      try {
+        if (onProgress) onProgress({ current: 95, total: 100, message: 'Checking continuity...' });
+        analysisResults.continuityIssues = await this._aiCheckContinuity(targetProjectId, manuscriptText);
+        this._debug('analysis-saved', { runId, phase: 'continuity', saved: analysisResults.continuityIssues?.length || 0 });
+      } catch (err) {
+        warnings.push(`Continuity check failed: ${err.message}`);
+        this._debug('analysis-error', { runId, phase: 'continuity', error: err.message });
+      }
+
+      await this._applyCoreMetadata(targetProjectId, manuscriptFiles[0], manuscriptText, analysisResults);
+    }
+
     if (onProgress) onProgress({ current: 100, total: 100, message: "Import complete!" });
+    this._debug('complete', {
+      runId,
+      summary,
+      createdChapterIds,
+      createdSceneIds,
+      finishedAt: new Date().toISOString()
+    });
 
     return {
       summary,
       changelog,
-      warnings
+      warnings,
+      analysisResults,
+      createdChapterIds,
+      createdSceneIds,
+      newChapterId: createdChapterIds[0] || null,
+      newSceneId: createdSceneIds[0] || null,
+      targetProjectId,
+      runId
     };
+  }
+
+  async _importParsedManuscript(projectId, parsed, fileName) {
+    const chapterIds = [];
+    const sceneIds = [];
+    const changelog = [];
+
+    for (const chapter of parsed.chapters) {
+      const createdChapter = await this._createChapter(projectId, {
+        title: chapter.title,
+        order: chapter.order,
+        importedAt: new Date().toISOString(),
+        importedFrom: fileName
+      });
+      chapterIds.push(createdChapter.id);
+      changelog.push({ action: 'Added', type: 'Chapter', detail: chapter.title });
+
+      for (const scene of chapter.scenes) {
+        const createdScene = await this._createScene(projectId, {
+          chapterId: createdChapter.id,
+          title: scene.title,
+          text: scene.content,
+          order: scene.order,
+          status: 'Draft',
+          importedAt: new Date().toISOString(),
+          importedFrom: fileName,
+          wordCount: scene.wordCount
+        });
+        sceneIds.push(createdScene.id);
+        changelog.push({ action: 'Added', type: 'Scene', detail: `${chapter.title} / ${scene.title}` });
+      }
+    }
+
+    return { chapterIds, sceneIds, changelog };
+  }
+
+  async _applySceneInventory(projectId, sceneIds, inventory) {
+    if (!Array.isArray(inventory) || inventory.length === 0) return;
+    if (typeof this.storage.updateSceneMetadata !== 'function') return;
+
+    for (let index = 0; index < Math.min(sceneIds.length, inventory.length); index++) {
+      const sceneId = sceneIds[index];
+      const item = inventory[index];
+      await this.storage.updateSceneMetadata(sceneId, {
+        title: item.title || `Scene ${index + 1}`,
+        location: item.location || item.setting || '',
+        time: item.timeOfDay || '',
+        causality: item.purpose || '',
+        output: item.summary || '',
+        objects: Array.isArray(item.characters) ? item.characters.join(', ') : '',
+        status: 'Draft'
+      });
+    }
+  }
+
+  async _applyCoreMetadata(projectId, manuscriptFile, manuscriptText, analysisResults) {
+    if (typeof this.storage.updateProjectData !== 'function') return;
+
+    const title = manuscriptFile.fileName.replace(/\.[^.]+$/, '');
+    const wordCount = manuscriptText.split(/\s+/).filter(Boolean).length;
+    const leadCharacter = analysisResults.characters?.[0]?.name || '';
+    const firstBeat = analysisResults.beats?.[0]?.title || '';
+
+    await this.storage.updateProjectData(projectId, {
+      core: {
+        title,
+        wcCurrent: String(wordCount),
+        wc: String(wordCount),
+        constraint: firstBeat || '',
+        theme: '',
+        falseBelief: '',
+        protagonist: leadCharacter
+      }
+    });
+  }
+
+  _debug(event, payload) {
+    if (typeof window !== 'undefined') {
+      const state = window.__PROSELAB_IMPORT_DEBUG__ || { runs: [] };
+      state.runs.push({
+        event,
+        payload,
+        at: new Date().toISOString()
+      });
+      window.__PROSELAB_IMPORT_DEBUG__ = state;
+    }
+    console.log(`[ImportOrchestrator] ${event}`, payload);
+  }
+
+  async _createChapter(projectId, data) {
+    if (typeof this.storage.saveChapter === 'function') {
+      return await this.storage.saveChapter(projectId, data);
+    }
+    if (typeof this.storage.createChapter === 'function') {
+      return await this.storage.createChapter({ ...data, projectId });
+    }
+    throw new Error('Storage adapter is missing chapter creation methods');
+  }
+
+  async _createScene(projectId, data) {
+    if (typeof this.storage.saveScene === 'function') {
+      return await this.storage.saveScene(projectId, data);
+    }
+    if (typeof this.storage.createScene === 'function') {
+      return await this.storage.createScene({ ...data, projectId });
+    }
+    throw new Error('Storage adapter is missing scene creation methods');
+  }
+
+  async _getScenesForChapter(chapterId, projectId) {
+    if (typeof this.storage.listScenes === 'function') {
+      return await this.storage.listScenes(chapterId);
+    }
+    if (typeof this.storage.getScenes === 'function') {
+      const scoped = await this.storage.getScenes(chapterId);
+      if (Array.isArray(scoped) && scoped.every(scene => scene.chapterId === chapterId)) {
+        return scoped;
+      }
+      return Array.isArray(scoped)
+        ? scoped.filter(scene => scene.chapterId === chapterId)
+        : [];
+    }
+    if (typeof this.storage.getChapterScenes === 'function') {
+      return await this.storage.getChapterScenes(projectId, chapterId);
+    }
+    return [];
   }
 
   // ---- Private: Import Methods ----
@@ -613,72 +974,67 @@ export class ImportOrchestrator {
   // ---- Private: AI Analysis Methods ----
 
   async _aiExtractCharacters(projectId, manuscriptText, options, report) {
-    const maxChars = 30000;
-    const truncated = manuscriptText.length > maxChars ? manuscriptText.substring(0, maxChars) + '\n\n[... truncated ...]' : manuscriptText;
-    const prompt = `Analyze the following manuscript text and extract all characters mentioned. Return a JSON array of objects with: name, role, description, traits, relationships. Respond ONLY with JSON.\n\nMANUSCRIPT:\n${truncated}`;
-    const response = await this.llm.generate(prompt, { temperature: 0.3, maxTokens: 4000 });
     try {
+      const maxChars = 30000;
+      const truncated = manuscriptText.length > maxChars ? manuscriptText.substring(0, maxChars) + '\n\n[... truncated ...]' : manuscriptText;
+      const prompt = `Analyze the following manuscript text and extract all characters mentioned. Return a JSON array of objects with: name, role, description, traits, relationships. Respond ONLY with JSON.\n\nMANUSCRIPT:\n${truncated}`;
+      const response = await this.llm.generate(prompt, { temperature: 0.3, maxTokens: 4000 });
       const cleaned = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const characters = JSON.parse(cleaned);
-      if (options.autoSaveExtracted) {
-        for (const char of characters) {
-          const existing = await this.storage.getCharacters(projectId);
-          if (!existing.find(e => e.name.toLowerCase().trim() === (char.name || '').toLowerCase().trim())) {
-            await this.storage.createCharacter(projectId, { ...char, source: 'ai-extracted', importedAt: new Date().toISOString() });
-            report.charactersImported++;
-          }
-        }
-      }
+      await this._persistCharacters(projectId, characters, report);
       return characters;
-    } catch (err) { throw new Error(`AI extraction failed: ${err.message}`); }
+    } catch (err) {
+      console.warn('[ImportOrchestrator] character extraction falling back', err);
+      const characters = await fallbackExtractCharacters(manuscriptText);
+      await this._persistCharacters(projectId, characters, report);
+      return characters;
+    }
   }
 
   async _aiExtractWorldRules(projectId, manuscriptText, options, report) {
-    const maxChars = 30000;
-    const truncated = manuscriptText.length > maxChars ? manuscriptText.substring(0, maxChars) + '\n\n[... truncated ...]' : manuscriptText;
-    const prompt = `Analyze the manuscript and extract world-building rules. Return a JSON array of objects with: title, category, description, evidence. Respond ONLY with JSON.\n\nMANUSCRIPT:\n${truncated}`;
-    const response = await this.llm.generate(prompt, { temperature: 0.3, maxTokens: 4000 });
     try {
+      const maxChars = 30000;
+      const truncated = manuscriptText.length > maxChars ? manuscriptText.substring(0, maxChars) + '\n\n[... truncated ...]' : manuscriptText;
+      const prompt = `Analyze the manuscript and extract world-building rules. Return a JSON array of objects with: title, category, description, evidence. Respond ONLY with JSON.\n\nMANUSCRIPT:\n${truncated}`;
+      const response = await this.llm.generate(prompt, { temperature: 0.3, maxTokens: 4000 });
       const cleaned = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const rules = JSON.parse(cleaned);
-      if (options.autoSaveExtracted) {
-        for (const rule of rules) {
-          const existing = await this.storage.getWorldRules(projectId);
-          if (!existing.find(e => e.title && e.title.toLowerCase().trim() === (rule.title || '').toLowerCase().trim())) {
-            await this.storage.createWorldRule(projectId, { ...rule, source: 'ai-extracted', importedAt: new Date().toISOString() });
-            report.worldRulesImported++;
-          }
-        }
-      }
+      await this._persistWorldRules(projectId, rules, report);
       return rules;
-    } catch (err) { throw new Error(`AI extraction failed: ${err.message}`); }
+    } catch (err) {
+      console.warn('[ImportOrchestrator] world-rule extraction falling back', err);
+      const rules = await fallbackExtractWorldRules(manuscriptText);
+      await this._persistWorldRules(projectId, rules, report);
+      return rules;
+    }
   }
 
   async _aiDeriveBeatMap(projectId, manuscriptText, options, report) {
-    const maxChars = 30000;
-    const truncated = manuscriptText.length > maxChars ? manuscriptText.substring(0, maxChars) + '\n\n[... truncated ...]' : manuscriptText;
-    const prompt = `Analyze the manuscript and derive a story beat map. Return a JSON array of objects with: order, title, type, description, approximateLocation. Respond ONLY with JSON.\n\nMANUSCRIPT:\n${truncated}`;
-    const response = await this.llm.generate(prompt, { temperature: 0.3, maxTokens: 4000 });
     try {
+      const maxChars = 30000;
+      const truncated = manuscriptText.length > maxChars ? manuscriptText.substring(0, maxChars) + '\n\n[... truncated ...]' : manuscriptText;
+      const prompt = `Analyze the manuscript and derive a story beat map. Return a JSON array of objects with: order, title, type, description, approximateLocation. Respond ONLY with JSON.\n\nMANUSCRIPT:\n${truncated}`;
+      const response = await this.llm.generate(prompt, { temperature: 0.3, maxTokens: 4000 });
       const cleaned = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const beats = JSON.parse(cleaned);
-      if (options.autoSaveExtracted) {
-        for (const beat of beats) {
-          await this.storage.createBeat(projectId, { ...beat, source: 'ai-derived', importedAt: new Date().toISOString() });
-          report.beatsImported++;
-        }
-      }
+      await this._persistBeats(projectId, beats, report);
       return beats;
-    } catch (err) { throw new Error(`AI extraction failed: ${err.message}`); }
+    } catch (err) {
+      console.warn('[ImportOrchestrator] beat derivation falling back', err);
+      const beats = await fallbackDeriveBeatMap(manuscriptText);
+      await this._persistBeats(projectId, beats, report);
+      return beats;
+    }
   }
 
   async _aiBuildSceneInventory(projectId, manuscriptText) {
-    const maxChars = 30000;
-    const truncated = manuscriptText.length > maxChars
-      ? manuscriptText.substring(0, maxChars) + '\n\n[... truncated for analysis ...]'
-      : manuscriptText;
+    try {
+      const maxChars = 30000;
+      const truncated = manuscriptText.length > maxChars
+        ? manuscriptText.substring(0, maxChars) + '\n\n[... truncated for analysis ...]'
+        : manuscriptText;
 
-    const prompt = `Analyze the following manuscript and create a scene-by-scene inventory. For each scene, provide:
+      const prompt = `Analyze the following manuscript and create a scene-by-scene inventory. For each scene, provide:
 - sceneNumber: Sequential number
 - title: A brief descriptive title
 - setting: Where the scene takes place
@@ -695,12 +1051,11 @@ ${truncated}
 
 Respond ONLY with a valid JSON array. No other text.`;
 
-    const response = await this.llm.generate(prompt, {
-      temperature: 0.3,
-      maxTokens: 4000
-    });
+      const response = await this.llm.generate(prompt, {
+        temperature: 0.3,
+        maxTokens: 4000
+      });
 
-    try {
       const cleaned = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const scenes = JSON.parse(cleaned);
 
@@ -710,40 +1065,42 @@ Respond ONLY with a valid JSON array. No other text.`;
 
       return scenes;
     } catch (err) {
-      throw new Error(`Failed to parse AI scene inventory: ${err.message}`);
+      console.warn('[ImportOrchestrator] scene inventory falling back', err);
+      return await fallbackBuildSceneInventory(manuscriptText);
     }
   }
 
   async _aiCheckContinuity(projectId, manuscriptText) {
-    const maxChars = 30000;
-    const truncated = manuscriptText.length > maxChars
-      ? manuscriptText.substring(0, maxChars) + '\n\n[... truncated for analysis ...]'
-      : manuscriptText;
-
-    // Also load existing world rules and characters for cross-reference
-    let contextBlock = '';
     try {
-      const characters = await this.storage.getCharacters(projectId) || [];
-      const worldRules = await this.storage.getWorldRules(projectId) || [];
+      const maxChars = 30000;
+      const truncated = manuscriptText.length > maxChars
+        ? manuscriptText.substring(0, maxChars) + '\n\n[... truncated for analysis ...]'
+        : manuscriptText;
 
-      if (characters.length > 0) {
-        contextBlock += '\n\nESTABLISHED CHARACTERS:\n';
-        for (const c of characters.slice(0, 30)) {
-          contextBlock += `- ${c.name}: ${(c.description || '').substring(0, 100)}\n`;
+      // Also load existing world rules and characters for cross-reference
+      let contextBlock = '';
+      try {
+        const characters = await this.storage.getCharacters(projectId) || [];
+        const worldRules = await this.storage.getWorldRules(projectId) || [];
+
+        if (characters.length > 0) {
+          contextBlock += '\n\nESTABLISHED CHARACTERS:\n';
+          for (const c of characters.slice(0, 30)) {
+            contextBlock += `- ${c.name}: ${(c.description || c.Psychology || '').substring(0, 100)}\n`;
+          }
         }
+
+        if (worldRules.length > 0) {
+          contextBlock += '\n\nESTABLISHED WORLD RULES:\n';
+          for (const r of worldRules.slice(0, 30)) {
+            contextBlock += `- ${r.title || r.rule}: ${(r.description || r.consequence || '').substring(0, 100)}\n`;
+          }
+        }
+      } catch (e) {
+        // Non-critical, continue without context
       }
 
-      if (worldRules.length > 0) {
-        contextBlock += '\n\nESTABLISHED WORLD RULES:\n';
-        for (const r of worldRules.slice(0, 30)) {
-          contextBlock += `- ${r.title}: ${(r.description || '').substring(0, 100)}\n`;
-        }
-      }
-    } catch (e) {
-      // Non-critical, continue without context
-    }
-
-    const prompt = `Analyze the following manuscript for continuity issues, contradictions, and inconsistencies. Look for:
+      const prompt = `Analyze the following manuscript for continuity issues, contradictions, and inconsistencies. Look for:
 - Character inconsistencies (name spelling changes, contradictory descriptions, out-of-character behavior)
 - Timeline problems (events out of order, impossible timing)
 - Setting contradictions (locations described differently)
@@ -765,12 +1122,11 @@ ${truncated}
 Return your response as a JSON array of issue objects. If no issues are found, return an empty array [].
 Respond ONLY with a valid JSON array. No other text.`;
 
-    const response = await this.llm.generate(prompt, {
-      temperature: 0.3,
-      maxTokens: 4000
-    });
+      const response = await this.llm.generate(prompt, {
+        temperature: 0.3,
+        maxTokens: 4000
+      });
 
-    try {
       const cleaned = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const issues = JSON.parse(cleaned);
 
@@ -780,7 +1136,70 @@ Respond ONLY with a valid JSON array. No other text.`;
 
       return issues;
     } catch (err) {
-      throw new Error(`Failed to parse AI continuity check: ${err.message}`);
+      console.warn('[ImportOrchestrator] continuity analysis falling back', err);
+      return await fallbackCheckContinuity(manuscriptText);
+    }
+  }
+
+  async _persistCharacters(projectId, characters, report) {
+    if (!Array.isArray(characters)) return;
+    for (const char of characters) {
+      const existing = await this.storage.getCharacters(projectId);
+      if (!existing.find(e => e.name?.toLowerCase().trim() === (char.name || '').toLowerCase().trim())) {
+        await this.storage.createCharacter(projectId, {
+          id: crypto.randomUUID(),
+          name: char.name || 'Unknown Character',
+          role: char.role || '',
+          archetype: char.archetype || char.role || '',
+          motivation: Array.isArray(char.relationships) ? char.relationships.join(', ') : (char.motivation || ''),
+          Physiology: char.description || char.appearance || '',
+          Psychology: Array.isArray(char.traits) ? char.traits.join(', ') : (char.traits || ''),
+          trait: Array.isArray(char.traits) ? char.traits[0] || '' : (char.traits || ''),
+          source: char.source || 'ai-extracted',
+          importedAt: new Date().toISOString()
+        });
+        report.charactersImported++;
+      }
+    }
+  }
+
+  async _persistWorldRules(projectId, rules, report) {
+    if (!Array.isArray(rules)) return;
+    for (const rule of rules) {
+      const existing = await this.storage.getWorldRules(projectId);
+      if (!existing.find(e => (e.title || e.rule || '').toLowerCase().trim() === (rule.title || '').toLowerCase().trim())) {
+        await this.storage.createWorldRule(projectId, {
+          id: crypto.randomUUID(),
+          title: rule.title || 'Imported Rule',
+          rule: rule.title || 'Imported Rule',
+          category: rule.category || 'general',
+          description: rule.description || rule.content || '',
+          consequence: rule.description || rule.content || '',
+          evidence: rule.evidence || '',
+          limit: '',
+          source: rule.source || 'ai-extracted',
+          importedAt: new Date().toISOString()
+        });
+        report.worldRulesImported++;
+      }
+    }
+  }
+
+  async _persistBeats(projectId, beats, report) {
+    if (!Array.isArray(beats)) return;
+    for (let index = 0; index < beats.length; index++) {
+      const beat = beats[index];
+      await this.storage.createBeat(projectId, {
+        id: crypto.randomUUID(),
+        order: beat.order ?? index + 1,
+        pct: this._normalizeBeatPct(beat.approximateLocation, beat.order ?? index + 1),
+        title: beat.title || 'Imported Beat',
+        type: beat.type || 'beat',
+        description: beat.description || beat.summary || '',
+        source: beat.source || 'ai-derived',
+        importedAt: new Date().toISOString()
+      });
+      report.beatsImported++;
     }
   }
 
@@ -791,5 +1210,18 @@ Respond ONLY with a valid JSON array. No other text.`;
     } catch {
       return fallback;
     }
+  }
+
+  _normalizeBeatPct(location, order = 1) {
+    if (typeof location === 'number') return String(location);
+    const lower = String(location || '').toLowerCase();
+    if (lower.includes('begin')) return '5';
+    if (lower.includes('early')) return '20';
+    if (lower.includes('first_quarter')) return '25';
+    if (lower.includes('middle') || lower.includes('mid')) return '50';
+    if (lower.includes('third_quarter')) return '75';
+    if (lower.includes('late')) return '85';
+    if (lower.includes('end')) return '95';
+    return String(Math.min(95, Math.max(5, order * 10)));
   }
 }

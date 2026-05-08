@@ -1,6 +1,6 @@
 // src/components/LoreAgent/ConsistencyPanel.jsx
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 const SEVERITY_COLORS = {
   error: '#E74C3C',
@@ -8,10 +8,10 @@ const SEVERITY_COLORS = {
   info: '#3498DB',
 };
 
-const SEVERITY_ICONS = {
-  error: '⚠',
-  warning: '⚡',
-  info: 'ℹ',
+const SEVERITY_LABELS = {
+  error: 'Error',
+  warning: 'Warning',
+  info: 'Info',
 };
 
 export default function ConsistencyPanel({
@@ -21,10 +21,18 @@ export default function ConsistencyPanel({
   onAutoFix,
   onMerge,
 }) {
+  const severityCounts = useMemo(() => {
+    return issues.reduce((acc, issue) => {
+      const key = issue.severity || 'info';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+  }, [issues]);
+
   if (issues.length === 0) {
     return (
       <div className="consistency-panel empty-state">
-        <p>✓ No consistency issues detected.</p>
+        <p>No consistency issues detected.</p>
       </div>
     );
   }
@@ -36,80 +44,103 @@ export default function ConsistencyPanel({
     groupedIssues[type].push(issue);
   }
 
+  const sortedGroups = Object.entries(groupedIssues).sort(([, issuesA], [, issuesB]) => issuesB.length - issuesA.length);
+
   return (
     <div className="consistency-panel">
       <div className="issues-header">
-        <h3>{issues.length} Issue{issues.length !== 1 ? 's' : ''} Found</h3>
+        <div>
+          <h3>{issues.length} issue{issues.length !== 1 ? 's' : ''} found</h3>
+          <p className="issues-subtitle">Use this tab to review contradictions, low-confidence lore, and duplicate entities before trusting manuscript continuity.</p>
+        </div>
         <button className="auto-fix-btn" onClick={onAutoFix}>
-          🔧 Auto-Fix All
+          Auto-Fix All
         </button>
       </div>
 
-      {Object.entries(groupedIssues).map(([type, typeIssues]) => (
+      <div className="lore-review-strip lore-review-strip--tight">
+        <div className="lore-review-card issue-tone-error">
+          <span>Errors</span>
+          <strong>{severityCounts.error || 0}</strong>
+        </div>
+        <div className="lore-review-card issue-tone-warning">
+          <span>Warnings</span>
+          <strong>{severityCounts.warning || 0}</strong>
+        </div>
+        <div className="lore-review-card">
+          <span>Info</span>
+          <strong>{severityCounts.info || 0}</strong>
+        </div>
+      </div>
+
+      {sortedGroups.map(([type, typeIssues]) => (
         <div key={type} className="issue-group">
           <h4 className="issue-group-title">{formatIssueType(type)} ({typeIssues.length})</h4>
-          {typeIssues.map(issue => {
-            const involvedEntities = (issue.entityIds || [])
-              .map(id => entities.find(e => e.id === id))
-              .filter(Boolean);
+          {typeIssues
+            .slice()
+            .sort((a, b) => severityRank(b.severity) - severityRank(a.severity))
+            .map((issue) => {
+              const involvedEntities = (issue.entityIds || [])
+                .map((id) => entities.find((entity) => entity.id === id))
+                .filter(Boolean);
 
-            return (
-              <div
-                key={issue.id}
-                className="issue-card"
-                style={{ borderLeftColor: SEVERITY_COLORS[issue.severity] || SEVERITY_COLORS.info }}
-              >
-                <div className="issue-header">
-                  <span className="issue-icon">
-                    {SEVERITY_ICONS[issue.severity] || SEVERITY_ICONS.info}
-                  </span>
-                  <span className="issue-severity" style={{ color: SEVERITY_COLORS[issue.severity] }}>
-                    {issue.severity?.toUpperCase()}
-                  </span>
-                  <span className="issue-message">{issue.message}</span>
-                </div>
-
-                {issue.details && (
-                  <div className="issue-details">{issue.details}</div>
-                )}
-
-                {involvedEntities.length > 0 && (
-                  <div className="issue-entities">
-                    {involvedEntities.map(e => (
-                      <span key={e.id} className="entity-chip" style={{ borderColor: getTypeColor(e.type) }}>
-                        {e.name}
-                      </span>
-                    ))}
+              return (
+                <div
+                  key={issue.id}
+                  className="issue-card"
+                  style={{ borderLeftColor: SEVERITY_COLORS[issue.severity] || SEVERITY_COLORS.info }}
+                >
+                  <div className="issue-header">
+                    <span
+                      className="issue-severity"
+                      style={{ color: SEVERITY_COLORS[issue.severity] || SEVERITY_COLORS.info }}
+                    >
+                      {SEVERITY_LABELS[issue.severity] || SEVERITY_LABELS.info}
+                    </span>
+                    <span className="issue-message">{issue.message}</span>
                   </div>
-                )}
 
-                <div className="issue-actions">
-                  {issue.type === 'duplicate' && issue.entityIds?.length === 2 && (
-                    <button
-                      className="action-btn merge"
-                      onClick={() => onMerge(issue.entityIds[0], issue.entityIds[1])}
-                    >
-                      Merge Entities
-                    </button>
+                  {issue.details && (
+                    <div className="issue-details">{issue.details}</div>
                   )}
-                  {issue.suggestion && (
-                    <button
-                      className="action-btn fix"
-                      onClick={() => onAutoFix(issue)}
-                    >
-                      Apply Fix
-                    </button>
+
+                  {involvedEntities.length > 0 && (
+                    <div className="issue-entities">
+                      {involvedEntities.map((entity) => (
+                        <span key={entity.id} className="entity-chip" style={{ borderColor: getTypeColor(entity.type) }}>
+                          {entity.name}
+                        </span>
+                      ))}
+                    </div>
                   )}
-                  <button
-                    className="action-btn dismiss"
-                    onClick={() => onDismiss(issue.id)}
-                  >
-                    Dismiss
-                  </button>
+
+                  <div className="issue-actions">
+                    {issue.type === 'duplicate' && issue.entityIds?.length === 2 && (
+                      <button
+                        className="action-btn merge"
+                        onClick={() => onMerge(issue.entityIds[0], issue.entityIds[1])}
+                      >
+                        Merge Entities
+                      </button>
+                    )}
+                    {issue.suggestion && (
+                      <button
+                        className="action-btn fix"
+                        onClick={() => onAutoFix(issue)}
+                      >
+                        Apply Fix
+                      </button>
+                    )}
+                    <button
+                      className="action-btn dismiss"
+                      onClick={() => onDismiss(issue.id)}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
       ))}
     </div>
@@ -140,4 +171,10 @@ function getTypeColor(type) {
     unknown: '#95A5A6',
   };
   return colors[type] || colors.unknown;
+}
+
+function severityRank(severity) {
+  if (severity === 'error') return 3;
+  if (severity === 'warning') return 2;
+  return 1;
 }

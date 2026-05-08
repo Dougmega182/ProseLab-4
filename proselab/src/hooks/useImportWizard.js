@@ -30,6 +30,7 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState({ percent: 0, label: '', detail: '' });
   const [error, setError] = useState(null);
+  const [projectName, setProjectName] = useState('');
 
   const abortRef = useRef(false);
   const fileIdCounter = useRef(0);
@@ -55,24 +56,9 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
 
   // Auto-classify based on filename and content
   const autoClassify = useCallback((fileName, content) => {
-    const name = fileName.toLowerCase();
-    const text = (content || '').toLowerCase();
-
-    // Check filename patterns
-    if (name.match(/chapter|ch\d|part\s?\d/i)) return 'chapters';
-    if (name.match(/character|cast|persona/i)) return 'characters';
-    if (name.match(/world|setting|rule|lore|magic/i)) return 'worldRules';
-    if (name.match(/beat|outline|plot|structure/i)) return 'beats';
-    if (name.match(/note|idea|brainstorm|todo/i)) return 'notes';
-
-    // Check content patterns
-    if (text.match(/^#\s*chapter/m)) return 'chapters';
-    if (text.match(/"name"\s*:/)) {
-      if (text.match(/"age"\s*:/) || text.match(/"personality"\s*:/)) return 'characters';
-    }
-    if (text.match(/^#\s*(world|setting|rule)/mi)) return 'worldRules';
-
-    return 'notes'; // default
+    const classification = ImportOrchestrator.classifyFile(fileName, content);
+    // Map back to our internal IDs if they differ, but we aligned them.
+    return classification.suggestedType;
   }, []);
 
   // Handle file selection
@@ -149,6 +135,11 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
       }
     });
     setClassifications(prev => ({ ...prev, ...newClassifications }));
+
+    const manuscriptFile = newFiles.find(f => f.status === 'ready' && f.category === 'manuscript');
+    if (manuscriptFile && !projectName.trim()) {
+      setProjectName(manuscriptFile.fileName.replace(/\.[^.]+$/, '').trim());
+    }
   }, [readFileContent, autoClassify]);
 
   const removeFile = useCallback((fileId) => {
@@ -173,7 +164,7 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
       if (file.status === 'error') return;
       const category = classifications[file.id] || file.category;
 
-      if (category === 'chapters' && existing.chapters) {
+      if (category === 'manuscript' && existing.chapters) {
         const titleMatch = file.fileName.replace(/\.\w+$/, '').trim();
         const existingChapter = existing.chapters.find(ch =>
           ch.title && ch.title.toLowerCase() === titleMatch.toLowerCase()
@@ -223,7 +214,7 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
         });
       }
 
-      if (category === 'worldRules' && existing.worldRules) {
+      if (category === 'worldbuilding' && existing.worldRules) {
         const titleMatch = file.fileName.replace(/\.\w+$/, '').trim();
         const existingRule = existing.worldRules.find(r =>
           r.title && r.title.toLowerCase() === titleMatch.toLowerCase()
@@ -302,7 +293,7 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
         }
 
         if (analysisOptions.validateConsistency) {
-          if (category === 'chapters' && file.content) {
+          if (category === 'manuscript' && file.content) {
             if (file.content.trim().length < 100) {
               warnings.push(`"${file.fileName}" is very short for a chapter (${file.content.trim().length} characters)`);
             }
@@ -313,7 +304,7 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
           if (category === 'notes') {
             if (file.content && file.content.length > 2000) {
               suggestions.push(
-                `"${file.fileName}" is quite long for a note. Consider classifying as a chapter.`
+                `"${file.fileName}" is quite long for a note. Consider classifying as a manuscript.`
               );
             }
           }
@@ -347,19 +338,30 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
     setIsProcessing(true);
     abortRef.current = false;
     setProgress({ percent: 0, label: 'Preparing import...', detail: '' });
+    console.groupCollapsed('[ImportWizard] executeImport');
 
     try {
-      const readyFiles = importFiles.filter(f => f.status === 'ready');
+      const readyFiles = importFiles
+        .filter(f => f.status === 'ready')
+        .map(f => ({
+          ...f,
+          category: classifications[f.id] || f.category
+        }));
+      console.log('[ImportWizard] ready files', readyFiles);
+
       const resolutions = {};
       Object.entries(conflictResolutions).forEach(([id, res]) => {
         resolutions[id] = res;
       });
+      console.log('[ImportWizard] resolutions', resolutions);
 
       const result = await orchestrator.execute(
         projectId, 
         readyFiles, 
         resolutions, 
-        {}, // Options
+        {
+          projectTitle: projectName.trim()
+        },
         (prog) => {
           setProgress({
             percent: prog.current,
@@ -368,6 +370,7 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
           });
         }
       );
+      console.log('[ImportWizard] orchestrator result', result);
 
       const finalResult = {
         ...result,
@@ -375,16 +378,28 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
         totalImported: result.summary ? Object.values(result.summary).reduce((a, b) => a + b, 0) : 0,
         totalFiles: readyFiles.length
       };
+      if (typeof window !== 'undefined') {
+        window.__PROSELAB_IMPORT_LAST_RESULT__ = finalResult;
+      }
 
       setImportResult(finalResult);
-      if (onImportComplete) onImportComplete(finalResult);
       setCurrentStep(STEPS.length - 1);
+      if (onImportComplete) onImportComplete(finalResult);
     } catch (err) {
+      console.error('[ImportWizard] executeImport failed', err);
+      if (typeof window !== 'undefined') {
+        window.__PROSELAB_IMPORT_LAST_ERROR__ = {
+          message: err.message,
+          stack: err.stack,
+          at: new Date().toISOString()
+        };
+      }
       setError(`Import failed: ${err.message}`);
     } finally {
       setIsProcessing(false);
+      console.groupEnd();
     }
-  }, [importFiles, conflictResolutions, projectId, orchestrator, onImportComplete]);
+  }, [importFiles, conflictResolutions, projectId, projectName, orchestrator, onImportComplete]);
 
   const canProceed = useCallback(() => {
     switch (stepName) {
@@ -392,7 +407,10 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
       case 'classify': return importFiles.filter(f => f.status === 'ready').every(f => classifications[f.id]);
       case 'conflicts': return conflicts.every(c => conflictResolutions[c.id]);
       case 'analysis': return true;
-      case 'review': return true;
+      case 'review': {
+        const hasManuscript = importFiles.some(f => f.status === 'ready' && (classifications[f.id] || f.category) === 'manuscript');
+        return hasManuscript ? Boolean(projectName.trim()) : true;
+      }
       case 'result': return false;
       default: return false;
     }
@@ -430,6 +448,7 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
     setIsProcessing(false);
     setProgress({ percent: 0, label: '', detail: '' });
     setError(null);
+    setProjectName('');
     abortRef.current = false;
   }, []);
 
@@ -444,6 +463,7 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
     analysisOptions,
     analysisResults,
     importResult,
+    projectName,
     isProcessing,
     progress,
     error,
@@ -453,6 +473,7 @@ export function useImportWizard({ projectId, existingData, onImportComplete, sto
     resolveConflict,
     resolveAllConflicts,
     setAnalysisOptions,
+    setProjectName,
     runAnalysis,
     executeImport,
     canProceed,

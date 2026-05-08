@@ -1,8 +1,19 @@
 import { Fragment } from "react";
 
+function getSceneBriefWarnings(scene) {
+  const warnings = [];
+  if (!scene.location) warnings.push("Location not locked");
+  if (!scene.time) warnings.push("Story time not locked");
+  if (!scene.objects) warnings.push("Carried objects undefined");
+  if (!scene.causality) warnings.push("Causality statement missing");
+  if (!scene.output) warnings.push("Required output undefined");
+  if (!scene.stakes) warnings.push("Stakes undefined");
+  return warnings;
+}
+
 export function StatCard({ label, value, detail, accent }) {
   return (
-    <div className="stat-card" style={{ borderLeft: accent ? `3px solid ${accent}` : "none" }}>
+    <div className={`stat-card ${accent || ""}`}>
       <div className="stat-label">{label}</div>
       <div className="stat-value">{value}</div>
       {detail && <div className="stat-detail">{detail}</div>}
@@ -15,7 +26,7 @@ export function MetricBar({ label, value, max = 1 }) {
   let color = "var(--accent-purple)";
   if (pct < 30) color = "#ef4444";
   else if (pct < 60) color = "#f59e0b";
-  
+
   return (
     <div className="metric-row">
       <div className="metric-header">
@@ -29,7 +40,7 @@ export function MetricBar({ label, value, max = 1 }) {
   );
 }
 
-export function PipelineTracker({ currentStage, activeMode }) {
+export function PipelineTracker({ currentStage }) {
   const stages = [
     { id: "analysis", label: "ANALYSIS", desc: "Measuring rhythm and truth" },
     { id: "delta", label: "DELTA", desc: "Generating constraints" },
@@ -56,8 +67,8 @@ export function PipelineTracker({ currentStage, activeMode }) {
       </div>
       {currentStage && currentStage !== "done" && (
         <div className="pipeline-current-info">
-           <div className="spinner-small" /> 
-           <span>{stages[currentIndex]?.desc}...</span>
+          <div className="spinner-small" />
+          <span>{stages[currentIndex]?.desc}...</span>
         </div>
       )}
     </div>
@@ -67,21 +78,37 @@ export function PipelineTracker({ currentStage, activeMode }) {
 export function PreflightBrief({ scene, preproduction }) {
   if (!scene) return null;
 
-  const warnings = [];
-  if (!scene.location) warnings.push("LOCATION NOT LOCKED — Physical space is undefined.");
-  if (!scene.time) warnings.push("STORY TIME NOT LOCKED — Timeline continuity cannot be verified.");
-  if (!scene.objects) warnings.push("CARRIED OBJECTS UNDEFINED — Any object used will be an unplanted prop.");
-  if (!scene.causality) warnings.push("CAUSALITY STATEMENT MISSING — This scene has no defined function.");
-  if (!scene.output) warnings.push("REQUIRED OUTPUT UNDEFINED — No scene should be drafted without knowing exactly what it must produce.");
+  const warnings = getSceneBriefWarnings(scene);
+  const readiness = Math.max(0, 6 - warnings.length);
+  const readinessPct = Math.round((readiness / 6) * 100);
+  const presentCharacters = String(scene.chars || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
 
   return (
     <div className="preflight-doc">
       <div className="brief-header">
-        <div className="brief-title">Ch.{scene.chapter} — {scene.title}</div>
+        <div className="brief-title">Ch.{scene.chapter} - {scene.title}</div>
         <div className="brief-meta">
           <div>PROJECT <span>{preproduction.core.title || "UNTITLED"}</span></div>
           <div>STATUS <span className={`status-badge tag-${scene.status}`}>{scene.status.toUpperCase()}</span></div>
           <div>FUNCTION <span className={`causality-badge tag-${scene.causalityType}`}>{scene.causalityType.toUpperCase()}</span></div>
+        </div>
+      </div>
+
+      <div className="brief-audit-strip">
+        <div className="brief-audit-card">
+          <span>Scene readiness</span>
+          <strong>{readinessPct}%</strong>
+        </div>
+        <div className="brief-audit-card">
+          <span>Characters present</span>
+          <strong>{presentCharacters.length || 0}</strong>
+        </div>
+        <div className="brief-audit-card">
+          <span>Review items</span>
+          <strong>{warnings.length}</strong>
         </div>
       </div>
 
@@ -104,10 +131,23 @@ export function PreflightBrief({ scene, preproduction }) {
         </div>
       </div>
 
+      <div className="brief-grid">
+        <div className="brief-section">
+          <div className="brief-label">CHARACTERS IN SCENE</div>
+          <div className="brief-value">
+            {presentCharacters.length > 0 ? presentCharacters.join(", ") : "NOT SET"}
+          </div>
+        </div>
+        <div className="brief-section">
+          <div className="brief-label">SCENE SUMMARY</div>
+          <div className="brief-value">{scene.summary || scene.notes || "NOT SET"}</div>
+        </div>
+      </div>
+
       {warnings.length > 0 && (
         <div className="brief-warnings">
-          {warnings.map((w, i) => (
-            <div key={i} className="brief-warning-item">⚠️ {w}</div>
+          {warnings.map((warning, index) => (
+            <div key={index} className="brief-warning-item">Review: {warning}</div>
           ))}
         </div>
       )}

@@ -1,70 +1,69 @@
-# ProseLab V4 — Editorial Orchestration Engine
+# ProseLab V4 - Pro-Grade Editorial Workstation
 
-ProseLab is a local-first, quality-enforcing AI prose workstation. Unlike generic chat interfaces, it uses a multi-agent pipeline to force output quality through structural analysis, intent-alignment, and adversarial critique.
+ProseLab is a local-first, quality-enforcing AI writing engine. It shifts the workflow from one-shot drafting toward intent-locked scene development, critique, and revision.
 
-## Core Pipeline
+## Quick Start
 
-The system operates on a **Generate → Critique → Challenge** loop:
+1. Configure `proselab/.env` with:
+   - `VITE_OPENAI_KEY`
+   - `VITE_GEMINI_KEY`
+   - `VITE_OLLAMA_MODEL`
+2. Run `npm run dev`
+3. Open `http://localhost:5173`
 
-1.  **Analysis & Delta**: The input text is measured for rhythm, physical grounding, and specificity. These metrics are converted into a "Delta" (rewrite instructions).
-2.  **Ollama Draft**: A local LLM produces the primary structural draft based on the Delta.
-3.  **OpenAI Refinement**: The draft is smoothed for rhythm and tone using `gpt-4o-mini`.
-4.  **Critic Gate**: The Critic agent evaluates the refined draft against narrative intent and stylistic "Absolute Bans" (e.g., no abstract emotional labels).
-5.  **Adversarial Challenge**: If the Critic approves, a Challenger agent (Gemini 1.5 Pro) performs a cross-architecture verification to detect "deceptively clean" but empty prose.
-6.  **Retry Loop**: On rejection, the engine re-injects specific failure directives and retries up to 3 times.
-7.  **Editorial Engine**: A high-performance, document-aware rich text editor with integrated Slash Commands, Image Handling, and Story-Core awareness.
+## Importing Your Manuscript
 
-## Editorial Workstation
+1. Click `Import` in the sidebar.
+2. Add `.md`, `.txt`, `.json`, `.docx`, or `.rtf` files.
+3. Review file classification.
+4. Name the manuscript project before final import.
+5. Let ProseLab split the manuscript into chapters and scenes.
+6. Review imported:
+   - dossiers
+   - world rules
+   - beats
+   - scene inventory
 
-The system features a professional editorial environment:
-- **Slash Commands (`/`)**: Instant access to AI assistance, structural formatting, and media insertion.
-- **Lore Integration**: Direct linking to characters, locations, and world-building assets from the Preproduction workspace.
-- **Image Intelligence**: Drag-and-drop media handling with AI-assisted captioning and responsive resizing.
-- **History Management**: Robust Undo/Redo stack preserved across AI rewrite cycles.
-- **Timeline Visualization**: Real-time narrative event tracking and force-directed graph analysis.
+## Getting Your Manuscript Critiqued
 
-## Throughput Hardening
+Once the manuscript is imported, work scene-by-scene.
 
-The engine is tuned for **Liveness and Honesty**:
-- **Decoupled Confidence**: Confidence scores are telemetry signals, not hard rejection gates.
-- **Survival Pass**: If narrative intent repair is exhausted, the pipeline proceeds to full critique anyway to provide honest scoring for "near-misses."
-- **Softened Scoring**: The Critic permits emotional resonance provided it is anchored in physical grounding, lowering the approval barrier for contextually strong prose.
+### 1. Preproduction
 
-## Setup & Execution
+Lock the scene brief first:
+- causality
+- location
+- story time
+- required output
+- stakes
 
-### 1. Environment Configuration
-Create `proselab/.env` (Vite-specific) with the following:
-```env
-VITE_OPENAI_KEY=your_openai_key
-VITE_GEMINI_KEY=your_gemini_key
-VITE_OLLAMA_MODEL=llama3 (or your preferred local model)
-```
+### 2. Create Loop
 
-### 2. Run Development App
-```bash
-cd proselab
-npm install
-npm run dev
-```
+`CREATE` currently runs:
+- Ollama generation
+- OpenAI refinement
+- Critic evaluation
 
-### 3. Engine Validation
-The engine is verified via a 50-sample throughput test set:
-```bash
-# Run the full throughput telemetry map
-cd proselab
-npm run throughput:test
-```
+Important:
+- the Critic can reject and force rewrite passes
+- Gemini may be configured, but it is not the enforced final stage of the main create loop
 
-## Architecture Map
+### 3. Editorial Modes
 
-- `src/engine/pipeline.js`: The central orchestrator.
-- `src/engine/critic.js`: The quality gate (Primary & Challenger logic).
-- `src/engine/rewrite.js`: The constraint-driven generator prompts.
-- `src/engine/guards.js`: System invariants and gatekeepers.
-- `src/services/inferenceCache.js`: SHA-256 content-addressed caching.
+- `ANALYSE`: diagnosis
+- `ENGINEER`: structure and world-shape review
+- `MARKET`: market-facing evaluation
+- `VERDICT`: higher-level editorial synthesis
+
+## Tech Stack
+
+- Frontend: React 19, Vite 8
+- Persistence: IndexedDB plus selected localStorage support data
+- LLMs: Ollama, OpenAI, optional Gemini infrastructure
+- Editing: CodeMirror 6 and project-aware manuscript state
 
 ## Principles
 
-> "If the system cannot reject bad output, it will produce average output."
+If the system cannot reject weak output, it will drift toward generic prose.
 
-ProseLab defaults to rejection. If a sample is borderline, it triggers a rewrite. Quality is enforced through the adversarial friction between the Primary Critic and the Challenger.
+The Critic is not optional. It is the quality gate that keeps the engine useful.
