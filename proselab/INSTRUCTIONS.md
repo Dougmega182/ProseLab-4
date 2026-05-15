@@ -1,93 +1,80 @@
-# ProseLab V4 — User Guide & Walkthrough
+# ProseLab V4 — User Guide
 
-Welcome to **ProseLab V4**, a high-fidelity editorial workstation designed to force quality through adversarial critique and structured orchestration.
+ProseLab V4 is a local-first editorial workstation for fiction.
 
----
+It is built for intent-locked drafting, critique, and revision.
 
-## 🚀 The "Zero-to-Scene" Walkthrough
+## Quick workflow
 
-Follow this workflow to move from an idea to a polished, verified manuscript.
+### 1) Import or create a manuscript project
 
-### 1. Project Initialization & Import
-ProseLab V4 uses a hierarchical IndexedDB storage system. To bring existing work in:
-- **The Import Wizard**: Click the **[Import]** button in the Document Sidebar.
-- **Format Support**: Upload `.md` or `.txt` files. 
-- **Structure Parsing**: 
-  - Use `#` for Chapters.
-  - Use `---` or `***` for Scene breaks.
-  - The Wizard will automatically chunk your text into the Project/Chapter/Scene tree.
-- **Manual Setup**: Create a Project/Chapter manually and paste text directly into the **ProseEditor**.
+- Use **Import** in the sidebar for `.md`, `.txt`, `.json`, `.docx`, or `.rtf`.
+- ProseLab maps content to **Project → Chapter → Scene**.
+- You can also create chapters/scenes manually and paste text directly in the editor.
 
-### 2. Define Narrative Intent (The Metadata Panel)
-ProseLab requires **Intent** before it allows **Execution**.
-- Select your scene in the **Document Sidebar**.
-- Open the **Metadata** panel in the Write tab.
-- Define the **Causality**, **Stakes**, and **Required Output**.
-- *Tip: The Critic Agent will reject prose that fails to physically manifest the "Required Output" defined here.*
+### 2) Set scene intent before running modes
 
-### 3. Drafting (The High-Performance Editor)
-Switch to the **Write** workspace mode in the top toolbar.
-- Use **Focus Mode** (in the top status bar) to dim non-active UI and maintain concentration.
-- Every character you type is automatically tracked, and word counts are aggregated in the Dashboard Stats.
-- *Note: Auto-save is active and persists directly to your browser's IndexedDB.*
+In the **Write** tab, open metadata for the selected scene and fill:
 
-### 4. The Editorial Engine (Modes)
-ProseLab forces a progression to ensure quality:
-- **CREATE**: The primary generation/refinement loop. Uses **Ollama -> OpenAI -> Critic**.
-- **ANALYSE**: Run this first for diagnostics. Margaret (Voice) and Rafael (Rhythm) will diagnose your prose.
-- **ENGINEER**: Becomes available after editing post-analysis. It performs a structural "Surgical Rewrite."
-- **MARKET & VERDICT**: The final gates. The Critic Agent and the Gemini Challenger evaluate the scene for publication readiness.
+- causality
+- location
+- time
+- required output
+- stakes
 
-### 5. Running the Orchestration Loop
-The full power of ProseLab is in the automated loop:
-- Click the **[RUN] RUN ORCHESTRATION LOOP** button in the header.
-- This triggers the full pipeline: **Drafting -> Refinement -> Critique**.
-- If the Critic gives a `REWRITE` verdict, the system will automatically retry (up to 3 times) with specific instructions injected into the next generation.
-- Rejection traces are kept in the **Logs** tab for inspection.
+Intent metadata improves critique quality and run gating.
 
----
+### 3) Draft in the Write tab
 
-## 📂 Importing Your Manuscript
-(Detailed Workflow)
-1. Prepare your markdown file with standard headers.
-2. Launch the **Import Wizard** from the sidebar.
-3. Review the parsed tree in the preview.
-4. Click **Apply Import** to commit to the local database.
+- Edit the active scene in the prose editor.
+- Auto-save persists to IndexedDB.
+- Focus Mode is available from the header.
 
----
+### 4) Run editorial modes
 
-## ⚖️ How to Get Your Manuscript Critiqued
-1. Ensure your **API Keys** are valid in `proselab/.env`.
-2. Select a scene and ensure its **Required Output** metadata is set.
-3. Click the **VERDICT** tab.
-4. Click **Start VERDICT Mode**.
-5. Inspect the **Pipeline Trace** in the Logs tab to see the Critic's specific reasoning for Approval or Rejection.
+- **CREATE**: generation/refinement with critic quality gate
+- **ANALYSE**: voice/rhythm and editorial diagnostics
+- **ENGINEER**: structural and world-shape feedback
+- **MARKET**: market-facing evaluation
+- **VERDICT**: synthesis/final editorial judgment
 
----
+## Expansion draft insertions (Galaxy AI polling)
 
-## 🛠 Component Reference
+Use this when you want expansion prose inserted between existing paragraphs without changing the source scene directly.
 
-### The Toolbar
-- **Format Select**: Manage H1-H6, Blockquotes, and Paragraphs.
-- **Style Controls**: Bold, Italic, Lists, and Indentation.
-- **Mode Toggle**: Switch between **CREATE**, **ANALYSE**, **ENGINEER**, etc.
+Steps:
 
-### The Document Sidebar
-- **Hierarchy**: Manage Projects > Chapters > Scenes.
-- **Organization**: Drag-and-drop reordering of scenes within or between chapters.
-- **Import/Export**: Central hub for manuscript movement.
+1. Select the source scene.
+2. In **Write**, open **Expansion Draft Insertion**.
+3. Paste the expansion brief/instructions.
+4. Click **Suggest Insertion Placement** to auto-fill start/end paragraph boundaries.
+5. Adjust boundaries if needed.
+6. Click **Generate Expansion Draft**.
 
-### The Status Bar (Env Status)
-- **API Status**: Real-time checks for OpenAI and Ollama connectivity.
-- **Cache Control**: Toggle and clear inference caching to reset AI memory.
-- **Costs**: Live tracking of token usage and estimated USD costs.
+Runtime behavior:
 
----
+- Uses Galaxy AI polling path (non-streaming).
+- Automatically continues when output truncates.
+- De-duplicates overlapping continuation output.
+- Saves to **Editorial Drafts** as draft scenes (non-destructive).
+- Labels output with chapter and insertion boundaries (paragraph and line references).
+- Expansion panel uses responsive layout so controls wrap instead of overflowing.
+- Autosaves each pass and logs start/checkpoint/complete/error records.
 
-## 🛡 Principles of ProseLab
+## Logs and diagnostics
 
-1.  **Defaults to Rejection**: The engine is designed to find flaws, not to validate your ego.
-2.  **Show, Don't Tell**: Abstract emotional labels are banned. The engine will flag words like "felt," "anxious," or "happy."
-3.  **Adversarial Truth**: We use multiple AI architectures (OpenAI, Gemini, Ollama) to ensure that if one model misses a flaw, the other catches it.
+- Use the **Logs** tab to inspect traces and run behavior.
+- Checkpoint and completion records for expansion runs are stored via document logs.
 
-> "If the system cannot reject bad output, it will produce average output."
+## Environment keys
+
+Configure `proselab/.env`:
+
+- `VITE_OPENAI_KEY` (Galaxy AI proxy key in this runtime)
+- `VITE_GEMINI_KEY` (optional challenger infrastructure)
+- `VITE_OLLAMA_MODEL`
+
+## Notes on runtime truth
+
+- Galaxy/Opus is used through the OpenAI-keyed provider path in this app.
+- In `CREATE`, Gemini challenger is enforced on `APPROVE` verdicts when `VITE_GEMINI_KEY` is configured.

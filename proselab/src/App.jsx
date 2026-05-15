@@ -23,6 +23,8 @@ import { analyze } from "./engine/analysis.js";
 import { INFERENCE_CACHE_CONTEXT_VERSION } from "./engine/pipeline.js";
 import { PERSONAS } from "./engine/editorial.js";
 import { runCriticAgent, runGeneratorAgent, applyAgentAction } from "./agents/runAgent.js";
+import { generateRewrite } from "./engine/rewrite.js";
+import { describeInsertionAnchors, generateExpansionInsertionDraft } from "./engine/expansionWriter.js";
 import { compileScene, SCENE_PHASES } from "./services/compiler.js";
 import { runCreateModeOrchestrator } from "./services/createModeOrchestrator.js";
 import { runEditorialModeOrchestrator } from "./services/editorialModeOrchestrator.js";
@@ -37,7 +39,9 @@ import { LoreAgent } from "./engine/lore/index.js";
 import LorePanel from "./components/LoreAgent/LorePanel.jsx";
 import { createImportCompletionHandler, createImportStorageAdapter } from "./services/appAdapters.js";
 import { CREATE_PIPELINE_SUMMARY, getChallengerRuntimeLabel } from "./services/runtimeTruth.js";
+import { runChallengerGate } from "./engine/challengerGate.js";
 import { resetLocalAppData } from "./services/db.js";
+
 import "./components/LoreAgent/LoreAgent.css";
 
 
@@ -46,6 +50,7 @@ import "./components/LoreAgent/LoreAgent.css";
 // TOKEN & COST TRACKING CONSTANTS
 // =============================
 const COST_RATES = {
+  "galaxy": { input: 0, output: 0, perCall: 0.0001 },
   "openai::gpt-4o-mini": { input: 0.00015, output: 0.0006 },
   "ollama": { input: 0, output: 0 },
 };
@@ -66,6 +71,32 @@ function renderMarkdown(text) {
 
 function estimateTokens(text) { return Math.ceil((text || "").length / 4); }
 
+function extractFirstJsonObject(raw) {
+  const source = String(raw || "").replace(/```json|```/gi, "").trim();
+  const first = source.indexOf("{");
+  const last = source.lastIndexOf("}");
+  if (first === -1 || last === -1 || last <= first) {
+    throw new Error("Model did not return a JSON object.");
+  }
+  return JSON.parse(source.slice(first, last + 1));
+}
+
+function summarizeParagraphsForPlacement(sourceText, maxParagraphs = 120) {
+  const paragraphs = String(sourceText || "")
+    .split(/\n\s*\n/g)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const capped = paragraphs.slice(0, maxParagraphs);
+  const map = capped
+    .map((p, idx) => `${idx + 1}: ${p.replace(/\s+/g, " ").slice(0, 260)}`)
+    .join("\n");
+  return {
+    paragraphCount: paragraphs.length,
+    providedCount: capped.length,
+    map,
+  };
+}
+
 function getTodayStats() {
   return getCostStats(COST_RATES);
 }
@@ -75,6 +106,7 @@ function getTodayStats() {
 const ENV_KEYS = {
   openai: import.meta.env.VITE_OPENAI_KEY || "",
   gemini: import.meta.env.VITE_GEMINI_KEY || "",
+  geminiModel: import.meta.env.VITE_GEMINI_MODEL || "gemini-2.5-flash",
   model: import.meta.env.VITE_OLLAMA_MODEL || "llama3",
 };
 // =============================
@@ -103,6 +135,7 @@ export default function ProseLabV4() {
     selectedProjectId,
     selectedSceneId,
     tree,
+    draftTree,
     selectProject,
     refreshProjectState,
     selectScene,
@@ -124,6 +157,7 @@ export default function ProseLabV4() {
     reorderChapter,
     reorderScene,
     scenes,
+    chapters,
     core,
     chars,
     rules,
@@ -149,7 +183,11 @@ export default function ProseLabV4() {
     getBeats,
     findCharacterByName,
     updateSceneText,
-    saveSceneDraft
+    saveSceneDraft,
+    moveBeat,
+    reorderBeats,
+    moveScene,
+    reorderScenes
   } = useDocumentManager();
 
   const currentScene = useMemo(() =>
@@ -166,7 +204,7 @@ export default function ProseLabV4() {
     saveDocument, updateDocument, findDocuments,
     createCharacter, createWorldRule, createBeat,
     getProject, getChapters, getScenes, getCharacters, getWorldRules, getBeats, findCharacterByName,
-    updateSceneText
+    updateSceneText, moveBeat, reorderBeats, moveScene, reorderScenes
   }), [
     projects, selectedProjectId, selectedSceneId, tree,
     selectProject, refreshProjectState, selectScene, createProject, deleteProject, createChapter, createScene,
@@ -176,19 +214,19 @@ export default function ProseLabV4() {
     saveDocument, updateDocument, findDocuments,
     createCharacter, createWorldRule, createBeat,
     getProject, getChapters, getScenes, getCharacters, getWorldRules, getBeats, findCharacterByName,
-    updateSceneText
+    updateSceneText, moveBeat, reorderBeats, moveScene, reorderScenes
   ]);
 
   const llmService = useMemo(() => ({
     complete: async (prompt, options = {}) => {
-      // Default to OpenAI for complex extraction, fallback to Ollama if needed
+      // Routes through Galaxy AI (Opus 4.6), fallback to Ollama if needed
       const res = await callOpenAI(ENV_KEYS.openai, prompt, {
         temperature: options.temperature || 0.3,
         maxTokens: options.maxTokens || 4000
       });
       if (res.ok) return res.content;
 
-      // Fallback to Ollama if OpenAI fails
+      // Fallback to Ollama if Galaxy fails
       const ollamaRes = await callOllama(ENV_KEYS.model, prompt);
       if (ollamaRes.ok) return ollamaRes.content;
 
@@ -198,20 +236,27 @@ export default function ProseLabV4() {
 
 
   const [showMetadata, setShowMetadata] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("idle");
 
   // Sync state with selected scene
   useEffect(() => {
     if (currentScene) {
       setText(currentScene.text || "");
       setModeFeedback(currentScene.modeFeedback || { ANALYSE: {}, ENGINEER: {}, MARKET: {}, VERDICT: {} });
+    } else {
+      setText("");
+      setModeFeedback({ ANALYSE: {}, ENGINEER: {}, MARKET: {}, VERDICT: {} });
     }
   }, [selectedSceneId, currentScene?.id]); // Only on scene change
 
   // Auto-save debounced
   useEffect(() => {
     if (!selectedSceneId || !text) return;
-    const timer = setTimeout(() => {
-      saveSceneDraft(selectedSceneId, { text, modeFeedback });
+    setSaveStatus("saving");
+    const timer = setTimeout(async () => {
+      await saveSceneDraft(selectedSceneId, { text, modeFeedback });
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 2000);
     }, 1000);
     return () => clearTimeout(timer);
   }, [text, modeFeedback, selectedSceneId, saveSceneDraft]);
@@ -221,6 +266,10 @@ export default function ProseLabV4() {
   const [editingScene, setEditingScene] = useState(null);
   const [running, setRunning] = useState(false);
   const [stage, setStage] = useState(null);
+  const [expansionPlanText, setExpansionPlanText] = useState("");
+  const [expansionStartParagraph, setExpansionStartParagraph] = useState("1");
+  const [expansionEndParagraph, setExpansionEndParagraph] = useState("1");
+  const [expansionPlacementReasoning, setExpansionPlacementReasoning] = useState("");
   const [cacheStats, setCacheStats] = useState(getCacheStats());
   const [costStats, setCostStats] = useState(getTodayStats());
   const [envStatus, setEnvStatus] = useState({
@@ -431,11 +480,11 @@ export default function ProseLabV4() {
   const providerCards = [
     {
       key: "openai",
-      label: "OpenAI",
+      label: "Galaxy AI",
       status: !envStatusState.openai ? "missing" : (envStatusState.openaiReachable ? "ready" : "warning"),
       detail: !envStatusState.openai
-        ? "Missing API key in proselab/.env"
-        : (envStatusState.openaiReachable ? "Configured for refinement and extraction" : `Configured but unreachable: ${envStatusState.openaiReason}`)
+        ? "Missing Galaxy API key in proselab/.env"
+        : (envStatusState.openaiReachable ? "Galaxy AI (Opus 4.6) connected" : `Configured but unreachable: ${envStatusState.openaiReason}`)
     },
     {
       key: "ollama",
@@ -516,6 +565,14 @@ export default function ProseLabV4() {
         modeFeedback,
         voiceSpec: voice,
         openaiKey: ENV_KEYS.openai,
+        geminiKey: ENV_KEYS.gemini,
+        sceneIntent: scenes.find(s => String(s.id) === String(selectedSceneId)) ? {
+          objective: scenes.find(s => String(s.id) === String(selectedSceneId)).output,
+          success_state: scenes.find(s => String(s.id) === String(selectedSceneId)).output,
+          failure_state: `Failed to fulfill: ${scenes.find(s => String(s.id) === String(selectedSceneId)).output}`,
+          irreversible_change: scenes.find(s => String(s.id) === String(selectedSceneId)).causality,
+          story_delta: scenes.find(s => String(s.id) === String(selectedSceneId)).stakes
+        } : null,
         logTokenUsage,
         onStage: setStage,
         onFeedback: (mode, feedback) =>
@@ -539,6 +596,7 @@ export default function ProseLabV4() {
       preflightId: selectedSceneId,
       delta,
       keys: { openai: ENV_KEYS.openai },
+      geminiKey: ENV_KEYS.gemini,
       cacheVersion: INFERENCE_CACHE_CONTEXT_VERSION,
       logTokenUsage,
       estimateTokens,
@@ -593,11 +651,10 @@ export default function ProseLabV4() {
 
 
   const runTargetedRewrite = async () => {
-    if (running || !modeFeedback.ANALYSE?.margaret) return;
-    setRunning(true); setStage("margaret-rewrite");
+    if (running || !text) return;
+    setRunning(true); setStage("editorial-rewrite");
 
     try {
-      // Get the active scene intent for the context of the rewrite
       const activeScene = scenes.find(s => String(s.id) === String(selectedSceneId));
       const sceneIntent = activeScene ? {
         objective: activeScene.output,
@@ -607,20 +664,62 @@ export default function ProseLabV4() {
         story_delta: activeScene.stakes
       } : null;
 
-      const res = await EngineV1.evaluate({
-        text,
-        sceneIntent,
-        keys: { openai: ENV_KEYS.openai },
-        onStage: setStage,
-        flags: {
-          USE_STYLE_REFINEMENT: true,
-          MAX_ITERATIONS: 2
-        }
+      let allFeedback = [];
+      Object.keys(modeFeedback).forEach(mode => {
+        Object.entries(modeFeedback[mode] || {}).forEach(([pKey, feedback]) => {
+          allFeedback.push(`[${PERSONAS[pKey]?.name || pKey}]: ${feedback}`);
+        });
       });
 
-      if (res.final) {
-        setOutput(res.final);
-        setStages(prev => ({ ...prev, final: res.final }));
+      if (allFeedback.length === 0) {
+        throw new Error("No editorial feedback available to apply.");
+      }
+
+      const res = await generateRewrite({
+        original: text,
+        instructions: allFeedback,
+        sceneIntent,
+        mode: "intent-repair",
+        llmCaller: callOpenAI,
+        key: ENV_KEYS.openai
+      });
+
+      if (res.ok && res.text) {
+        let challengerResult = null;
+        if (ENV_KEYS.gemini && sceneIntent) {
+          setStage("gemini-challenger");
+          const challenger = await runChallengerGate({
+            prose: res.text,
+            sceneIntent,
+            geminiKey: ENV_KEYS.gemini,
+            onStage: setStage
+          });
+          challengerResult = challenger.challenger;
+        }
+
+        let targetChapterId = draftTree?.find(c => c.title === "Editorial Drafts")?.id;
+        if (!targetChapterId) {
+          const newChap = await createChapter({ title: "Editorial Drafts", isDraft: true });
+          targetChapterId = newChap.id;
+        }
+        await createScene({
+          chapterId: targetChapterId,
+          title: `Draft: ${activeScene?.title || "Rewrite"}`,
+          text: res.text,
+          isDraft: true
+        });
+
+        setOutput(res.text);
+        setStages(prev => ({ ...prev, final: res.text }));
+        setCreateModeCritique({
+          verdict: challengerResult?.verdict === "VETO" ? "REWRITE" : "APPROVE",
+          score: null,
+          failures: challengerResult?.verdict === "VETO" ? challengerResult.fatal_flaws.map(f => ({ type: 'GEMINI_VETO', reason: f })) : [],
+          attempts: 1,
+          traces: [],
+          intent: null,
+          challenger: challengerResult
+        });
         setActiveTab("output");
       } else {
         throw new Error("Rewrite failed to produce content.");
@@ -630,6 +729,216 @@ export default function ProseLabV4() {
     }
     setRunning(false); setStage(null);
   };
+
+  const recommendExpansionInsertion = async () => {
+    if (running) return;
+    const activeScene = scenes.find(s => String(s.id) === String(selectedSceneId));
+    const sourceText = activeScene?.text || text || "";
+    if (!activeScene || !sourceText.trim()) {
+      setOutput("Error: Select a scene with manuscript text before requesting insertion placement.");
+      return;
+    }
+
+    const expansionBrief = (expansionPlanText || "").trim();
+    if (!expansionBrief) {
+      setOutput("Error: Paste expansion instructions into the Expansion Brief field first.");
+      return;
+    }
+
+    const { paragraphCount, providedCount, map } = summarizeParagraphsForPlacement(sourceText);
+    if (!map.trim()) {
+      setOutput("Error: No paragraph map available for insertion recommendation.");
+      return;
+    }
+
+    const placementPrompt = `You are selecting insertion boundaries for a manuscript expansion.
+
+Return only strict JSON with this schema:
+{
+  "startParagraph": number,
+  "endParagraph": number,
+  "reasoning": string
+}
+
+Rules:
+- Choose paragraph numbers between 1 and ${providedCount}.
+- startParagraph must be less than or equal to endParagraph.
+- reasoning must be concise and reference scene continuity.
+- No markdown. No prose outside JSON.
+
+Scene title: ${activeScene.title || "Untitled Scene"}
+Total paragraphs in scene: ${paragraphCount}
+Paragraph map provided: 1..${providedCount}
+
+Expansion brief:
+${expansionBrief}
+
+Paragraph map:
+${map}`;
+
+    setRunning(true);
+    setStage("expansion-insertion-recommend");
+
+    try {
+      const res = await callOpenAI(ENV_KEYS.openai, placementPrompt, { temperature: 0.2, timeout: 120000, pollInterval: 1200 });
+      if (!res?.ok) {
+        throw new Error(res?.error || "Insertion recommendation failed.");
+      }
+
+      const parsed = extractFirstJsonObject(res.content);
+      const rawStart = Number(parsed?.startParagraph);
+      const rawEnd = Number(parsed?.endParagraph);
+      const boundedStart = Math.max(1, Math.min(providedCount, Number.isFinite(rawStart) ? rawStart : 1));
+      const boundedEnd = Math.max(boundedStart, Math.min(providedCount, Number.isFinite(rawEnd) ? rawEnd : boundedStart));
+      const reasoning = String(parsed?.reasoning || "").trim();
+
+      setExpansionStartParagraph(String(boundedStart));
+      setExpansionEndParagraph(String(boundedEnd));
+      setExpansionPlacementReasoning(reasoning || "Placement suggested by Galaxy AI.");
+
+      const boundary = describeInsertionAnchors(sourceText, boundedStart, boundedEnd);
+      setOutput(`Recommended insertion:\nStart: before paragraph ${boundary.start.paragraph} (line ${boundary.start.line})\nEnd: before paragraph ${boundary.end.paragraph} (line ${boundary.end.line})\n\nReason: ${reasoning || "Placement suggested by Galaxy AI."}`);
+    } catch (e) {
+      setOutput("Error: " + e.message);
+    }
+
+    setRunning(false);
+    setStage(null);
+  };
+
+  const runExpansionInsertionDraft = async () => {
+    if (running) return;
+    const activeScene = scenes.find(s => String(s.id) === String(selectedSceneId));
+    const sourceText = activeScene?.text || text || "";
+    if (!activeScene || !sourceText.trim()) {
+      setOutput("Error: Select a scene with manuscript text before generating an expansion draft.");
+      return;
+    }
+
+    const expansionBrief = (expansionPlanText || "").trim();
+    if (!expansionBrief) {
+      setOutput("Error: Paste expansion instructions into the Expansion Brief field first.");
+      return;
+    }
+
+    const startParagraph = Math.max(1, Number(expansionStartParagraph) || 1);
+    const endParagraph = Math.max(startParagraph, Number(expansionEndParagraph) || startParagraph);
+    const initialBoundary = describeInsertionAnchors(sourceText, startParagraph, endParagraph);
+
+    setRunning(true);
+    setStage("expansion-insertion-init");
+
+    const expansionRunId = crypto.randomUUID();
+    let draftScene = null;
+
+    try {
+      let targetChapterId = draftTree?.find(c => c.title === "Editorial Drafts")?.id;
+      if (!targetChapterId) {
+        const newChap = await createChapter({ title: "Editorial Drafts", isDraft: true });
+        targetChapterId = newChap.id;
+      }
+
+      draftScene = await createScene({
+        chapterId: targetChapterId,
+        title: `Expansion Draft: ${activeScene.title || "Scene"} | p${startParagraph}-p${endParagraph}`,
+        text: `Expansion run: ${expansionRunId}\nStatus: starting`,
+        isDraft: true,
+        sourceSceneId: activeScene.id,
+        expansionRunId
+      });
+
+      await saveDocument({
+        projectId: selectedProjectId,
+        type: "expansion_log",
+        domain: "expansion",
+        subdomain: "insertion",
+        title: `Expansion start ${activeScene.title || "Scene"}`,
+        content: JSON.stringify({ expansionRunId, sourceSceneId: activeScene.id, startParagraph, endParagraph, at: Date.now() })
+      });
+
+      const result = await generateExpansionInsertionDraft({
+        key: ENV_KEYS.openai,
+        llmCaller: callOpenAI,
+        chapterTitle: activeScene.title || "Untitled Scene",
+        sourceText,
+        expansionBrief,
+        startParagraph,
+        endParagraph,
+        onStage: setStage,
+        onChunk: async ({ pass, combined, hasEndMarker, wordCount }) => {
+          const label = `Insertion start: before paragraph ${initialBoundary.start.paragraph} (line ${initialBoundary.start.line}) | Insertion end: before paragraph ${initialBoundary.end.paragraph} (line ${initialBoundary.end.line})`;
+          const header = `Chapter: ${activeScene.title || "Untitled Scene"}\n${label}\nRun: ${expansionRunId}\nCheckpoint: pass ${pass}`;
+          const composedDraft = `${header}\n\n${combined}`;
+
+          setSaveStatus("saving");
+          if (draftScene?.id) {
+            await updateSceneText(draftScene.id, composedDraft);
+            await updateSceneMetadata(draftScene.id, {
+              expansionCheckpoint: { pass, wordCount, hasEndMarker, updatedAt: Date.now() }
+            });
+          }
+
+          await saveDocument({
+            projectId: selectedProjectId,
+            type: "expansion_log",
+            domain: "expansion",
+            subdomain: "checkpoint",
+            title: `Expansion checkpoint pass ${pass}`,
+            content: JSON.stringify({ expansionRunId, pass, wordCount, hasEndMarker, at: Date.now() })
+          });
+
+          logTokenUsage("galaxy", estimateTokens(expansionBrief), estimateTokens(combined));
+          setOutput(composedDraft);
+          setStages(prev => ({ ...prev, final: composedDraft }));
+          setSaveStatus("saved");
+          setTimeout(() => setSaveStatus("idle"), 1200);
+        }
+      });
+
+      if (!result.ok) {
+        throw new Error(result.error || "Expansion generation failed.");
+      }
+
+      const boundary = result.anchor;
+      const finalLabel = `Chapter: ${activeScene.title || "Untitled Scene"}\nInsertion start: before paragraph ${boundary.start.paragraph} (line ${boundary.start.line})\nInsertion end: before paragraph ${boundary.end.paragraph} (line ${boundary.end.line})\nRun: ${expansionRunId}\nPasses: ${result.passes}\nWords: ${result.wordCount}`;
+      const finalText = `${finalLabel}\n\n${result.text}`;
+
+      if (draftScene?.id) {
+        await updateSceneText(draftScene.id, finalText);
+        await updateSceneMetadata(draftScene.id, {
+          title: `Expansion Draft: ${activeScene.title || "Scene"} | p${boundary.start.paragraph}-p${boundary.end.paragraph}`,
+          expansionResult: { expansionRunId, passes: result.passes, words: result.wordCount, completedAt: Date.now() }
+        });
+      }
+
+      await saveDocument({
+        projectId: selectedProjectId,
+        type: "expansion_log",
+        domain: "expansion",
+        subdomain: "complete",
+        title: `Expansion complete ${activeScene.title || "Scene"}`,
+        content: JSON.stringify({ expansionRunId, passes: result.passes, words: result.wordCount, boundary, at: Date.now() })
+      });
+
+      setOutput(finalText);
+      setStages(prev => ({ ...prev, final: finalText }));
+      setActiveTab("output");
+    } catch (e) {
+      await saveDocument({
+        projectId: selectedProjectId,
+        type: "expansion_log",
+        domain: "expansion",
+        subdomain: "error",
+        title: `Expansion error ${activeScene.title || "Scene"}`,
+        content: JSON.stringify({ expansionRunId, error: e.message, at: Date.now() })
+      });
+      setOutput("Error: " + e.message);
+    }
+
+    setRunning(false);
+    setStage(null);
+  };
+
   const handleClearCache = () => {
     clearInferenceCache();
     setCacheStats(getCacheStats());
@@ -675,6 +984,33 @@ export default function ProseLabV4() {
     }
 
     window.location.reload();
+  };
+
+  const handleMigrateToDocker = async () => {
+    const confirmed = window.confirm("Migrate all local browser data to the Docker PostgreSQL database? This will copy all your projects to the server.");
+    if (!confirmed) return;
+
+    setRunning(true);
+    setStage("migration");
+    try {
+      const { exportAllData } = await import("./services/db.js");
+      const { batchImport } = await import("./services/serverDb.js");
+      
+      const data = await exportAllData();
+      const result = await batchImport(data);
+      
+      if (result.success) {
+        alert(`Successfully migrated ${result.count} projects to the Docker database!`);
+        window.location.reload();
+      } else {
+        throw new Error(result.error || "Migration failed");
+      }
+    } catch (err) {
+      alert("Migration failed: " + err.message);
+    } finally {
+      setRunning(false);
+      setStage(null);
+    }
   };
 
   const handleExport = () => {
@@ -726,6 +1062,7 @@ export default function ProseLabV4() {
         <DocumentSidebar
           projects={projects}
           tree={tree}
+          draftTree={draftTree}
           selectedProjectId={selectedProjectId}
           selectedSceneId={selectedSceneId}
           onSelectProject={selectProject}
@@ -734,11 +1071,14 @@ export default function ProseLabV4() {
           onRenameProject={handleRenameProject}
           onSelectScene={selectScene}
           onCreateChapter={createChapter}
+          onCreateDraftChapter={(data) => createChapter({ ...data, isDraft: true })}
           onCreateScene={createScene}
+          onCreateDraftScene={(chapterId) => createScene({ chapterId, title: "New Draft", isDraft: true })}
           onDeleteChapter={deleteChapter}
           onDeleteScene={deleteScene}
           onReorderChapter={reorderChapter}
           onReorderScene={reorderScene}
+          onEditScene={setEditingScene}
           onOpenImport={() => setShowImportWizard(true)}
         />
       )}
@@ -761,7 +1101,22 @@ export default function ProseLabV4() {
                 </div>
               </div>
               <div className="header-right">
-                <div className="datetime-display">
+                {saveStatus !== "idle" && (
+                  <div className={`save-indicator ${saveStatus}`}>
+                    {saveStatus === "saving" ? (
+                      <>
+                        <span className="spinner" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Saved!
+                      </>
+                    )}
+                  </div>
+                )}
+                <div className="datetime-display" style={{ marginLeft: "15px" }}>
                   <div className="datetime-date">{dateStr}</div>
                   <div className="datetime-time">{timeStr}</div>
                 </div>
@@ -831,7 +1186,9 @@ export default function ProseLabV4() {
               <button className={`tab-trigger ${activeTab === "write" ? "active" : ""}`} onClick={() => setActiveTab("write")}>Write</button>
               <button className={`tab-trigger ${activeTab === "output" ? "active" : ""}`} onClick={() => setActiveTab("output")}>Output</button>
               <button className={`tab-trigger ${activeTab === "lore" ? "active" : ""}`} onClick={() => setActiveTab("lore")}>Lore</button>
+
               <button className={`tab-trigger ${activeTab === "logs" ? "active" : ""}`} onClick={() => setActiveTab("logs")}>Logs</button>
+              <button className={`tab-trigger ${activeTab === "system" ? "active" : ""}`} onClick={() => setActiveTab("system")}>System</button>
 
               <button
                 className="btn btn-primary"
@@ -960,6 +1317,8 @@ export default function ProseLabV4() {
               beats={beats}
               voice={voice}
               scenes={scenes}
+              chapters={chapters}
+              storage={docManager}
               shadowActions={shadowActions}
               applyAgentAction={(id, opts) => applyAgentAction(id, { shadowActions, scenes, removeShadowAction, ...opts })}
               removeShadowAction={removeShadowAction}
@@ -970,15 +1329,20 @@ export default function ProseLabV4() {
               deleteRule={deleteRule}
               saveBeat={saveBeat}
               deleteBeat={deleteBeat}
+              moveBeat={moveBeat}
+              reorderBeats={reorderBeats}
+              moveScene={moveScene}
+              reorderScenes={reorderScenes}
               onEditChar={setEditingChar}
               onEditScene={setEditingScene}
+              onSelectScene={selectScene}
               envStatusState={envStatusState}
             />
           )}
 
           {activeTab === "lore" && (
             <div className="lore-view-container" style={{ height: "calc(100vh - 250px)", marginTop: "20px" }}>
-              <LorePanel agent={loreAgent} />
+              <LorePanel agent={loreAgent} text={stages.final || output || text} keys={ENV_KEYS} />
             </div>
           )}
 
@@ -1038,48 +1402,114 @@ export default function ProseLabV4() {
                       <span style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{wordCount} words</span>
                     </div>
                   </div>
-                  {!showPreview ? (
-                    <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                      <ProseEditor
-                        value={text}
-                        onChange={setText}
-                        placeholder="Start writing your scene..."
+                  {selectedSceneId ? (
+                    !showPreview ? (
+                      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                        <ProseEditor
+                          value={text}
+                          onChange={setText}
+                          placeholder="Start writing your scene..."
+                        />
+                        {showMetadata && currentScene && (
+                          <div className="metadata-panel">
+                            <div className="field-group">
+                              <label className="field-label">Scene Title</label>
+                              <input
+                                className="field-input"
+                                value={currentScene.title || ""}
+                                onChange={e => updateSceneMetadata(currentScene.id, { title: e.target.value })}
+                              />
+                            </div>
+                            <div className="field-group">
+                              <label className="field-label">Tags (comma separated)</label>
+                              <input
+                                className="field-input"
+                                value={currentScene.tags || ""}
+                                placeholder="e.g. action, internal, draft"
+                                onChange={e => updateSceneMetadata(currentScene.id, { tags: e.target.value })}
+                              />
+                            </div>
+                            <div className="field-group">
+                              <label className="field-label">Scene Notes</label>
+                              <textarea
+                                className="field-input"
+                                style={{ minHeight: "200px", resize: "vertical" }}
+                                value={currentScene.notes || ""}
+                                placeholder="Plot points, emotional beats..."
+                                onChange={e => updateSceneMetadata(currentScene.id, { notes: e.target.value })}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="prose-preview" dangerouslySetInnerHTML={{ __html: renderMarkdown(text) }} />
+                    )
+                  ) : (
+                    <div className="empty-state-container" style={{ padding: "80px 20px", textAlign: "center", color: "var(--text-muted)" }}>
+                      <div style={{ fontSize: "32px", marginBottom: "20px" }}>📝</div>
+                      <h3 style={{ marginBottom: "12px", color: "var(--text-bright)" }}>No Scene Selected</h3>
+                      <p style={{ maxWidth: "440px", margin: "0 auto", fontSize: "14px", lineHeight: "1.6" }}>
+                        Select a chapter or scene from the manuscript sidebar to begin writing, or use the Import tool to bring in your work.
+                      </p>
+                    </div>
+                  )}
+                  <div className="panel" style={{ marginTop: "16px", borderLeft: "4px solid var(--accent-primary)" }}>
+                    <div className="panel-header">
+                      <span className="panel-title">Expansion Draft Insertion</span>
+                    </div>
+                    <div className="expansion-panel-body">
+                      <textarea
+                        className="field-input expansion-brief-input"
+                        value={expansionPlanText}
+                        placeholder="Paste expansion brief or plan instructions for Galaxy AI (Opus 4.6)..."
+                        onChange={e => setExpansionPlanText(e.target.value)}
                       />
-                      {showMetadata && currentScene && (
-                        <div className="metadata-panel">
-                          <div className="field-group">
-                            <label className="field-label">Scene Title</label>
-                            <input
-                              className="field-input"
-                              value={currentScene.title || ""}
-                              onChange={e => updateSceneMetadata(currentScene.id, { title: e.target.value })}
-                            />
-                          </div>
-                          <div className="field-group">
-                            <label className="field-label">Tags (comma separated)</label>
-                            <input
-                              className="field-input"
-                              value={currentScene.tags || ""}
-                              placeholder="e.g. action, internal, draft"
-                              onChange={e => updateSceneMetadata(currentScene.id, { tags: e.target.value })}
-                            />
-                          </div>
-                          <div className="field-group">
-                            <label className="field-label">Scene Notes</label>
-                            <textarea
-                              className="field-input"
-                              style={{ minHeight: "200px", resize: "vertical" }}
-                              value={currentScene.notes || ""}
-                              placeholder="Plot points, emotional beats..."
-                              onChange={e => updateSceneMetadata(currentScene.id, { notes: e.target.value })}
-                            />
-                          </div>
+                      <div className="expansion-placement-grid">
+                        <div className="field-group">
+                          <label className="field-label">Insertion start paragraph (before)</label>
+                          <input
+                            className="field-input"
+                            type="number"
+                            min="1"
+                            value={expansionStartParagraph}
+                            onChange={e => setExpansionStartParagraph(e.target.value)}
+                          />
+                        </div>
+                        <div className="field-group">
+                          <label className="field-label">Insertion end paragraph (before)</label>
+                          <input
+                            className="field-input"
+                            type="number"
+                            min="1"
+                            value={expansionEndParagraph}
+                            onChange={e => setExpansionEndParagraph(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="expansion-actions-row">
+                        <button
+                          className="btn btn-ghost"
+                          onClick={recommendExpansionInsertion}
+                          disabled={running || !selectedSceneId || !expansionPlanText.trim()}
+                        >
+                          {running && stage === "expansion-insertion-recommend" ? "Recommending Placement..." : "Suggest Insertion Placement"}
+                        </button>
+                        <button
+                          className="btn btn-amber"
+                          onClick={runExpansionInsertionDraft}
+                          disabled={running || !selectedSceneId || !expansionPlanText.trim()}
+                        >
+                          {running && String(stage || "").startsWith("expansion") ? "Generating Expansion Draft..." : "Generate Expansion Draft"}
+                        </button>
+                      </div>
+                      {expansionPlacementReasoning && (
+                        <div className="expansion-placement-reason">
+                          {expansionPlacementReasoning}
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="prose-preview" dangerouslySetInnerHTML={{ __html: renderMarkdown(text) }} />
-                  )}
+                  </div>
                   <div className="actions-bar">
                     <button id="run-btn" className="btn btn-primary" onClick={run} disabled={running || !text.trim() || !activeModeInfo.isConfigReady || activeModeInfo.isLocked}>
                       {running && <span className="spinner" />}
@@ -1145,9 +1575,16 @@ export default function ProseLabV4() {
             </div>
           )}
 
-          {activeTab === "output" && (
+          {activeTab === "output" && (() => {
+            const editorialModes = ["ANALYSE", "ENGINEER", "MARKET", "VERDICT"]
+              .filter(m => Object.keys(modeFeedback[m] || {}).length > 0);
+            const hasCreateOutput = Boolean(createModeCritique || stages.final || (output && output.startsWith("Error:")));
+            const hasEditorial = editorialModes.length > 0;
+            const hasNothing = !hasCreateOutput && !hasEditorial;
+
+            return (
             <div className="output-view" ref={outputRef}>
-              {activeMode === "CREATE" ? (
+              {hasCreateOutput && (
                 <>
                   <div className="panel" style={{ marginBottom: "24px" }}>
                     <div className="panel-header">
@@ -1158,6 +1595,9 @@ export default function ProseLabV4() {
                         </span>
                       </span>
                       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        <div className="status-badge" style={{ fontSize: 10, background: "rgba(100, 100, 255, 0.1)", color: "#aaddff", border: "1px solid rgba(100, 100, 255, 0.3)" }}>
+                          Engine: Galaxy AI (Opus 4.6)
+                        </div>
                         {createModeCritique && (
                           <div className={`status-badge tag-${createModeCritique.verdict === "APPROVE" ? "locked" : "pending"}`} style={{ fontSize: 10 }}>
                             CRITIC: {createModeCritique.verdict} ({createModeCritique.score?.overall}/10)
@@ -1178,7 +1618,43 @@ export default function ProseLabV4() {
                       <div className="output-placeholder">No output yet. Run the pipeline in the Write tab.</div>
                     )}
                   </div>
-
+                  {createModeCritique?.challenger && (
+                    <div className="panel" style={{ marginBottom: "16px", borderLeft: `4px solid ${createModeCritique.challenger.verdict === "CONFIRM" ? "var(--success)" : createModeCritique.challenger.verdict === "VETO" ? "var(--error)" : "var(--warning)"}` }}>
+                      <div className="panel-header">
+                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                          <span className="panel-title">Gemini Challenger Gate</span>
+                          <div className="status-badge" style={{ fontSize: 10, background: "rgba(100, 200, 100, 0.1)", color: "#aaffaa", border: "1px solid rgba(100, 200, 100, 0.3)" }}>
+                            Engine: Gemini 2.5 Flash
+                          </div>
+                          <div className={`status-badge tag-${createModeCritique.challenger.verdict === "CONFIRM" ? "locked" : "pending"}`} style={{ fontSize: 10 }}>
+                            {createModeCritique.challenger.verdict}
+                            {createModeCritique.challenger.confidence > 0 && ` (${(createModeCritique.challenger.confidence * 100).toFixed(0)}%)`}
+                          </div>
+                        </div>
+                      </div>
+                      {createModeCritique.challenger.reasoning && (
+                        <div className="output-content" style={{ fontSize: "13px", marginBottom: "8px", color: "var(--text-secondary)" }}>
+                          {createModeCritique.challenger.reasoning}
+                        </div>
+                      )}
+                      {createModeCritique.challenger.fatal_flaws?.length > 0 && (
+                        <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "4px", marginBottom: "8px" }}>
+                          <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--error)", marginBottom: "4px" }}>FATAL FLAWS:</div>
+                          {createModeCritique.challenger.fatal_flaws.map((flaw, i) => (
+                            <div key={i} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginBottom: "3px" }}>- {flaw}</div>
+                          ))}
+                        </div>
+                      )}
+                      {createModeCritique.challenger.concerns?.length > 0 && (
+                        <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "4px" }}>
+                          <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--warning)", marginBottom: "4px" }}>CONCERNS:</div>
+                          {createModeCritique.challenger.concerns.map((concern, i) => (
+                            <div key={i} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginBottom: "3px" }}>- {concern}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="content-grid" style={{ gridTemplateColumns: "1fr" }}>
                     {createModeCritique?.intent?.intent_verdict === "FAIL" && (
                       <div className="panel" style={{ borderLeft: "4px solid var(--error)" }}>
@@ -1190,13 +1666,9 @@ export default function ProseLabV4() {
                         </div>
                         {createModeCritique.intent.intent_failures?.length > 0 && (
                           <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "4px", marginBottom: "12px" }}>
-                            <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--error)", marginBottom: "4px" }}>
-                              INTENT FAILURES:
-                            </div>
+                            <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--error)", marginBottom: "4px" }}>INTENT FAILURES:</div>
                             {createModeCritique.intent.intent_failures.map((failure, idx) => (
-                              <div key={idx} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginBottom: "3px" }}>
-                                - {failure}
-                              </div>
+                              <div key={idx} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginBottom: "3px" }}>- {failure}</div>
                             ))}
                           </div>
                         )}
@@ -1213,33 +1685,23 @@ export default function ProseLabV4() {
                             Intent: {t.critique.intent_verdict} ({t.critique.intent_alignment}) | R: {t.critique.score?.rhythm} | S: {t.critique.score?.specificity} | G: {t.critique.score?.physical_grounding}
                           </div>
                         </div>
-                        <div className="output-content" style={{ fontSize: "14px", marginBottom: "12px", opacity: 0.9 }}>
-                          {t.draft}
-                        </div>
+                        <div className="output-content" style={{ fontSize: "14px", marginBottom: "12px", opacity: 0.9 }}>{t.draft}</div>
                         {t.critique.verdict === "REWRITE" && (
                           <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "4px" }}>
                             {t.critique.intent_failures?.length > 0 && (
                               <div style={{ marginBottom: "10px" }}>
-                                <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--error)", marginBottom: "4px" }}>
-                                  INTENT FAILURES:
-                                </div>
+                                <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--error)", marginBottom: "4px" }}>INTENT FAILURES:</div>
                                 {t.critique.intent_failures.map((failure, fi) => (
-                                  <div key={fi} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginBottom: "3px" }}>
-                                    - {failure}
-                                  </div>
+                                  <div key={fi} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginBottom: "3px" }}>- {failure}</div>
                                 ))}
                                 {t.critique.minimal_fix?.instruction && (
-                                  <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginTop: "6px" }}>
-                                    Minimal fix: {t.critique.minimal_fix.instruction}
-                                  </div>
+                                  <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginTop: "6px" }}>Minimal fix: {t.critique.minimal_fix.instruction}</div>
                                 )}
                               </div>
                             )}
                             {t.critique.failures?.length > 0 && (
                               <div style={{ marginBottom: "10px" }}>
-                                <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--error)", marginBottom: "4px" }}>
-                                  FAILURE REASONS:
-                                </div>
+                                <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--error)", marginBottom: "4px" }}>FAILURE REASONS:</div>
                                 {t.critique.failures.map((f, fi) => (
                                   <div key={fi} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px", marginBottom: "3px" }}>
                                     <span style={{ color: "var(--warning)", fontWeight: 600 }}>{f.type}</span>
@@ -1250,9 +1712,7 @@ export default function ProseLabV4() {
                             )}
                             {t.critique.rewrite?.instructions?.length > 0 && (
                               <div>
-                                <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--accent-primary)", marginBottom: "4px" }}>
-                                  REWRITE INSTRUCTIONS:
-                                </div>
+                                <div style={{ fontSize: "10px", fontWeight: "bold", color: "var(--accent-primary)", marginBottom: "4px" }}>REWRITE INSTRUCTIONS:</div>
                                 {t.critique.rewrite.instructions.map((inst, i) => (
                                   <div key={i} style={{ fontSize: "11px", color: "var(--text-secondary)", marginLeft: "8px" }}>&bull; {inst}</div>
                                 ))}
@@ -1262,38 +1722,67 @@ export default function ProseLabV4() {
                         )}
                       </div>
                     ))}
-                    {!createModeCritique && (
-                      <div className="output-placeholder">No loop traces yet. Run the pipeline in the Write tab.</div>
-                    )}
                   </div>
                 </>
-              ) : (
-                <div className="editorial-board">
-                  <div className="panel-header" style={{ marginBottom: "20px" }}>
-                    <span className="panel-title">Editorial Board Review: {activeMode}</span>
-                    {activeMode === "ANALYSE" && modeFeedback.ANALYSE?.margaret && (
-                      <button className="btn btn-amber btn-sm" onClick={runTargetedRewrite} disabled={running}>
-                        {running ? "Running Targeted Rewrite..." : "Apply Targeted Rewrite (Margaret Only)"}
-                      </button>
-                    )}
-                  </div>
-                  <div className="content-grid">
-                    {Object.entries(modeFeedback[activeMode] || {}).map(([pKey, feedback]) => (
-                      <div key={pKey} className="panel">
-                        <div className="panel-header">
-                          <span className="panel-title" style={{ color: "var(--accent-primary)" }}>{PERSONAS[pKey].name}</span>
+              )}
+
+              {hasEditorial && (
+                <div className="editorial-board" style={{ marginTop: hasCreateOutput ? "32px" : 0 }}>
+                  {editorialModes.map(mode => (
+                    <div key={mode} style={{ marginBottom: "24px" }}>
+                      <div className="panel-header" style={{ marginBottom: "12px" }}>
+                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                          <span className="panel-title">Editorial Review: {mode}</span>
+                          <div className="status-badge" style={{ fontSize: 10, background: "rgba(100, 100, 255, 0.1)", color: "#aaddff", border: "1px solid rgba(100, 100, 255, 0.3)" }}>
+                            Engine: Galaxy AI (Opus 4.6)
+                          </div>
                         </div>
-                        <div className="output-content" style={{ fontSize: "14px", whiteSpace: "pre-wrap" }}>{feedback}</div>
+                        {mode === "ANALYSE" && Object.keys(modeFeedback.ANALYSE || {}).length > 0 && (
+                          <button className="btn btn-amber btn-sm" onClick={runTargetedRewrite} disabled={running}>
+                            {running ? "Running Rewrite..." : "Apply Full Editorial Rewrite"}
+                          </button>
+                        )}
                       </div>
-                    ))}
-                    {Object.keys(modeFeedback[activeMode] || {}).length === 0 && (
-                      <div className="output-placeholder" style={{ gridColumn: "1 / -1" }}>No editorial feedback for this mode yet.</div>
-                    )}
+                      <div className="content-grid">
+                        {Object.entries(modeFeedback[mode] || {}).map(([pKey, feedback]) => (
+                          <div key={pKey} className="panel">
+                            <div className="panel-header">
+                              <span className="panel-title" style={{ color: "var(--accent-primary)" }}>{PERSONAS[pKey]?.name || pKey}</span>
+                            </div>
+                            <div className="output-content" style={{ fontSize: "14px", whiteSpace: "pre-wrap" }}>{feedback}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <div className="panel" style={{ borderLeft: "4px solid var(--accent-primary)", marginTop: "16px" }}>
+                    <div className="panel-header">
+                      <span className="panel-title">What to do with this feedback</span>
+                    </div>
+                    <div className="output-content" style={{ fontSize: "13px", lineHeight: "1.7" }}>
+                      <strong>1. Read the editorial notes above.</strong> Each persona flags specific issues in your prose.
+                      <br /><strong>2. Go to the Write tab</strong> and revise your scene text to address the feedback.
+                      <br /><strong>3. Re-run ANALYSE</strong> to verify your revisions improved the prose.
+                      <br /><strong>4. When ANALYSE is clean,</strong> run ENGINEER (structure) and VERDICT (final pass/fail) for deeper review.
+                      {Object.keys(modeFeedback.ANALYSE || {}).length > 0 && (
+                        <><br /><br /><strong>Shortcut:</strong> Click "Apply Full Editorial Rewrite" above to let Galaxy AI automatically generate a new Draft incorporating all feedback across all personas and stages.</>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {hasNothing && (
+                <div className="output-placeholder" style={{ padding: "40px 20px", textAlign: "center" }}>
+                  <div style={{ fontSize: "14px", marginBottom: "8px" }}>No results yet.</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                    Select a scene in the sidebar, go to the Write tab, choose ANALYSE mode, and click Start.
                   </div>
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
 
           {activeTab === "logs" && (
             <div className="logs-view">
@@ -1362,6 +1851,46 @@ export default function ProseLabV4() {
                   )}
                   <div className="log-entry" style={{ color: "var(--text-muted)" }}>
                     Check browser console (F12) for full object inspection.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "system" && (
+            <div className="system-view">
+              <div className="panel" style={{ marginBottom: "24px" }}>
+                <div className="panel-header">
+                  <span className="panel-title">Data Migration & Maintenance</span>
+                </div>
+                <div className="panel-body" style={{ padding: "20px" }}>
+                  <div style={{ marginBottom: "24px", padding: "16px", background: "rgba(0,0,0,0.2)", borderRadius: "8px", border: "1px solid var(--accent-primary)" }}>
+                    <h4 style={{ color: "var(--accent-primary)", marginBottom: "8px" }}>Move to Docker (PostgreSQL)</h4>
+                    <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "16px" }}>
+                      You are currently using browser-local storage (IndexedDB). If you want to use the high-performance PostgreSQL database running in Docker (for NAS or server hosting), use this migration tool.
+                    </p>
+                    <button className="btn btn-primary" onClick={handleMigrateToDocker} disabled={running}>
+                      {running && stage === "migration" && <span className="spinner" />}
+                      {running && stage === "migration" ? "Migrating..." : "Migrate All Data to Docker DB"}
+                    </button>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                    <div className="maintenance-card" style={{ padding: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "8px" }}>
+                      <h5 style={{ marginBottom: "8px" }}>Cache Management</h5>
+                      <p style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "12px" }}>Clear the AI inference cache to force fresh generations.</p>
+                      <button className="btn btn-ghost btn-sm" onClick={handleClearCache}>Clear Inference Cache</button>
+                    </div>
+                    <div className="maintenance-card" style={{ padding: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "8px" }}>
+                      <h5 style={{ marginBottom: "8px" }}>Cost Logs</h5>
+                      <p style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "12px" }}>Reset the token usage and cost tracking statistics.</p>
+                      <button className="btn btn-ghost btn-sm" onClick={handleClearCosts}>Reset Cost Logs</button>
+                    </div>
+                    <div className="maintenance-card" style={{ padding: "16px", background: "rgba(255,0,0,0.05)", borderRadius: "8px" }}>
+                      <h5 style={{ marginBottom: "8px", color: "var(--error)" }}>Factory Reset</h5>
+                      <p style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "12px" }}>Wipe ALL local data and start fresh. Use with caution.</p>
+                      <button className="btn btn-ghost btn-sm" style={{ color: "var(--error)" }} onClick={handleResetLocalData}>Reset Local Data</button>
+                    </div>
                   </div>
                 </div>
               </div>

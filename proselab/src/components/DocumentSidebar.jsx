@@ -8,6 +8,7 @@ import { searchProject } from "../services/search.js";
 export function DocumentSidebar({
   projects,
   tree,
+  draftTree = [],
   selectedProjectId,
   selectedSceneId,
   onSelectProject,
@@ -16,16 +17,21 @@ export function DocumentSidebar({
   onRenameProject,
   onSelectScene,
   onCreateChapter,
+  onCreateDraftChapter,
   onCreateScene,
+  onCreateDraftScene,
   onDeleteChapter,
   onDeleteScene,
   onReorderChapter,
   onReorderScene,
+  onEditScene,
   onOpenImport
 }) {
   const [expandedChapters, setExpandedChapters] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const hoverTimer = React.useRef(null);
 
   useEffect(() => {
     if (searchQuery.trim().length >= 2 && selectedProjectId) {
@@ -121,8 +127,28 @@ export function DocumentSidebar({
     }
   };
 
+  const handleMouseEnter = () => {
+    if (hoverTimer.current) {
+      clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
+    }
+    setIsCollapsed(false);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => {
+      setIsCollapsed(true);
+      hoverTimer.current = null;
+    }, 5000);
+  };
+
   return (
-    <div className="doc-sidebar">
+    <div 
+      className={`doc-sidebar ${isCollapsed ? "is-collapsed" : "is-expanded"}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <div className="sidebar-header">
         <div className="sidebar-brand">
           <img className="sidebar-brand-mark" src="/logo.png" alt="ProseLab" />
@@ -241,6 +267,7 @@ export function DocumentSidebar({
                         key={scene.id}
                         className={`scene-item ${scene.id === selectedSceneId ? "active" : ""}`}
                         onClick={() => onSelectScene(scene.id)}
+                        onDoubleClick={() => onEditScene && onEditScene(scene)}
                         draggable
                         onDragStart={(event) => handleDragStart(event, "scene", scene.id, chapter.id)}
                         onDragOver={handleDragOver}
@@ -263,6 +290,67 @@ export function DocumentSidebar({
           )}
           {tree.length === 0 && !searchQuery && (
             <div className="empty-project">No chapters yet. Create one to start writing.</div>
+          )}
+        </div>
+      </div>
+
+      <div className="sidebar-section">
+        <div className="section-header" style={{ marginTop: "16px" }}>
+          <span>DRAFTS</span>
+          <button onClick={() => onCreateDraftChapter()} className="btn-icon" title="Add Draft Folder">+</button>
+        </div>
+
+        <div className="tree-container">
+          {!searchQuery && draftTree.map((chapter) => (
+            <div key={chapter.id} className="chapter-group">
+              <div
+                className="chapter-header"
+                onClick={() => toggleChapter(chapter.id)}
+                draggable
+                onDragStart={(event) => handleDragStart(event, "chapter", chapter.id)}
+                onDragOver={handleDragOver}
+                onDrop={(event) => handleDrop(event, "chapter", chapter.id, draftTree.indexOf(chapter))}
+              >
+                <span className={`chevron ${expandedChapters[chapter.id] ? "expanded" : ""}`}>▶</span>
+                <span className="chapter-title">{chapter.title}</span>
+                <button
+                  className="btn-icon-sm"
+                  onClick={(event) => { event.stopPropagation(); onCreateDraftScene(chapter.id); }}
+                  title="Add Draft Scene"
+                >
+                  +
+                </button>
+              </div>
+
+              {expandedChapters[chapter.id] && (
+                <div className="scene-list">
+                  {chapter.scenes.map((scene, index) => (
+                    <div
+                      key={scene.id}
+                      className={`scene-item ${scene.id === selectedSceneId ? "active" : ""}`}
+                      onClick={() => onSelectScene(scene.id)}
+                      onDoubleClick={() => onEditScene && onEditScene(scene)}
+                      draggable
+                      onDragStart={(event) => handleDragStart(event, "scene", scene.id, chapter.id)}
+                      onDragOver={handleDragOver}
+                      onDrop={(event) => {
+                        event.dataTransfer.setData("targetChapterId", chapter.id);
+                        handleDrop(event, "scene", scene.id, index);
+                      }}
+                    >
+                      <span className="scene-status-dot" data-status="draft" />
+                      <span className="scene-title">{scene.title || "Untitled Draft"}</span>
+                    </div>
+                  ))}
+                  {chapter.scenes.length === 0 && (
+                    <div className="empty-chapter">No drafts here.</div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+          {draftTree.length === 0 && !searchQuery && (
+            <div className="empty-project">No drafts yet.</div>
           )}
         </div>
       </div>

@@ -80,95 +80,217 @@ export const CircuitBreaker = {
   }
 };
 
+// Galaxy AI configuration from env
+const GALAXY_CONFIG = {
+  key: (typeof import.meta !== "undefined" && import.meta.env?.VITE_GALAXY_AI_API_KEY) || "",
+  workflowId: (typeof import.meta !== "undefined" && import.meta.env?.VITE_GALAXY_WORKFLOW_ID) || "",
+  nodeId: (typeof import.meta !== "undefined" && import.meta.env?.VITE_GALAXY_NODE_ID) || "",
+};
+
+/**
+ * Call Galaxy AI workflow API.
+ * Starts a run, polls for completion, extracts output.
+ * Returns the same { ok, content, error, raw } shape as callOpenAI.
+ */
+export async function callGalaxy(key, prompt, options = {}) {
+  const {
+    timeout = 120000, // 2 min timeout for polling
+    pollInterval = 1200,
+  } = options;
+
+  // Use passed key if it's a Galaxy key, otherwise use the env config key
+  const isGalaxyKey = key && typeof key === 'string' && key.startsWith('gx_');
+  const galaxyKey = isGalaxyKey ? key : GALAXY_CONFIG.key;
+  const workflowId = GALAXY_CONFIG.workflowId;
+  const nodeId = GALAXY_CONFIG.nodeId;
+
+  if (!galaxyKey || !workflowId || !nodeId) {
+    return { ok: false, error: "Galaxy AI not configured (missing key, workflow, or node ID)", raw: null };
+  }
+
+  const headers = {
+    "Authorization": `Bearer ${galaxyKey}`,
+    "Content-Type": "application/json"
+  };
+
+  const isDebug = (typeof window !== "undefined" && window.PROSELAB_DEBUG_LLM) ||
+    (typeof import.meta !== "undefined" && import.meta.env?.PROSELAB_DEBUG_LLM);
+
+  if (isDebug) {
+    console.log("[GALAXY REQUEST]", { workflowId, nodeId, prompt: prompt.slice(0, 200) + "..." });
+  }
+
+  const start = Date.now();
+
+  try {
+    // Step 1: Start the run
+    const startRes = await fetch("/api/galaxy/runs", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        workflowId,
+        values: {
+          [nodeId]: {
+            text_field: prompt
+          }
+        }
+      })
+    });
+
+    if (!startRes.ok) {
+      const errText = await startRes.text();
+      CircuitBreaker.record(false, Date.now() - start, startRes.status);
+      console.error("[GALAXY RUN ERROR]", startRes.status, errText);
+      return { ok: false, status: startRes.status, error: errText, raw: errText };
+    }
+
+    const startData = await startRes.json();
+    const runId = startData.runId;
+
+    if (!runId) {
+      CircuitBreaker.record(false, Date.now() - start, "NO_RUN_ID");
+      return { ok: false, error: "Galaxy returned no runId", raw: JSON.stringify(startData) };
+    }
+
+    // Step 2: Poll for completion
+    const deadline = Date.now() + timeout;
+
+    while (Date.now() < deadline) {
+      await new Promise(r => setTimeout(r, pollInterval));
+
+      const pollRes = await fetch(`/api/galaxy/runs/${runId}?inDetails=true`, {
+        method: "GET",
+        headers
+      });
+
+      if (!pollRes.ok) {
+        const errText = await pollRes.text();
+        CircuitBreaker.record(false, Date.now() - start, pollRes.status);
+        return { ok: false, status: pollRes.status, error: errText, raw: errText };
+      }
+
+      const pollData = await pollRes.json();
+      const status = pollData.status;
+
+      if (status === "COMPLETED") {
+        const duration = Date.now() - start;
+        CircuitBreaker.record(true, duration);
+        CircuitBreaker.onSuccess();
+
+        // Extract output from nodeRuns
+        const output = extractGalaxyOutput(pollData);
+
+        if (isDebug) {
+          console.log("[GALAXY RESPONSE]", { status, duration, output: output.slice(0, 500) });
+        }
+
+        return {
+          ok: true,
+          status: 200,
+          content: output,
+          usage: null,
+          raw: JSON.stringify(pollData)
+        };
+      }
+
+      if (status === "FAILED" || status === "CANCELED") {
+        const duration = Date.now() - start;
+        CircuitBreaker.record(false, duration, status);
+        const output = extractGalaxyOutput(pollData);
+        return {
+          ok: false,
+          error: `Galaxy run ${status}: ${pollData.error || "unknown error"}`,
+          content: output || "",
+          raw: JSON.stringify(pollData)
+        };
+      }
+      // Still running — continue polling
+    }
+
+    // Timeout
+    CircuitBreaker.record(false, Date.now() - start, "TIMEOUT");
+    return { ok: false, error: "Galaxy run timed out", raw: null };
+
+  } catch (err) {
+    const duration = Date.now() - start;
+    CircuitBreaker.record(false, duration, "EXCEPTION");
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+      raw: null
+    };
+  }
+}
+
+/**
+ * Extract text output from Galaxy workflow run data.
+ */
+function extractGalaxyOutput(data) {
+  const outputs = [];
+  for (const node of (data.nodeRuns || [])) {
+    const out = node.output;
+    if (!out) continue;
+    if (typeof out === "object") {
+      let found = false;
+      for (const k of ["output", "text", "content", "response", "result"]) {
+        if (typeof out[k] === "string" && out[k]) {
+          outputs.push(out[k]);
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        const meta = new Set(["model", "usage", "cost_usd", "creditUsed", "provider_used", "status", "id"]);
+        for (const k of Object.keys(out)) {
+          if (!meta.has(k) && typeof out[k] === "string" && out[k].trim()) {
+            outputs.push(out[k]);
+            break;
+          }
+        }
+      }
+    } else if (typeof out === "string") {
+      outputs.push(out);
+    }
+  }
+  return outputs.join("\n").trim();
+}
+
+/**
+ * callOpenAI — now routes through Galaxy AI.
+ * Signature preserved so all existing call sites work without changes.
+ */
 export async function callOpenAI(key, prompt, options = {}) {
   if (CircuitBreaker.isOpen()) {
     return { ok: false, error: "CIRCUIT_BREAKER_OPEN", raw: null };
   }
 
   return TraceManager.intercept(async () => {
-    const {
-      model = "gpt-4o-mini",
-      temperature,
-      timeout = 30000, // 30s hard timeout
-    } = options;
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeout);
-
-    const start = Date.now();
-    try {
-      const payload = {
-        model,
-        ...(typeof temperature === "number" ? { temperature } : {}),
-        messages: [{ role: "user", content: prompt }],
-      };
-      
-      const isDebug = (typeof window !== "undefined" && window.PROSELAB_DEBUG_LLM) || (typeof import.meta !== "undefined" && import.meta.env?.PROSELAB_DEBUG_LLM);
-
-      if (isDebug) {
-          console.log("[LLM REQUEST]", JSON.stringify({ model, prompt: prompt.slice(0, 200) + "..." }, null, 2));
-      }
-
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${key}`,
-          "Content-Type": "application/json",
-        },
-        signal: controller.signal,
-        body: JSON.stringify(payload),
-      });
-
-      const duration = Date.now() - start;
-      clearTimeout(timer);
-      const raw = await response.text();
-
-      if (isDebug || !response.ok) {
-          console.log("[LLM RAW RESPONSE]", { status: response.status, ok: response.ok, body: raw.slice(0, 500) + (raw.length > 500 ? "..." : "") });
-      }
-
-      if (!response.ok) {
-        CircuitBreaker.record(false, duration, response.status);
-        return { ok: false, status: response.status, error: raw, raw };
-      }
-
-      CircuitBreaker.record(true, duration);
-      CircuitBreaker.onSuccess();
-      const data = JSON.parse(raw);
-      return {
-        ok: true,
-        status: response.status,
-        content: data?.choices?.[0]?.message?.content || "",
-        usage: data?.usage || null,
-        raw,
-      };
-    } catch (err) {
-      const duration = Date.now() - start;
-      clearTimeout(timer);
-      const errorType = err.name === "AbortError" ? "TIMEOUT" : "EXCEPTION";
-      CircuitBreaker.record(false, duration, errorType);
-      return {
-        ok: false,
-        error: errorType,
-        raw: null,
-      };
-    }
+    return callGalaxy(key, prompt, options);
   });
 }
 
 export async function checkOpenAIReachability(key) {
-  if (!key) {
-    return { reachable: false, reason: "Missing API key" };
+  // Check Galaxy reachability instead of OpenAI
+  const isGalaxyKey = key && typeof key === 'string' && key.startsWith('gx_');
+  const galaxyKey = isGalaxyKey ? key : GALAXY_CONFIG.key;
+
+  if (!galaxyKey) {
+    return { reachable: false, reason: "Missing Galaxy API key" };
+  }
+  if (!GALAXY_CONFIG.workflowId || !GALAXY_CONFIG.nodeId) {
+    return { reachable: false, reason: "Missing Galaxy workflow config" };
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 5000);
+  const timer = setTimeout(() => controller.abort(), 8000);
 
   try {
-    const response = await fetch("https://api.openai.com/v1/models", {
+    // Ping Galaxy API with a lightweight GET request (lists runs) to check auth without starting a new run
+    const response = await fetch("/api/galaxy/runs", {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${key}`
+        "Authorization": `Bearer ${galaxyKey}`,
+        "Content-Type": "application/json"
       },
       signal: controller.signal
     });
@@ -176,10 +298,12 @@ export async function checkOpenAIReachability(key) {
     clearTimeout(timer);
 
     if (!response.ok) {
-      return { reachable: false, reason: `HTTP ${response.status}` };
+      const errText = await response.text();
+      console.error("[GALAXY PING ERROR]", response.status, errText);
+      return { reachable: false, reason: `HTTP ${response.status}: ${errText.slice(0, 100)}` };
     }
 
-    return { reachable: true, reason: "API reachable" };
+    return { reachable: true, reason: "Galaxy AI reachable" };
   } catch (error) {
     clearTimeout(timer);
     return {
@@ -191,7 +315,7 @@ export async function checkOpenAIReachability(key) {
 
 export async function callGemini(key, prompt, options = {}) {
   const {
-    model = "gemini-1.5-pro",
+    model = "gemini-2.5-flash",
     temperature = 0.7,
   } = options;
   

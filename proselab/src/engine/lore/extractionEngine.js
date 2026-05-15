@@ -1,6 +1,7 @@
 // src/engine/lore/extractionEngine.js
 
-export { ENTITY_TYPES } from './entityTypes';
+import { ENTITY_TYPES } from './entityTypes.js';
+export { ENTITY_TYPES };
 
 // Pattern libraries for entity extraction
 const EXTRACTION_PATTERNS = {
@@ -70,6 +71,8 @@ const STOP_WORDS = new Set([
   'Do', 'He', 'I', 'My', 'No', 'So', 'An', 'Or', 'It',
   'Chapter', 'Part', 'Book', 'Section', 'Prologue', 'Epilogue',
   'Note', 'Notes', 'Scene', 'Act',
+  'Maybe', 'Outside', 'Inside', 'Turned', 'Coffee', 'Behavioural', 'Actually',
+  'Anyway', 'Meanwhile', 'Suddenly', 'Instead', 'Otherwise', 'Therefore',
 ]);
 
 /**

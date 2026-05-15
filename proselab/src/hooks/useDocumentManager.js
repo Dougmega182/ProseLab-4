@@ -6,8 +6,13 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import * as db from "../services/db.js";
+import * as serverDb from "../services/serverDb.js";
 import { migrateIfNeeded } from "../services/migration.js";
 import { loadProjectStateBundle } from "../services/projectState.js";
+
+// Determine storage provider based on environment
+const isServerMode = window.location.hostname === 'proselab.local' || window.location.hostname === 'localhost' && window.location.port === '';
+const storage = isServerMode ? serverDb : db;
 
 export function useDocumentManager() {
   const [projects, setProjects] = useState([]);
@@ -44,14 +49,27 @@ export function useDocumentManager() {
     }
   }, []);
 
-  // Build tree structure for sidebar
+  // Build tree structures for sidebar
   const tree = useMemo(() => {
     if (!selectedProjectId) return [];
     return [...chapters]
+      .filter(c => !c.isDraft)
       .sort((a, b) => (a.order || 0) - (b.order || 0))
       .map(chapter => ({
       ...chapter,
-      scenes: scenes.filter(s => s.chapterId === chapter.id)
+      scenes: scenes.filter(s => s.chapterId === chapter.id && !s.isDraft)
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+    }));
+  }, [chapters, scenes, selectedProjectId]);
+
+  const draftTree = useMemo(() => {
+    if (!selectedProjectId) return [];
+    return [...chapters]
+      .filter(c => c.isDraft)
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map(chapter => ({
+      ...chapter,
+      scenes: scenes.filter(s => s.chapterId === chapter.id && s.isDraft)
         .sort((a, b) => (a.order || 0) - (b.order || 0))
     }));
   }, [chapters, scenes, selectedProjectId]);
@@ -61,23 +79,26 @@ export function useDocumentManager() {
     async function init() {
       setLoading(true);
       try {
-        await db.initDB();
-        const migration = await migrateIfNeeded();
+        if (storage === db) await db.initDB();
+        const migration = storage === db ? await migrateIfNeeded() : null;
 
-        const allProjects = await db.listProjects();
+        const allProjects = await storage.listProjects();
         setProjects(allProjects);
 
         if (allProjects.length > 0) {
           const defaultProject = migration?.projectId || allProjects[0].id;
           setSelectedProjectId(defaultProject);
-          const bundle = await loadProjectStateBundle(db, defaultProject, migration?.sceneId || null);
+          const bundle = await loadProjectStateBundle(storage, defaultProject, migration?.sceneId || null);
           applyLoadedProjectState(bundle);
 
           // Load Shadow Actions and Metrics
-          const [actions, metrics] = await Promise.all([
-            db.perform("shadow_actions", "readonly", s => s.getAll()),
-            db.perform("composition_metrics", "readonly", s => s.getAll())
-          ]);
+          let actions = [], metrics = [];
+          if (storage === db) {
+            [actions, metrics] = await Promise.all([
+              db.perform("shadow_actions", "readonly", s => s.getAll()),
+              db.perform("composition_metrics", "readonly", s => s.getAll())
+            ]);
+          }
           setShadowActions(actions || []);
           setCompositionMetrics(metrics || []);
         }
@@ -94,7 +115,7 @@ export function useDocumentManager() {
   useEffect(() => {
     if (!selectedProjectId) return;
 
-    loadProjectStateBundle(db, selectedProjectId)
+    loadProjectStateBundle(storage, selectedProjectId)
       .then(applyLoadedProjectState)
       .catch((error) => {
         console.error("Failed to load selected project state", error);
@@ -108,9 +129,9 @@ export function useDocumentManager() {
 
   const refreshProjectState = useCallback(async (projectId, preferredSceneId = null) => {
     if (!projectId) return;
-    const bundle = await loadProjectStateBundle(db, projectId, preferredSceneId);
+    const bundle = await loadProjectStateBundle(storage, projectId, preferredSceneId);
 
-    setProjects(await db.listProjects());
+    setProjects(await storage.listProjects());
     setSelectedProjectId(projectId);
     applyLoadedProjectState(bundle);
   }, [applyLoadedProjectState]);
@@ -126,8 +147,8 @@ export function useDocumentManager() {
       voice: {},
       ...data
     };
-    await db.createProject(newProject);
-    const all = await db.listProjects();
+    await storage.createProject(newProject);
+    const all = await storage.listProjects();
     setProjects(all);
     setSelectedProjectId(newProject.id);
     return newProject;
@@ -141,9 +162,9 @@ export function useDocumentManager() {
     const resolvedProjectId = projectId || selectedProjectId;
     if (!resolvedProjectId) return;
 
-    await db.deleteProjectCascade(resolvedProjectId);
+    await storage.deleteProjectCascade(resolvedProjectId);
 
-    const remainingProjects = await db.listProjects();
+    const remainingProjects = await storage.listProjects();
     setProjects(remainingProjects);
 
     if (remainingProjects.length === 0) {
@@ -162,8 +183,13 @@ export function useDocumentManager() {
     await refreshProjectState(remainingProjects[0].id, null);
   }, [selectedProjectId, refreshProjectState]);
 
-  const createChapter = useCallback(async (arg1 = "New Chapter") => {
-    let chapterData = typeof arg1 === 'object' ? arg1 : { title: arg1 };
+  const createChapter = useCallback(async (arg1 = "New Chapter", arg2) => {
+    let chapterData;
+    if (typeof arg1 === 'string' && typeof arg2 === 'object') {
+      chapterData = { ...arg2, projectId: arg1 };
+    } else {
+      chapterData = typeof arg1 === 'object' ? arg1 : { title: arg1 };
+    }
     const resolvedProjectId = chapterData.projectId || selectedProjectId;
     if (!resolvedProjectId) return null;
     
@@ -174,8 +200,8 @@ export function useDocumentManager() {
       order: chapterData.order ?? chapters.length,
       ...chapterData
     };
-    await db.createChapter(newChapter);
-    const updatedChapters = await db.listChaptersByProject(newChapter.projectId);
+    await storage.createChapter(newChapter);
+    const updatedChapters = await storage.listChaptersByProject(newChapter.projectId);
     if (newChapter.projectId === selectedProjectId) {
         setChapters(updatedChapters);
     }
@@ -183,7 +209,12 @@ export function useDocumentManager() {
   }, [selectedProjectId, chapters.length]);
 
   const createScene = useCallback(async (arg1, arg2 = "New Scene") => {
-    let sceneData = typeof arg1 === 'object' ? arg1 : { chapterId: arg1, title: arg2 };
+    let sceneData;
+    if (typeof arg1 === 'string' && typeof arg2 === 'object') {
+      sceneData = { ...arg2, projectId: arg1 };
+    } else {
+      sceneData = typeof arg1 === 'object' ? arg1 : { chapterId: arg1, title: arg2 };
+    }
     const resolvedProjectId = sceneData.projectId || selectedProjectId;
     if (!resolvedProjectId) return null;
     
@@ -196,8 +227,8 @@ export function useDocumentManager() {
       order: sceneData.order ?? scenes.filter(s => s.chapterId === sceneData.chapterId).length,
       ...sceneData
     };
-    await db.createScene(newScene);
-    const updatedScenes = await db.listScenesByProject(newScene.projectId);
+    await storage.createScene(newScene);
+    const updatedScenes = await storage.listScenesByProject(newScene.projectId);
     if (newScene.projectId === selectedProjectId) {
         setScenes(updatedScenes);
         setSelectedSceneId(newScene.id);
@@ -206,10 +237,10 @@ export function useDocumentManager() {
   }, [selectedProjectId, scenes]);
 
   const deleteChapter = useCallback(async (id) => {
-    await db.deleteChapter(id);
+    await storage.deleteChapter(id);
     const [newChapters, newScenes] = await Promise.all([
-      db.listChaptersByProject(selectedProjectId),
-      db.listScenesByProject(selectedProjectId)
+      storage.listChaptersByProject(selectedProjectId),
+      storage.listScenesByProject(selectedProjectId)
     ]);
     setChapters(newChapters);
     setScenes(newScenes);
@@ -219,20 +250,20 @@ export function useDocumentManager() {
   }, [selectedProjectId, selectedSceneId]);
 
   const deleteScene = useCallback(async (id) => {
-    await db.deleteScene(id);
-    const updatedScenes = await db.listScenesByProject(selectedProjectId);
+    await storage.deleteScene(id);
+    const updatedScenes = await storage.listScenesByProject(selectedProjectId);
     setScenes(updatedScenes);
     if (selectedSceneId === id) setSelectedSceneId(null);
   }, [selectedProjectId, selectedSceneId]);
 
   const updateSceneText = useCallback(async (id, text) => {
-    await db.updateScene(id, { text });
+    await storage.updateScene(id, { text });
     // Update local state optimistically
     setScenes(prev => prev.map(s => s.id === id ? { ...s, text } : s));
   }, []);
 
   const saveSceneDraft = useCallback(async (id, updates) => {
-    await db.updateScene(id, updates);
+    await storage.updateScene(id, updates);
     setScenes(prev => prev.map(scene => scene.id === id ? { ...scene, ...updates } : scene));
   }, []);
 
@@ -249,11 +280,11 @@ export function useDocumentManager() {
 
     // Batch update order for all scenes in the target chapter
     const updatePromises = otherScenes.map((s, idx) =>
-      db.updateScene(s.id, { chapterId: targetChapterId, order: idx })
+      storage.updateScene(s.id, { chapterId: targetChapterId, order: idx })
     );
 
     await Promise.all(updatePromises);
-    const updatedScenes = await db.listScenesByProject(selectedProjectId);
+    const updatedScenes = await storage.listScenesByProject(selectedProjectId);
     setScenes(updatedScenes);
   }, [selectedProjectId, scenes]);
 
@@ -268,22 +299,22 @@ export function useDocumentManager() {
     otherChapters.splice(newIndex, 0, chapterToMove);
 
     const updatePromises = otherChapters.map((c, idx) =>
-      db.updateChapter(c.id, { order: idx })
+      storage.updateChapter(c.id, { order: idx })
     );
 
     await Promise.all(updatePromises);
-    const updatedChapters = await db.listChaptersByProject(selectedProjectId);
+    const updatedChapters = await storage.listChaptersByProject(selectedProjectId);
     setChapters(updatedChapters);
   }, [selectedProjectId, chapters]);
 
   const updateSceneMetadata = useCallback(async (id, metadata) => {
-    await db.updateScene(id, metadata);
+    await storage.updateScene(id, metadata);
     setScenes(prev => prev.map(s => s.id === id ? { ...s, ...metadata } : s));
   }, []);
 
   const updateProjectMetadata = useCallback(async (updates) => {
     if (!selectedProjectId) return;
-    await db.updateProject(selectedProjectId, updates);
+    await storage.updateProject(selectedProjectId, updates);
     if (updates.core) setCore(prev => ({ ...prev, ...updates.core }));
     if (updates.chars) setChars(updates.chars);
     if (updates.rules) setRules(updates.rules);
@@ -294,8 +325,8 @@ export function useDocumentManager() {
 
   const updateProjectData = useCallback(async (projectId, updates) => {
     if (!projectId) return;
-    await db.updateProject(projectId, updates);
-    const refreshed = await db.listProjects();
+    await storage.updateProject(projectId, updates);
+    const refreshed = await storage.listProjects();
     setProjects(refreshed);
 
     if (projectId === selectedProjectId) {
@@ -331,19 +362,90 @@ export function useDocumentManager() {
     await updateProjectMetadata({ rules: newRules });
   }, [rules, updateProjectMetadata]);
 
+  const redistributeBeats = useCallback((beatsList) => {
+    if (beatsList.length === 0) return [];
+    if (beatsList.length === 1) return [{ ...beatsList[0], pct: 100 }];
+    return beatsList.map((beat, index) => ({
+      ...beat,
+      pct: Math.round((index / (beatsList.length - 1)) * 100)
+    }));
+  }, []);
+
+  const redistributeScenes = useCallback((scenesList) => {
+    if (scenesList.length === 0) return [];
+    if (scenesList.length === 1) return [{ ...scenesList[0], pct: 100, order: 0 }];
+    return scenesList.map((scene, index) => ({
+      ...scene,
+      order: index,
+      pct: Math.round((index / (scenesList.length - 1)) * 100)
+    }));
+  }, []);
+
   const saveBeat = useCallback(async (beat) => {
-    const newBeats = beats.find(b => b.id === beat.id)
+    let newBeats = beats.find(b => b.id === beat.id)
       ? beats.map(b => b.id === beat.id ? beat : b)
       : [...beats, { ...beat, id: beat.id || Date.now() }];
-    // Enforce order by pct
+    
+    // Sort by existing pct first to maintain relative order before redistribution
     newBeats.sort((a, b) => (parseInt(a.pct) || 0) - (parseInt(b.pct) || 0));
+    
+    // Auto-redistribute percentages evenly across 0-100%
+    newBeats = redistributeBeats(newBeats);
+    
     await updateProjectMetadata({ beats: newBeats });
-  }, [beats, updateProjectMetadata]);
+  }, [beats, updateProjectMetadata, redistributeBeats]);
 
   const deleteBeat = useCallback(async (id) => {
-    const newBeats = beats.filter(b => b.id !== id);
+    let newBeats = beats.filter(b => b.id !== id);
+    // Auto-redistribute after deletion
+    newBeats = redistributeBeats(newBeats);
     await updateProjectMetadata({ beats: newBeats });
-  }, [beats, updateProjectMetadata]);
+  }, [beats, updateProjectMetadata, redistributeBeats]);
+
+  const moveBeat = useCallback(async (beatId, direction) => {
+    const idx = beats.findIndex(b => b.id === beatId);
+    if (idx === -1) return;
+    const target = direction === 'up' ? idx - 1 : idx + 1;
+    if (target < 0 || target >= beats.length) return;
+    const next = [...beats];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    await updateProjectMetadata({ beats: redistributeBeats(next) });
+  }, [beats, updateProjectMetadata, redistributeBeats]);
+
+  const reorderBeats = useCallback(async (reorderedBeats) => {
+    await updateProjectMetadata({ beats: redistributeBeats(reorderedBeats) });
+  }, [updateProjectMetadata, redistributeBeats]);
+
+  const moveScene = useCallback(async (sceneId, direction) => {
+    const scene = scenes.find(s => s.id === sceneId);
+    if (!scene) return;
+
+    // Only reorder within the same chapter
+    const siblings = scenes
+      .filter(s => s.chapterId === scene.chapterId)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    const idx = siblings.findIndex(s => s.id === sceneId);
+    if (idx === -1) return;
+    const target = direction === 'up' ? idx - 1 : idx + 1;
+    if (target < 0 || target >= siblings.length) return;
+
+    [siblings[idx], siblings[target]] = [siblings[target], siblings[idx]];
+    const redistributed = redistributeScenes(siblings);
+
+    // Persist order changes for affected chapter only
+    await Promise.all(redistributed.map(s => storage.updateScene(s.id, { order: s.order, pct: s.pct })));
+    // Merge back into full scene list
+    const updatedIds = new Set(redistributed.map(s => s.id));
+    const merged = scenes.map(s => updatedIds.has(s.id) ? redistributed.find(r => r.id === s.id) : s);
+    setScenes(merged);
+  }, [scenes, redistributeScenes]);
+
+  const reorderScenes = useCallback(async (reorderedScenes) => {
+    const redistributed = redistributeScenes(reorderedScenes);
+    await Promise.all(redistributed.map(s => storage.updateScene(s.id, { order: s.order, pct: s.pct })));
+    setScenes(redistributed);
+  }, [redistributeScenes]);
 
   // --- STORAGE ALIASES FOR ORCHESTRATOR ---
   
@@ -364,18 +466,18 @@ export function useDocumentManager() {
   }, [saveCharacter]);
 
   const updateChapter = useCallback(async (projectId, id, updates) => {
-    await db.updateChapter(id, updates);
+    await storage.updateChapter(id, updates);
     if (projectId === selectedProjectId) {
       setChapters(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
     }
   }, [selectedProjectId]);
 
   const getChapter = useCallback(async (projectId, id) => {
-    return await db.getChapter(id);
+    return await storage.getChapter(id);
   }, []);
 
   const updateCharacter = useCallback(async (projectId, id, updates) => {
-    const project = await db.getProject(projectId || selectedProjectId);
+    const project = await storage.getProject(projectId || selectedProjectId);
     const existingChars = project?.chars || [];
     const existing = existingChars.find(c => c.id === id);
     if (existing) {
@@ -389,7 +491,7 @@ export function useDocumentManager() {
   }, [chars]);
 
   const updateWorldRule = useCallback(async (projectId, id, updates) => {
-    const project = await db.getProject(projectId || selectedProjectId);
+    const project = await storage.getProject(projectId || selectedProjectId);
     const existingRules = project?.rules || [];
     const existing = existingRules.find(r => r.id === id);
     if (existing) {
@@ -404,62 +506,68 @@ export function useDocumentManager() {
 
   const getBeats = useCallback(async (projectId) => {
     if (!projectId || projectId === selectedProjectId) return beats;
-    const project = await db.getProject(projectId);
+    const project = await storage.getProject(projectId);
     return project?.beats || [];
   }, [beats, selectedProjectId]);
 
   const getWorldRules = useCallback(async (projectId) => {
     if (!projectId || projectId === selectedProjectId) return rules;
-    const project = await db.getProject(projectId);
+    const project = await storage.getProject(projectId);
     return project?.rules || [];
   }, [rules, selectedProjectId]);
 
   const getCharacters = useCallback(async (projectId) => {
     if (!projectId || projectId === selectedProjectId) return chars;
-    const project = await db.getProject(projectId);
+    const project = await storage.getProject(projectId);
     return project?.chars || [];
   }, [chars, selectedProjectId]);
 
   // --- NEW GENERIC DOCUMENT METHODS ---
 
   const saveDocument = useCallback(async (doc) => {
-    const id = await db.createDocument(doc);
-    return id;
+    if (storage === db) {
+        const id = await db.createDocument(doc);
+        return id;
+    }
+    return null; // Server document storage not yet implemented
   }, []);
 
   const updateDocument = useCallback(async (id, updates) => {
-    await db.updateDocument(id, updates);
+    if (storage === db) await db.updateDocument(id, updates);
   }, []);
 
   const findDocuments = useCallback(async (criteria) => {
-    return await db.findDocuments(criteria);
+    if (storage === db) return await db.findDocuments(criteria);
+    return [];
   }, []);
 
   const createNote = useCallback(async (projectId, note) => {
-    return await db.createDocument({ ...note, projectId, type: 'note', createdAt: Date.now(), updatedAt: Date.now() });
+    if (storage === db) return await db.createDocument({ ...note, projectId, type: 'note', createdAt: Date.now(), updatedAt: Date.now() });
+    return null;
   }, []);
 
   const getProject = useCallback(async (projectId) => {
     const resolvedProjectId = projectId || selectedProjectId;
     if (!resolvedProjectId) return null;
-    return await db.getProject(resolvedProjectId);
+    return await storage.getProject(resolvedProjectId);
   }, [selectedProjectId]);
 
   const listChapters = useCallback(async (projectId) => {
     const resolvedProjectId = projectId || selectedProjectId;
     if (!resolvedProjectId) return [];
-    return await db.listChaptersByProject(resolvedProjectId);
+    return await storage.listChaptersByProject(resolvedProjectId);
   }, [selectedProjectId]);
 
   const listScenes = useCallback(async (chapterIdOrProjectId) => {
     if (!chapterIdOrProjectId) return [];
     if (chapterIdOrProjectId === selectedProjectId || chapters.find(c => c.projectId === chapterIdOrProjectId)) {
-        return await db.listScenesByProject(chapterIdOrProjectId);
+        return await storage.listScenesByProject(chapterIdOrProjectId);
     }
     return scenes.filter(s => s.chapterId === chapterIdOrProjectId);
   }, [selectedProjectId, scenes, chapters]);
 
   const findCharacterByName = useCallback(async (projectId, name) => {
+    if (storage !== db) return null;
     const docs = await db.findDocuments({ projectId, type: 'character' });
     return docs.find(d => {
         const content = typeof d.content === 'string' ? JSON.parse(d.content) : d.content;
@@ -521,36 +629,35 @@ export function useDocumentManager() {
 
   // Orchestrator compatibility aliases (STABLE - NOT CALLING HOOKS)
   const orchestratorAliases = useMemo(() => ({
-    createChapter: (projectId, data) => createChapter({ ...data, projectId }),
-    createScene: (projectId, data) => createScene({ ...data, projectId }),
     createCharacter: async (projectId, data) => {
-      const project = await db.getProject(projectId);
+      const project = await storage.getProject(projectId);
       if (!project) throw new Error("Project not found");
       const nextChars = [...(project.chars || []), { ...data, id: data.id || crypto.randomUUID() }];
-      await updateProjectData(projectId, { chars: nextChars });
+      await storage.updateProject(projectId, { chars: nextChars });
       return nextChars[nextChars.length - 1];
     },
     createWorldRule: async (projectId, data) => {
-      const project = await db.getProject(projectId);
+      const project = await storage.getProject(projectId);
       if (!project) throw new Error("Project not found");
       const nextRules = [...(project.rules || []), { ...data, id: data.id || crypto.randomUUID() }];
-      await updateProjectData(projectId, { rules: nextRules });
+      await storage.updateProject(projectId, { rules: nextRules });
       return nextRules[nextRules.length - 1];
     },
     createBeat: async (projectId, data) => {
-      const project = await db.getProject(projectId);
+      const project = await storage.getProject(projectId);
       if (!project) throw new Error("Project not found");
       const nextBeats = [...(project.beats || []), { ...data, id: data.id || crypto.randomUUID() }];
-      await updateProjectData(projectId, { beats: nextBeats });
+      await storage.updateProject(projectId, { beats: nextBeats });
       return nextBeats[nextBeats.length - 1];
     }
-  }), [createChapter, createScene, updateProjectData]);
+  }), [updateProjectData]);
 
   return {
     projects,
     selectedProjectId,
     selectedSceneId,
     tree,
+    draftTree,
     loading,
     selectProject,
     refreshProjectState,
@@ -572,6 +679,10 @@ export function useDocumentManager() {
     deleteRule,
     saveBeat,
     deleteBeat,
+    moveBeat,
+    reorderBeats,
+    moveScene,
+    reorderScenes,
     scenes,
     core,
     chars,

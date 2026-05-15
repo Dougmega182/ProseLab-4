@@ -46,7 +46,7 @@ Lock the scene brief first:
 
 Important:
 - the Critic can reject and force rewrite passes
-- Gemini may be configured, but it is not the enforced final stage of the main create loop
+- Gemini challenger gate is enforced on `APPROVE` in `CREATE` when `VITE_GEMINI_KEY` is configured
 
 ### 3. Editorial Modes
 
@@ -54,6 +54,26 @@ Important:
 - `ENGINEER`: structure and world-shape review
 - `MARKET`: market-facing evaluation
 - `VERDICT`: higher-level editorial synthesis
+
+## Draft Expansion Insertions (Galaxy AI)
+
+The Write tab includes an **Expansion Draft Insertion** panel for chapter expansion passes.
+
+Workflow:
+1. Select the source scene in the manuscript tree.
+2. Paste the expansion plan/brief.
+3. Click **Suggest Insertion Placement** to let Opus recommend start/end paragraph boundaries.
+4. Adjust boundaries if needed.
+5. Click **Generate Expansion Draft**.
+
+Runtime behavior:
+- Uses Galaxy AI polling path (non-streaming).
+- Automatically continues on output truncation until completion marker.
+- Deduplicates overlap across continuation passes.
+- Writes output into `Editorial Drafts` as draft scenes.
+- Labels output with chapter and insertion boundaries (paragraph + line references).
+- Expansion panel layout is responsive to prevent controls running off-page.
+- Autosaves each pass and logs start/checkpoint/complete/error records via document logs.
 
 ## Tech Stack
 

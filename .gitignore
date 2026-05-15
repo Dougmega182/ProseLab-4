@@ -7,3 +7,4 @@ icon/
 client_secret*.json
 node_modules/
 galaxy_cli.py
+galaxy_cli copy.py

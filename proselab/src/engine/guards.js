@@ -88,6 +88,10 @@ export function validateOutputContract(text) {
     violations.push("INSTRUCTION_BLEED_DETECTED");
   }
 
+  if (/\b(SCENE INTENT|REPAIR OBJECTIVE|TRANSFORMATION RULES|SPECIFIC REPAIR INSTRUCTIONS|CURRENT TEXT|ORIGINAL TEXT|ORIGINAL CONTEXT)\b/i.test(text)) {
+    violations.push("PROMPT_LEAKAGE_DETECTED");
+  }
+
   return {
     valid: violations.length === 0,
     violations

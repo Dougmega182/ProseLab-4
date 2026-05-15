@@ -1,0 +1,7 @@
+node_modules
+pending-docs
+.git
+.vscode
+.env
+Dockerfile
+.dockerignore

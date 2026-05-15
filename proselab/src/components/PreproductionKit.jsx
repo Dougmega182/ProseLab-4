@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { PreflightBrief } from "./Dashboard.jsx";
+
 
 const PRE_TABS = ["core", "world", "dossiers", "beats", "inventory", "preflight", "settings"];
 
@@ -95,6 +96,8 @@ export function PreproductionKit({
   beats,
   voice,
   scenes,
+  chapters = [],
+  storage,
   shadowActions,
   applyAgentAction,
   removeShadowAction,
@@ -105,15 +108,82 @@ export function PreproductionKit({
   deleteRule,
   saveBeat,
   deleteBeat,
+  moveBeat,
+  reorderBeats,
+  moveScene,
+  reorderScenes,
   onEditChar,
   onEditScene,
+  onSelectScene,
   envStatusState
 }) {
   const [preTab, setPreTab] = useState("core");
   const [preflightId, setPreflightId] = useState("");
+  const [draggedBeatIndex, setDraggedBeatIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [draggedSceneIndex, setDraggedSceneIndex] = useState(null);
+  const [sceneDragOverIndex, setSceneDragOverIndex] = useState(null);
+
+  useEffect(() => {
+    if (onSelectScene && preflightId) {
+      onSelectScene(preflightId);
+    }
+  }, [preflightId, onSelectScene]);
 
   const updatePre = (section, key, value) => {
     updateProjectMetadata({ [section]: { ...((section === "core" ? core : voice) || {}), [key]: value } });
+  };
+
+  const handleBeatDragStart = (index) => (e) => {
+    setDraggedBeatIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleBeatDragOver = (index) => (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) setDragOverIndex(index);
+  };
+
+  const handleBeatDrop = (dropIndex) => (e) => {
+    e.preventDefault();
+    if (draggedBeatIndex === null || draggedBeatIndex === dropIndex) {
+      setDraggedBeatIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+    const reordered = [...sortedBeats];
+    const [moved] = reordered.splice(draggedBeatIndex, 1);
+    reordered.splice(dropIndex, 0, moved);
+    reorderBeats(reordered);
+    setDraggedBeatIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleSceneDragStart = (index) => (e) => {
+    setDraggedSceneIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleSceneDragOver = (index) => (e) => {
+    e.preventDefault();
+    if (sceneDragOverIndex !== index) setSceneDragOverIndex(index);
+  };
+
+  const handleSceneDrop = (dropIndex) => (e) => {
+    e.preventDefault();
+    if (draggedSceneIndex === null || draggedSceneIndex === dropIndex) {
+      setDraggedSceneIndex(null);
+      setSceneDragOverIndex(null);
+      return;
+    }
+    const reordered = [...sortedScenes];
+    const [moved] = reordered.splice(draggedSceneIndex, 1);
+    reordered.splice(dropIndex, 0, moved);
+    reorderScenes(reordered);
+    setDraggedSceneIndex(null);
+    setSceneDragOverIndex(null);
   };
 
   const sortedBeats = useMemo(
@@ -121,9 +191,20 @@ export function PreproductionKit({
     [beats]
   );
 
+  const chapterOrderMap = useMemo(() => {
+    const map = new Map();
+    chapters.forEach(c => map.set(c.id, Number(c.order ?? 0)));
+    return map;
+  }, [chapters]);
+
   const sortedScenes = useMemo(
-    () => [...scenes].sort((a, b) => Number(a.order || 0) - Number(b.order || 0)),
-    [scenes]
+    () => [...scenes].sort((a, b) => {
+      const chA = chapterOrderMap.get(a.chapterId) ?? 9999;
+      const chB = chapterOrderMap.get(b.chapterId) ?? 9999;
+      if (chA !== chB) return chA - chB;
+      return Number(a.order || 0) - Number(b.order || 0);
+    }),
+    [scenes, chapterOrderMap]
   );
 
   const topRoles = useMemo(() => {
@@ -608,12 +689,26 @@ export function PreproductionKit({
             </div>
 
             <div className="beats-timeline">
-              {sortedBeats.map(b => {
+              {sortedBeats.map((b, i) => {
                 const reviewIssues = getBeatReviewIssues(b);
+                const isDragging = draggedBeatIndex === i;
+                const isOver = dragOverIndex === i;
                 return (
-                <div key={b.id} className="beat-card">
+                <div 
+                  key={b.id} 
+                  className={`beat-card ${isDragging ? "is-dragging" : ""} ${isOver ? "is-over" : ""}`}
+                  draggable
+                  onDragStart={handleBeatDragStart(i)}
+                  onDragOver={handleBeatDragOver(i)}
+                  onDrop={handleBeatDrop(i)}
+                  onDragEnd={() => { setDraggedBeatIndex(null); setDragOverIndex(null); }}
+                >
                   <div className="beat-card-rail">
                     <div className="beat-pct">{cleanText(b.pct, "0")}%</div>
+                    <div className="beat-reorder-controls">
+                      <button className="btn-reorder" onClick={() => moveBeat(b.id, 'up')} disabled={i === 0}>▲</button>
+                      <button className="btn-reorder" onClick={() => moveBeat(b.id, 'down')} disabled={i === sortedBeats.length - 1}>▼</button>
+                    </div>
                   </div>
                   <div className="beat-card-body">
                     <div className="asset-provenance">
@@ -674,24 +769,46 @@ export function PreproductionKit({
               <table className="scene-table">
                 <thead>
                   <tr>
-                    <th>Scene</th>
+                    <th style={{ width: "40px" }}></th>
+                    <th style={{ width: "60px" }}>Pos</th>
                     <th>Title</th>
-                    <th>Readiness</th>
+                    <th style={{ width: "80px" }}>Ready</th>
                     <th>Causality</th>
                     <th>Review</th>
                     <th>Status</th>
+                    <th style={{ width: "60px" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedScenes.map(s => {
+                  {sortedScenes.map((s, i) => {
                     const reviewIssues = getSceneReviewIssues(s);
                     const readiness = getSceneReadiness(s);
+                    const parentChapter = chapters.find(c => c.id === s.chapterId);
+                    const isDragging = draggedSceneIndex === i;
+                    const isOver = sceneDragOverIndex === i;
+                    
                     return (
-                    <tr key={s.id} onClick={() => onEditScene(s)} className={reviewIssues.length > 0 ? "scene-row-needs-review" : ""}>
-                      <td>#{cleanText(s.order, "?")}</td>
+                    <tr 
+                      key={s.id} 
+                      onClick={() => onEditScene(s)} 
+                      className={`${reviewIssues.length > 0 ? "scene-row-needs-review" : ""} ${isDragging ? "is-dragging" : ""} ${isOver ? "is-over" : ""}`}
+                      draggable
+                      onDragStart={handleSceneDragStart(i)}
+                      onDragOver={handleSceneDragOver(i)}
+                      onDrop={handleSceneDrop(i)}
+                      onDragEnd={() => { setDraggedSceneIndex(null); setSceneDragOverIndex(null); }}
+                    >
+                      <td className="drag-handle-cell">⋮⋮</td>
+                      <td style={{ textAlign: "center" }}>
+                        <div className="scene-pos-chip">{cleanText(s.pct, "0")}%</div>
+                      </td>
                       <td>
                         <div className="scene-table-title">{inferSceneLabel(s)}</div>
-                        <div className="scene-table-subtitle">{cleanText(firstFilled(s.location, s.time), "No location or time lock")}</div>
+                        <div className="scene-table-subtitle">
+                          {parentChapter ? <strong style={{ color: "var(--accent-primary)" }}>{parentChapter.title}</strong> : null}
+                          {parentChapter ? " | " : ""}
+                          {cleanText(firstFilled(s.location, s.time), "No location or time lock")}
+                        </div>
                       </td>
                       <td>
                         <span className={`readiness-pill ${readiness >= 80 ? "ready" : readiness >= 50 ? "partial" : "weak"}`}>
@@ -715,6 +832,20 @@ export function PreproductionKit({
                           {cleanText(s.status, "Unknown")}
                         </span>
                       </td>
+                      <td>
+                        <div className="scene-reorder-btns">
+                          <button 
+                            className="btn-reorder-sm" 
+                            onClick={(e) => { e.stopPropagation(); moveScene(s.id, 'up'); }}
+                            disabled={i === 0}
+                          >▲</button>
+                          <button 
+                            className="btn-reorder-sm" 
+                            onClick={(e) => { e.stopPropagation(); moveScene(s.id, 'down'); }}
+                            disabled={i === sortedScenes.length - 1}
+                          >▼</button>
+                        </div>
+                      </td>
                     </tr>
                   )})}
                 </tbody>
@@ -723,6 +854,8 @@ export function PreproductionKit({
             {scenes.length === 0 ? <div className="output-placeholder">No scenes defined.</div> : null}
           </div>
         )}
+
+
 
         {preTab === "preflight" && (
           <div className="preproduction-section">
@@ -736,9 +869,13 @@ export function PreproductionKit({
             <div className="grid-1 preflight-stack">
               <select className="field-select" value={preflightId} onChange={e => setPreflightId(e.target.value)}>
                 <option value="">Select scene to audit...</option>
-                {sortedScenes.map(s => (
-                  <option key={s.id} value={s.id}>{inferSceneLabel(s)}</option>
-                ))}
+                {sortedScenes.map(s => {
+                  const parentCh = chapters.find(c => c.id === s.chapterId);
+                  const chLabel = parentCh ? `${parentCh.title} > ` : "";
+                  return (
+                    <option key={s.id} value={s.id}>{chLabel}{inferSceneLabel(s)}</option>
+                  );
+                })}
               </select>
 
               {preflightId ? (

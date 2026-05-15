@@ -1,0 +1,63 @@
+services:
+  # Database
+  db:
+    image: postgres:latest
+    container_name: proselab_db
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-proselab_secure_pass}
+      POSTGRES_DB: proselab
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+  # Node.js Ingestion Server
+  node-app:
+    build: ./ingestion-server
+    container_name: proselab_node
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - OPENAI_API_KEY=${VITE_OPENAI_KEY}
+      - DATABASE_URL=postgres://postgres:${DB_PASSWORD:-proselab_secure_pass}@db:5432/proselab
+    depends_on:
+      - db
+    volumes:
+      - ./ingestion-server:/app
+      - /app/node_modules
+      - ./ingestion-server/pending-docs:/app/pending-docs
+
+  # Python Service
+  python-app:
+    build: ./python-service
+    container_name: proselab_python
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - GALAXY_AI_API_KEY=${GALAXY_AI_API_KEY}
+    depends_on:
+      - db
+
+  # Nginx Reverse Proxy & React Frontend (ProseLab)
+  proxy:
+    build:
+      context: ./proselab
+      args:
+        - VITE_OLLAMA_MODEL=${VITE_OLLAMA_MODEL}
+        - VITE_OPENAI_KEY=${VITE_OPENAI_KEY}
+        - VITE_GEMINI_KEY=${VITE_GEMINI_KEY}
+    container_name: proselab_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - VITE_OLLAMA_MODEL=${VITE_OLLAMA_MODEL}
+      - VITE_OPENAI_KEY=${VITE_OPENAI_KEY}
+      - VITE_GEMINI_KEY=${VITE_GEMINI_KEY}
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: always
+
+volumes:
+  postgres_data:

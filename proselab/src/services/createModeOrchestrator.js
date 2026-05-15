@@ -1,6 +1,7 @@
 import { runPipeline } from "../engine/pipeline.js";
 import { mapVoiceToPromptSpec } from "../engine/rewrite.js";
 import { ShadowManager } from "../engine/shadowLayer.js";
+import { runChallengerGate } from "../engine/challengerGate.js";
 
 function buildSceneIntent(scene) {
   const requiredFields = [scene.output, scene.causality, scene.stakes];
@@ -47,9 +48,10 @@ export async function runCreateModeOrchestrator({
   onBlocked,
   onComplete,
   onError,
+  geminiKey = null,
 }) {
   const activeScene = preproduction.scenes.find(
-    (s) => s.id === parseInt(preflightId)
+    (s) => String(s.id) === String(preflightId)
   );
 
   if (!activeScene) {
@@ -117,21 +119,52 @@ export async function runCreateModeOrchestrator({
     return;
   }
 
+  // ── GEMINI CHALLENGER GATE (hard gate on APPROVE) ──────────────
+  let challengerResult = null;
+  let finalVerdict = res.critique?.verdict;
+  let finalFailures = res.critique?.failures || [];
+
+  if (finalVerdict === "APPROVE" && geminiKey) {
+    const sceneIntent = buildSceneIntent(
+      preproduction.scenes.find(s => String(s.id) === String(preflightId))
+    );
+
+    challengerResult = await runChallengerGate({
+      prose: res.final,
+      sceneIntent,
+      geminiKey,
+      onStage,
+    });
+
+    if (!challengerResult.confirmed) {
+      // Gemini vetoed. Downgrade to REWRITE.
+      finalVerdict = "REWRITE";
+      finalFailures = [
+        ...finalFailures,
+        ...challengerResult.challenger.fatal_flaws.map(f => ({
+          type: "GEMINI_VETO",
+          reason: f,
+        })),
+      ];
+    }
+  }
+
   onComplete({
     analysis: res.analysis,
     delta: res.delta,
     draft: res.traces?.[0]?.draft || "",
     final: res.final,
     critique: {
-      verdict: res.critique?.verdict,
+      verdict: finalVerdict,
       score: res.critique?.score,
-      failures: res.critique?.failures,
+      failures: finalFailures,
       intent: res.intent,
       intent_verdict: res.critique?.intent_verdict,
       intent_alignment: res.critique?.intent_alignment,
       intent_failures: res.critique?.intent_failures,
       attempts: res.attempts,
       traces: res.traces,
+      challenger: challengerResult?.challenger || null,
     },
   });
 }

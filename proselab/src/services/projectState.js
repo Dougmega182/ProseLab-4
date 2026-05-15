@@ -3,7 +3,11 @@ export function resolvePreferredSceneId(projectScenes = [], preferredSceneId = n
     return preferredSceneId;
   }
 
-  return projectScenes.length > 0 ? projectScenes[0].id : null;
+  if (projectScenes.length > 0) {
+    return projectScenes[0].id;
+  }
+
+  return null;
 }
 
 export async function loadProjectStateBundle(dataSource, projectId, preferredSceneId = null) {

@@ -45,13 +45,16 @@ export function getCostStats(COST_RATES) {
     totals.inputTokens += e.inputTokens || 0;
     totals.outputTokens += e.outputTokens || 0;
     const rate = COST_RATES[e.provider] || { input: 0, output: 0 };
-    totals.cost += (e.inputTokens / 1000) * rate.input + (e.outputTokens / 1000) * rate.output;
+    // Flat per-call cost (e.g. Galaxy) + per-token cost (e.g. OpenAI)
+    totals.cost += (rate.perCall || 0) +
+      (e.inputTokens / 1000) * rate.input + (e.outputTokens / 1000) * rate.output;
   });
 
   const allTime = { calls: log.length, cost: 0 };
   log.forEach((e) => {
     const rate = COST_RATES[e.provider] || { input: 0, output: 0 };
-    allTime.cost += (e.inputTokens / 1000) * rate.input + (e.outputTokens / 1000) * rate.output;
+    allTime.cost += (rate.perCall || 0) +
+      (e.inputTokens / 1000) * rate.input + (e.outputTokens / 1000) * rate.output;
   });
 
   return { today: totals, allTime };

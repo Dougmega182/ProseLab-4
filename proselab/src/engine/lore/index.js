@@ -1,6 +1,13 @@
 // src/engine/lore/index.js
 
-import { extractEntities, extractRelationships, mergeEntities, mergeRelationships } from './extractionEngine.js';
+import { 
+  extractEntities, 
+  extractRelationships, 
+  mergeEntities, 
+  mergeRelationships,
+  buildExtractionPrompt,
+  normalizeLoreOutput
+} from './extractionEngine.js';
 import { runConsistencyChecks, checkNewTextConsistency, autoFixIssues } from './consistencyChecker.js';
 import { getLoreStore } from './loreStore.js';
 import { executeQuery } from './queryEngine.js';
@@ -21,6 +28,60 @@ export class LoreAgent {
     };
     this.processing = false;
     this.queue = [];
+  }
+
+  /**
+   * Process text using AI for high-fidelity extraction
+   */
+  async processWithAI(text, llmCaller, key, model = "gemini-2.5-flash", options = {}) {
+    if (!text || !llmCaller || !key) return null;
+    
+    this.processing = true;
+    try {
+      const prompt = buildExtractionPrompt(text, this.store.entities);
+      const res = await llmCaller(key, prompt, { model, temperature: 0.1 });
+      
+      if (!res.ok) throw new Error(res.error || "AI Lore extraction failed");
+      
+      const newEntities = normalizeLoreOutput(res.content);
+      
+      // Map relationships from LLM format to store format
+      const storeRelationships = [];
+      newEntities.forEach(ent => {
+        if (ent.relationships) {
+          ent.relationships.forEach(rel => {
+            storeRelationships.push({
+              id: `rel-${Math.random().toString(36).substr(2, 9)}`,
+              sourceName: ent.name,
+              targetName: rel.target,
+              type: rel.type,
+              description: rel.description,
+              confidence: 0.9,
+              verified: false
+            });
+          });
+        }
+      });
+      
+      const mergedEntities = mergeEntities(this.store.entities, newEntities);
+      const mergedRelationships = mergeRelationships(this.store.relationships, storeRelationships, mergedEntities);
+      
+      this.store.setEntities(mergedEntities);
+      this.store.setRelationships(mergedRelationships);
+
+      // Re-run consistency checks
+      if (this.options.autoCheck) {
+        const checkResult = runConsistencyChecks(mergedEntities, mergedRelationships);
+        this.store.setIssues(checkResult.issues);
+      }
+      
+      return { success: true, entitiesFound: newEntities.length };
+    } catch (err) {
+      console.error("[LoreAgent] AI Extraction Error:", err);
+      throw err;
+    } finally {
+      this.processing = false;
+    }
   }
 
   /**

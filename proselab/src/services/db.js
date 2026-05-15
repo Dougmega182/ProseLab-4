@@ -129,6 +129,20 @@ export async function resetLocalAppData({ preserveAiConfig = true } = {}) {
   };
 }
 
+/**
+ * EXPORT ALL DATA (FOR MIGRATION)
+ */
+export async function exportAllData() {
+  const [projects, chapters, scenes, documents] = await Promise.all([
+    listProjects(),
+    perform("chapters", "readonly", s => s.getAll()),
+    perform("scenes", "readonly", s => s.getAll()),
+    perform("documents", "readonly", s => s.getAll())
+  ]);
+
+  return { projects, chapters, scenes, documents };
+}
+
 // ═══════════════════════════════════════════════════════════
 // PUBLIC API
 // ═══════════════════════════════════════════════════════════

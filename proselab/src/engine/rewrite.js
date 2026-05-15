@@ -74,6 +74,9 @@ Rules for Intent Repair:
 2. Provide clear SENSORY EVIDENCE for the action. The reader must see the interaction.
 3. Do not use abstract labels or interpretation. Show the physical proof of the outcome.
 4. Preserve the existing tone while hardening the causal chain.
+5. Return ONLY the rewritten scene text.
+6. Do not include feedback, labels, analysis, metadata, JSON, or any copied instruction blocks.
+7. Do not include the original text unless it is rewritten into the new scene.
 
 CURRENT TEXT:
 ---

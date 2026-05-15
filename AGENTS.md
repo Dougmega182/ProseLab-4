@@ -1,4 +1,196 @@
 # AGENTS.md
+# Tool Roster & Routing Rules
+# Author: Dale Ryan | Last updated: see git log
+
+---
+
+## TOOL STACK OVERVIEW
+
+| Tool | Model | Role | Strengths |
+|------|-------|------|-----------|
+| **Gemini Flash 3** | Gemini 3 Flash | Fast thinker | Speed, low cost, good enough for low-stakes work |
+| **Gemini Pro 3** | Gemini 3 Pro | Auditor | 1M+ token context, whole-repo reads, pattern detection |
+| **Galaxy AI** | Claude Opus 4.6 | Executor | Precision, reasoning, voice-sensitive output |
+| **ABACUS.ai CLI** | — | Orchestrator | Loads GOVERNANCE/MEMORY/AGENTS, routes tasks, manages state |
+
+---
+
+## AGENT DEFINITIONS
+
+---
+
+### AGENT: FLASH
+**Tool:** Gemini Flash 3
+**Role:** Fast thinker
+**Cost:** Low — use freely for low-stakes work
+
+**Assign when:**
+- Quick factual lookups
+- First-pass drafts that will be reviewed anyway
+- Brainstorming / option generation
+- Anything where a wrong answer is cheap to fix
+- Formatting, restructuring, data transformation tasks
+- Generating options for a decision (not making the decision)
+
+**Do not assign when:**
+- Output goes to a human without review
+- The task requires multi-step reasoning
+- Accuracy is load-bearing (architecture decisions, financial data, legal/regulatory refs)
+- Anything voice-sensitive
+
+**Handoff to Executor (Opus 4.6):** When the draft needs to be finalised, polished, or is going to a human.
+**Handoff to Auditor (Pro 3):** When the task has grown beyond ~10 files or needs cross-file analysis.
+
+---
+
+### AGENT: AUDITOR
+**Tool:** Gemini Pro 3
+**Role:** Large-context analysis
+**Cost:** Medium-high — use when you genuinely need the full context window
+
+**Assign when:**
+- Auditing an entire codebase for patterns, bugs, or consistency
+- Processing large documents (PDFs, exports, long logs)
+- Cross-file dependency mapping
+- Checking consistency across the whole project (naming, structure, regulatory refs)
+- Anything where you need to hold the entire repo or document set in context at once
+
+**Do not assign when:**
+- It's a targeted edit to a specific file — that's overkill
+- Output is going to a human and voice/tone matters
+- You need fast, interactive back-and-forth
+
+**After an audit session:** Write a cache entry to MEMORY.md for whatever large context was processed. The next session should not re-read the same material.
+
+**Handoff to Executor:** Audit findings are in — now need targeted fixes or documented output.
+**Handoff to Flash:** Audit findings just need quick reformatting or simple transforms.
+
+---
+
+### AGENT: EXECUTOR
+**Tool:** Galaxy AI (Claude Opus 4.6)
+**Role:** Precision execution and all human-readable output
+**Cost:** High — route here when quality matters
+
+**Assign when:**
+- Writing anything a human reads: docs, READMEs, comments, reports, cover letters, commit messages
+- Targeted code changes where accuracy and context-awareness are load-bearing
+- Architecture decisions requiring reasoned trade-off analysis
+- Integrating outputs from Flash/Auditor into a coherent deliverable
+- Any task where voice, tone, and precision matter
+
+**Do not assign when:**
+- You just need a quick low-stakes answer (use Flash)
+- You need to process 30+ files simultaneously (use Auditor)
+
+**Voice rule:** All output from this agent must follow the voice spec in GOVERNANCE.md §4. No exceptions.
+
+---
+
+### AGENT: ABACUS CLI
+**Tool:** ABACUS.ai CLI
+**Role:** Session orchestrator — not a reasoning agent
+
+**Responsibilities:**
+- Load GOVERNANCE.md, MEMORY.md, AGENTS.md at session start
+- Route tasks to the right agent based on AGENTS.md rules
+- Write cache entries and session logs to MEMORY.md at session close
+- Surface open decisions and escalation points to Dale
+
+**Does not:**
+- Make architecture decisions
+- Write prose
+- Override routing rules from GOVERNANCE.md
+
+---
+
+## ROUTING DECISION TREE
+
+```
+New task arrives
+│
+├─ Does the output go to a human? (docs, prose, voice-sensitive)
+│   └─ YES → EXECUTOR (Opus 4.6)
+│
+├─ Does it span the entire repo or require full-context analysis?
+│   └─ YES → AUDITOR (Pro 3)
+│
+├─ Is it low-stakes, a quick lookup, or a first-pass draft?
+│   └─ YES → FLASH (Flash 3)
+│
+├─ Is it a targeted code edit with business logic context?
+│   └─ YES → EXECUTOR (Opus 4.6)
+│
+└─ Unclear? Default to EXECUTOR. Escalate to Auditor if context explodes.
+```
+
+---
+
+## PROJECT-SPECIFIC ROUTING
+
+### PMO Academy (Node.js/Express)
+| Task | Agent | Notes |
+|------|-------|-------|
+| Module content writing | Executor | Voice-critical |
+| Crisis scenario writing | Executor | Voice-critical |
+| OpenAI API integration | Executor | Precision required |
+| Full module consistency audit | Auditor | 8 modules, cross-check refs |
+| Quick option generation | Flash | Brainstorming only |
+
+### WARP Trading Bot (multi-model pipeline)
+| Task | Agent | Notes |
+|------|-------|-------|
+| Architecture decisions | Executor | Reasoning required |
+| Cross-layer data flow audit | Auditor | Full pipeline view needed |
+| Quick data transforms | Flash | Low stakes |
+| Documentation | Executor | Voice-critical |
+
+### Quantum Shadows — Novel
+| Task | Agent | Notes |
+|------|-------|-------|
+| Chapter drafting | Executor | Voice-critical |
+| Continuity/timeline audit | Auditor | Full manuscript context |
+| Plot option generation | Flash | First-pass brainstorm only |
+| Editorial pass | Executor | AI-tell detection, precision |
+| Character/antagonist work | Executor | Reasoning + voice |
+
+### Music Production (Google Flow / Lyria 3 Pro)
+| Task | Agent | Notes |
+|------|-------|-------|
+| Sound Box / Lyrics Box / Ask Producer | Executor | Voice and precision |
+| Reference track analysis | Flash | Quick analysis is fine |
+| Prompt structural review | Executor | Final output quality |
+
+### Construction Business SOPs
+| Task | Agent | Notes |
+|------|-------|-------|
+| SOP content writing | Executor | Voice-critical, regulatory accuracy |
+| Cross-SOP consistency audit | Auditor | 19 SOPs, 3 tiers |
+| Quick regulatory lookups | Flash | Verify with Executor before use |
+
+### Homes Victoria Application
+| Task | Agent | Notes |
+|------|-------|-------|
+| Interview prep / mock Q&A | Executor | Voice-critical |
+| Cover letter / CV edits | Executor | Voice-critical |
+| Research synthesis | Flash → Executor | Flash drafts, Executor finalises |
+
+---
+
+## HANDOFF PROTOCOL
+
+When passing context between agents, write to MEMORY.md first. The receiving agent needs a cache entry, not a re-read.
+
+Format:
+```
+### [HANDOFF] task-name | date: YYYY-MM-DD | from: AGENT → to: AGENT
+**Status:** what's done
+**Pending:** what's not done
+**Open decisions:** unresolved calls
+**Files touched:** paths that changed
+```
+
+*Add new project configs under "Project-Specific Routing" as projects are onboarded. Role, agent, one-line note — keep it lean.*
 
 # ProseLab 4 - Agent Architecture Status
 

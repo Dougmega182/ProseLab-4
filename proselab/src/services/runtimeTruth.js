@@ -1,9 +1,9 @@
-export const CREATE_PIPELINE_SUMMARY = "Ollama -> OpenAI -> Critic";
+export const CREATE_PIPELINE_SUMMARY = "Galaxy AI → Critic → Gemini Challenger";
 
 export function getChallengerRuntimeLabel(hasGeminiKey) {
   if (!hasGeminiKey) {
     return "Gemini challenger not configured.";
   }
 
-  return "Gemini challenger is configured, but it is not enforced in the main CREATE loop.";
+  return "Gemini challenger is ENFORCED as a hard gate on APPROVE verdicts.";
 }

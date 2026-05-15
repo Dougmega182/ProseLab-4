@@ -8,4 +8,20 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] })
   ],
+  server: {
+    proxy: {
+      // Proxy Galaxy AI API calls to avoid CORS in dev
+      '/api/galaxy': {
+        target: 'https://api.galaxy.ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/galaxy/, '/api/v1'),
+        secure: true
+      },
+      '/api/ingestion': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ingestion/, ''),
+      }
+    }
+  }
 })

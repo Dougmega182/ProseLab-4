@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm *)",
+      "Bash(node *)",
+      "Bash(powershell *)",
+      "Bash(git *)",
+      "Bash(npx *)"
+    ]
+  },
+  "additionalDirectories": [
+    "D:\\Users\\DalePsaila\\.abacusai\\screenshots"
+  ]
+}

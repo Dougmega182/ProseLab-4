@@ -1,0 +1,92 @@
+{
+  "name": "galaxy-ai",
+  "displayName": "Galaxy AI",
+  "publisher": "local-dev",
+  "repository": { "type": "git", "url": "https://github.com/local/galaxy-ai" },
+  "description": "AI code assistant powered by Galaxy AI workflows",
+  "version": "0.1.0",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["AI", "Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "galaxy.openChat",      "title": "Galaxy AI: Open Chat" },
+      { "command": "galaxy.explainCode",   "title": "Galaxy AI: Explain Selection" },
+      { "command": "galaxy.fixCode",       "title": "Galaxy AI: Fix / Refactor Selection" },
+      { "command": "galaxy.resetMemory",   "title": "Galaxy AI: Reset Conversation Memory" }
+    ],
+    "keybindings": [
+      { "command": "galaxy.openChat",    "key": "ctrl+shift+g", "mac": "cmd+shift+g" },
+      { "command": "galaxy.explainCode", "key": "ctrl+shift+e", "mac": "cmd+shift+e",
+        "when": "editorTextFocus && editorHasSelection" }
+    ],
+    "menus": {
+      "editor/context": [
+        { "command": "galaxy.explainCode", "when": "editorHasSelection", "group": "galaxy@1" },
+        { "command": "galaxy.fixCode",     "when": "editorHasSelection", "group": "galaxy@2" }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "galaxy-ai", "title": "Galaxy AI", "icon": "media/icon.svg" }
+      ]
+    },
+    "views": {
+      "galaxy-ai": [
+        { "type": "webview", "id": "galaxy.chatView", "name": "Chat" }
+      ]
+    },
+    "configuration": {
+      "title": "Galaxy AI",
+      "properties": {
+        "galaxy.apiKey": {
+          "type": "string",
+          "description": "Your Galaxy AI API key (GALAXY_AI_API_KEY)",
+          "scope": "application"
+        },
+        "galaxy.baseUrl": {
+          "type": "string",
+          "default": "https://api.galaxy.ai/api/v1",
+          "description": "Galaxy AI base URL"
+        },
+        "galaxy.workflowId": {
+          "type": "string",
+          "default": "cmonfiheh0000kz04dpoe8cjz",
+          "description": "Galaxy workflow ID"
+        },
+        "galaxy.nodeId": {
+          "type": "string",
+          "default": "node_1777671164161_request",
+          "description": "Galaxy node ID"
+        },
+        "galaxy.maxTurns": {
+          "type": "number",
+          "default": 6,
+          "description": "Max conversation turns kept in memory"
+        },
+        "galaxy.pollInterval": {
+          "type": "number",
+          "default": 1200,
+          "description": "Polling interval in ms"
+        },
+        "galaxy.inlineCompletions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable inline ghost-text completions"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile":  "tsc -p ./",
+    "watch":    "tsc -watch -p ./",
+    "package":  "vsce package"
+  },
+  "devDependencies": {
+    "@types/node":   "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript":    "^5.3.0",
+    "@vscode/vsce":  "^2.24.0"
+  }
+}

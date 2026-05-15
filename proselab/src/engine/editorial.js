@@ -1,6 +1,7 @@
 import { callOpenAI } from "../services/llm.js";
 import { cachedInference, shouldCacheInference } from "../services/inferenceCache.js";
 import { INFERENCE_CACHE_CONTEXT_VERSION } from "./pipeline.js";
+import { runChallengerGate } from "./challengerGate.js";
 
 export const PROMPT_IDS = {
   margaret: "margaret_v1",
@@ -57,6 +58,8 @@ export async function runEditorialMode({
   modeFeedback,
   voiceSpec,
   openaiKey,
+  geminiKey = null,
+  sceneIntent = null,
   onStage,
   onFeedbackUpdate,
   onComplete,
@@ -109,15 +112,31 @@ KEY FAILURES FROM ANALYSE PASS:
         },
         fn: async () => {
           const res = await callOpenAI(openaiKey, prompt);
-          if (!res.ok) throw new Error(res.error || "OpenAI API Error");
-          if (res.usage) {
-            logTokenUsage("openai::gpt-4o-mini", res.usage.prompt_tokens, res.usage.completion_tokens);
-          }
+          if (!res.ok) throw new Error(res.error || "Galaxy API Error");
+          // Galaxy uses flat per-call pricing; log as galaxy provider
+          logTokenUsage("galaxy", 0, 0);
           return res.content;
         },
         enabled: shouldCacheInference(cacheName),
       });
       feedback[pKey] = result;
+
+      // Challenger Gate for Victor's Verdict
+      if (pKey === "victor" && result.includes("APPROVED") && geminiKey && sceneIntent) {
+        onStage("gemini-challenger");
+        const challengerResult = await runChallengerGate({
+          prose: sourceText,
+          sceneIntent,
+          geminiKey,
+          onStage
+        });
+        
+        if (!challengerResult.confirmed) {
+          feedback[pKey] = `[GALAXY VERDICT]: APPROVED\n\n[GEMINI VETO]: REWRITE\n\nReasoning: ${challengerResult.challenger.reasoning}\n\nFatal Flaws:\n${challengerResult.challenger.fatal_flaws.map(f => `- ${f}`).join('\n')}\n\n---\n\nORIGINAL FEEDBACK:\n${result}`;
+        } else {
+          feedback[pKey] = `[GALAXY VERDICT]: APPROVED\n\n[GEMINI CONFIRMATION]: Challenger agrees with this approval.\n\n---\n\n${result}`;
+        }
+      }
     } catch (e) {
       feedback[pKey] = "Error: " + e.message;
     }

@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Galaxy Adapter",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\galaxy_adapter\\start_adapter.ps1"
+      ],
+      "presentation": {
+        "reveal": "never",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Stop Galaxy Adapter",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\galaxy_adapter\\stop_adapter.ps1"
+      ],
+      "presentation": {
+        "reveal": "never",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

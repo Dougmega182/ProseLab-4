@@ -7,6 +7,7 @@ import RelationshipGraph from './RelationshipGraph.jsx';
 import ConsistencyPanel from './ConsistencyPanel.jsx';
 import LoreQuery from './LoreQuery.jsx';
 import TimelineView from './TimelineView.jsx';
+import { callGemini, callOpenAI } from '../../services/llm.js';
 import './LoreAgent.css';
 
 const TABS = {
@@ -18,7 +19,7 @@ const TABS = {
   STATS: 'stats',
 };
 
-export default function LorePanel({ agent: externalAgent, text, onProcessText }) {
+export default function LorePanel({ agent: externalAgent, text, onProcessText, keys }) {
   const [localAgent] = useState(() => externalAgent || createLoreAgent());
   const agent = externalAgent || localAgent;
   
@@ -65,6 +66,20 @@ export default function LorePanel({ agent: externalAgent, text, onProcessText })
       setProcessing(false);
     }
   }, [text, agent, processing, onProcessText]);
+
+  const handleAIProcess = useCallback(async () => {
+    if (!text || !agent || processing || !keys?.gemini) return;
+    setProcessing(true);
+    try {
+      await agent.processWithAI(text, callGemini, keys.gemini, keys.geminiModel);
+      if (onProcessText) onProcessText();
+    } catch (err) {
+      console.error('AI Lore processing error:', err);
+      alert('AI Lore Extraction failed. Check console for details.');
+    } finally {
+      setProcessing(false);
+    }
+  }, [text, agent, processing, onProcessText, keys]);
 
   const handleVerify = useCallback((entityId) => {
     if (agent) agent.verifyEntity(entityId);
@@ -142,13 +157,25 @@ export default function LorePanel({ agent: externalAgent, text, onProcessText })
           <h2>Lore Tracker</h2>
           <p>Use lore review to validate continuity, entity confidence, and timeline coherence before trusting manuscript analysis.</p>
         </div>
-        <button
-          className="process-btn"
-          onClick={handleProcess}
-          disabled={processing || !text}
-        >
-          {processing ? 'Processing...' : 'Extract Lore'}
-        </button>
+        <div className="lore-action-group" style={{ display: "flex", gap: "8px" }}>
+          <button
+            className="process-btn btn-ghost"
+            onClick={handleProcess}
+            disabled={processing || !text}
+            title="Fast local extraction (Regex-based)"
+          >
+            {processing ? '...' : 'Quick Extract'}
+          </button>
+          <button
+            className="process-btn"
+            onClick={handleAIProcess}
+            disabled={processing || !text || !keys?.gemini}
+            title="Deep AI extraction (Gemini 2.5 Flash)"
+            style={{ background: "var(--accent-primary)", border: "none" }}
+          >
+            {processing ? 'Processing AI...' : 'Deep AI Extraction'}
+          </button>
+        </div>
       </div>
 
       <div className="lore-review-strip">
