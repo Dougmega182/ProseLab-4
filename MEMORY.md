@@ -235,7 +235,11 @@ Cache entries go in `§ INFERENCE CACHE`. Decisions go in `§ DECISIONS LOG`. Pr
 
 -->
 
-*No handoffs logged yet.*
+### [HANDOFF] repo-push-and-expansion | date: 2026-05-15 | from: FLASH → to: DALE
+**Status:** Major expansion committed and pushed. Docker-based architecture (Ingestion, Python, Nginx) integrated. `galaxy-vscode` extension added. `MEMORY.md`, `GOVERNANCE.md`, and `AGENTS.md` updated and synced.
+**Pending:** Validation of Docker containers in production environment. Testing of `galaxy-vscode` extension in a clean VS Code instance.
+**Open decisions:** None.
+**Files touched:** .gitignore, AGENTS.md, README.md, proselab/src/App.jsx, proselab/src/index.css, proselab/src/services/llm.js, ingestion-server/env.example, etc. (103 files total).
 
 ---
 
@@ -250,6 +254,7 @@ Cache entries go in `§ INFERENCE CACHE`. Decisions go in `§ DECISIONS LOG`. Pr
 | 2026-05-15 | Quantum Shadows — Book 1: Entangled | Diagnosed and fixed Apply Full Editorial Rewrite prompt leakage; aligned runtime context from governance docs | proselab-rewrite-flow-apply-full-editorial, governance-memory-agents-baseline | proselab-rewrite-output-contract-hardening |
 | 2026-05-15 | Quantum Shadows — Book 1: Entangled | Implemented and wired expansion insertion workflow with polling continuation, overlap dedup, draft checkpoint autosave/logging, and updated runtime docs | proselab-expansion-insertion-flow | proselab-expansion-runtime-polling-continuation |
 | 2026-05-15 | Quantum Shadows — Book 1: Entangled | Added Opus-guided insertion placement recommendation and fixed expansion panel overflow with responsive layout; updated docs to match runtime | proselab-expansion-insertion-flow | proselab-expansion-runtime-polling-continuation |
+| 2026-05-15 | Project Expansion | Staged, committed, and pushed 103 files including Docker architecture, Ingestion/Python services, and `galaxy-vscode` extension. Sanitized API keys. | none | none |
 
 ---
 
