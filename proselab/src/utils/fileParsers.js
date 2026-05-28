@@ -1,3 +1,5 @@
+import JSZip from 'jszip';
+
 /**
  * fileParsers.js - Utilities for parsing different file formats into text
  */
@@ -112,7 +114,7 @@ async function parseDocx(file) {
     throw new Error('Could not parse DOCX file. Consider converting to .txt or .md first.');
   } catch (err) {
     if (err.message.includes('Could not parse')) throw err;
-    throw new Error('Failed to parse DOCX file. Please convert to .txt or .md format.');
+    throw new Error('Failed to parse DOCX file. Please convert to .txt or .md format.', { cause: err });
   }
 }
 

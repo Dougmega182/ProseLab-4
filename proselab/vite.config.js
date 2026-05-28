@@ -15,7 +15,11 @@ export default defineConfig({
         target: 'https://api.galaxy.ai',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/galaxy/, '/api/v1'),
-        secure: true
+        secure: true,
+        onProxyReq: (proxyReq) => {
+          proxyReq.removeHeader('cookie');
+          proxyReq.removeHeader('Cookie');
+        }
       },
       '/api/ingestion': {
         target: 'http://localhost:3001',

@@ -29,6 +29,10 @@ function normalizeSceneInput(scene) {
     causality: scene?.causality || "",
     output: scene?.output || "",
     stakes: scene?.stakes || "",
+    goal: scene?.goal || "",
+    conflict: scene?.conflict || "",
+    change: scene?.change || "",
+    reveal: scene?.reveal || "",
     status: scene?.status || "draft",
     notes: scene?.notes || ""
   };
@@ -215,29 +219,51 @@ export function SceneModal({ scene, onSave, onClose, onDelete }) {
       </div>
 
       <div className="field-group">
-        <label className="field-label">Scene Summary</label>
-        <textarea className="field-textarea" value={data.summary} onChange={e => updateField("summary", e.target.value)} placeholder="One sharp sentence for what the scene actually does." />
+        <label className="field-label">Scene Summary / Logline</label>
+        <textarea className="field-textarea" value={data.summary} onChange={e => updateField("summary", e.target.value)} placeholder="One sharp sentence outlining the narrative impact of this scene." />
+      </div>
+
+      <div className="preproduction-divider" style={{ margin: "20px 0" }} />
+      <div className="modal-section-title" style={{ fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "var(--accent-primary)", marginBottom: "14px" }}>
+        🎬 Narrative Structural Beats (Scene Intelligence)
       </div>
 
       <div className="modal-grid modal-grid-two">
         <div className="field-group">
-          <label className="field-label">Causality</label>
-          <textarea className="field-textarea" value={data.causality} onChange={e => updateField("causality", e.target.value)} placeholder="Why does this scene happen now?" />
+          <label className="field-label">Scene Goal</label>
+          <textarea className="field-textarea" value={data.goal} onChange={e => updateField("goal", e.target.value)} placeholder="Goal: What is the character's immediate physical objective in this scene?" />
         </div>
         <div className="field-group">
-          <label className="field-label">Required Output</label>
-          <textarea className="field-textarea" value={data.output} onChange={e => updateField("output", e.target.value)} placeholder="What must change before the next scene?" />
+          <label className="field-label">Scene Conflict</label>
+          <textarea className="field-textarea" value={data.conflict} onChange={e => updateField("conflict", e.target.value)} placeholder="Conflict: What active obstacle or friction prevents them from achieving it?" />
         </div>
       </div>
 
-      <div className="modal-grid modal-grid-two">
+      <div className="modal-grid modal-grid-three">
         <div className="field-group">
-          <label className="field-label">Stakes</label>
-          <textarea className="field-textarea" value={data.stakes} onChange={e => updateField("stakes", e.target.value)} placeholder="What failure costs emotionally, narratively, or practically?" />
+          <label className="field-label">Irreversible Change</label>
+          <textarea className="field-textarea" value={data.change} onChange={e => updateField("change", e.target.value)} placeholder="Change: How has the status quo irreversibly shifted by the end of the scene?" />
         </div>
         <div className="field-group">
-          <label className="field-label">Scene Notes</label>
-          <textarea className="field-textarea" value={data.notes} onChange={e => updateField("notes", e.target.value)} placeholder="Continuity notes, voice risks, unresolved pressure..." />
+          <label className="field-label">Scene Stakes</label>
+          <textarea className="field-textarea" value={data.stakes} onChange={e => updateField("stakes", e.target.value)} placeholder="Stakes: What will failure cost the protagonist emotionally or narratively?" />
+        </div>
+        <div className="field-group">
+          <label className="field-label">Key Reveal</label>
+          <textarea className="field-textarea" value={data.reveal} onChange={e => updateField("reveal", e.target.value)} placeholder="Reveal: What critical lore, discovery, or realization is surfaced?" />
+        </div>
+      </div>
+
+      <div className="preproduction-divider" style={{ margin: "20px 0" }} />
+
+      <div className="modal-grid modal-grid-two">
+        <div className="field-group">
+          <label className="field-label">Causality & Setup</label>
+          <textarea className="field-textarea" value={data.causality} onChange={e => updateField("causality", e.target.value)} placeholder="Causality: Why does this scene happen specifically at this point in the timeline?" />
+        </div>
+        <div className="field-group">
+          <label className="field-label">Scene Notes & Voice Risks</label>
+          <textarea className="field-textarea" value={data.notes} onChange={e => updateField("notes", e.target.value)} placeholder="Backstory cues, character mood indicators, specific voice rules..." />
         </div>
       </div>
 

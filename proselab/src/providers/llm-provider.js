@@ -43,7 +43,7 @@ export class LLMProvider {
       if (import.meta.env.VITE_OLLAMA_URL) {
         this.configure('ollama', 'local', { baseUrl: import.meta.env.VITE_OLLAMA_URL });
       } else {
-        this.configure('ollama', 'local', { baseUrl: 'http://localhost:11434' });
+        this.configure('ollama', 'local', { baseUrl: 'http://127.0.0.1:11434' });
       }
     }
   }
@@ -61,7 +61,7 @@ export class LLMProvider {
       case 'openai': return 'https://api.openai.com/v1';
       case 'anthropic': return 'https://api.anthropic.com/v1';
       case 'openrouter': return 'https://openrouter.ai/api/v1';
-      case 'ollama': return 'http://localhost:11434';
+      case 'ollama': return 'http://127.0.0.1:11434';
       default: return '';
     }
   }

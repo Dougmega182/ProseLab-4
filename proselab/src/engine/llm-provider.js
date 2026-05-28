@@ -21,7 +21,7 @@ export class LLMProvider {
       this.apiKeys.openai = import.meta.env.VITE_OPENAI_KEY;
       this.apiKeys.anthropic = import.meta.env.VITE_ANTHROPIC_KEY;
       this.apiKeys.google = import.meta.env.VITE_GEMINI_KEY;
-      this.baseUrls.custom = import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434/v1';
+      this.baseUrls.custom = import.meta.env.VITE_OLLAMA_URL || 'http://127.0.0.1:11434/v1';
     }
   }
 

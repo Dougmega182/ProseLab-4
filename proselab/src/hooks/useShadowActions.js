@@ -29,7 +29,17 @@ export function useShadowActions(projectId, sceneId = null) {
   }, [projectId, sceneId]);
 
   useEffect(() => {
-    refresh();
+    let active = true;
+    const load = async () => {
+      await Promise.resolve();
+      if (active) {
+        refresh();
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
   }, [refresh]);
 
   const approve = useCallback(async (actionId) => {

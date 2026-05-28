@@ -47,9 +47,8 @@ Steps:
 1. Select the source scene.
 2. In **Write**, open **Expansion Draft Insertion**.
 3. Paste the expansion brief/instructions.
-4. Click **Suggest Insertion Placement** to auto-fill start/end paragraph boundaries.
-5. Adjust boundaries if needed.
-6. Click **Generate Expansion Draft**.
+4. Click **Generate Expansion Draft**. Opus first infers insertion boundaries automatically from chapter + brief.
+5. Optional: click **Refresh Auto Placement** to preview or re-run inferred boundaries before generation.
 
 Runtime behavior:
 
@@ -57,7 +56,9 @@ Runtime behavior:
 - Automatically continues when output truncates.
 - De-duplicates overlapping continuation output.
 - Saves to **Editorial Drafts** as draft scenes (non-destructive).
+- Delete draft scenes (× on each draft row) or draft folders (- on each draft folder header) in the **DRAFTS** sidebar section.
 - Labels output with chapter and insertion boundaries (paragraph and line references).
+- Validation/critique/lore extraction use boundary-safe JSON parsing so trailing model text does not block the pipeline.
 - Expansion panel uses responsive layout so controls wrap instead of overflowing.
 - Autosaves each pass and logs start/checkpoint/complete/error records.
 

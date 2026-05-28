@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { PreflightBrief } from "./Dashboard.jsx";
+import { calibrateVoice } from "../engine/voiceCalibrator.js";
 
 
 const PRE_TABS = ["core", "world", "dossiers", "beats", "inventory", "preflight", "settings"];
@@ -73,10 +74,12 @@ function getSceneReviewIssues(scene = {}) {
   const issues = [];
   if (!String(scene.location || "").trim()) issues.push("location");
   if (!String(scene.time || "").trim()) issues.push("time");
-  if (!String(scene.causality || "").trim()) issues.push("causality");
-  if (!String(scene.output || "").trim()) issues.push("output");
-  if (!String(scene.stakes || "").trim()) issues.push("stakes");
-  if (!String(scene.summary || scene.notes || "").trim()) issues.push("summary");
+  if (!String(scene.summary || "").trim()) issues.push("summary / logline");
+  if (!String(scene.goal || scene.causality || "").trim()) issues.push("scene goal");
+  if (!String(scene.conflict || "").trim()) issues.push("scene conflict");
+  if (!String(scene.change || scene.output || "").trim()) issues.push("irreversible change");
+  if (!String(scene.stakes || "").trim()) issues.push("scene stakes");
+  if (!String(scene.reveal || "").trim()) issues.push("key reveal");
   return issues;
 }
 
@@ -123,6 +126,62 @@ export function PreproductionKit({
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [draggedSceneIndex, setDraggedSceneIndex] = useState(null);
   const [sceneDragOverIndex, setSceneDragOverIndex] = useState(null);
+  
+  // Voice Calibration States & Handler
+  const [calibrationText, setCalibrationText] = useState("");
+  const [isCalibrating, setIsCalibrating] = useState(false);
+  const [calibrationError, setCalibrationError] = useState(null);
+  const [showCalibrator, setShowCalibrator] = useState(false);
+
+  const handleCalibrate = async () => {
+    if (!calibrationText.trim()) return;
+    setIsCalibrating(true);
+    setCalibrationError(null);
+    try {
+      const openAIKey = import.meta.env.VITE_OPENAI_KEY || "";
+      if (!openAIKey) {
+        throw new Error("Missing VITE_OPENAI_KEY in environment configuration.");
+      }
+
+      const result = await calibrateVoice(calibrationText, openAIKey);
+      if (!result) {
+        throw new Error("Failed to calibrate voice. Verify your OpenAI key or connection.");
+      }
+
+      // Update project voice state with structured signature & profile instructions
+      const updatedVoice = {
+        ...voice,
+        calibrated: true,
+        stabilityScore: result.stabilityScore,
+        fingerprint: result.fingerprint,
+        compressedDirectives: result.compressedDirectives,
+        profileMarkdown: result.profileMarkdown,
+        calibratedAt: result.calibratedAt,
+        sampleWordCount: result.sampleWordCount,
+        // Legacy fallbacks for safety
+        length: result.fingerprint.avgSentenceLength,
+        fragments: result.fingerprint.fragmentRate,
+        metaphor: result.fingerprint.metaphorDensity,
+        dialogue: result.fingerprint.dialogueStyle,
+        punctuationHabits: Array.isArray(result.fingerprint.punctuationHabits)
+          ? result.fingerprint.punctuationHabits.join(", ")
+          : result.fingerprint.punctuationHabits,
+        lexicalPatterns: Array.isArray(result.fingerprint.lexicalPatterns)
+          ? result.fingerprint.lexicalPatterns.join(", ")
+          : result.fingerprint.lexicalPatterns,
+        profile: result.profileMarkdown || "",
+      };
+
+      await updateProjectMetadata({ voice: updatedVoice });
+      setCalibrationText("");
+      setShowCalibrator(false);
+    } catch (e) {
+      console.error("Calibration failed:", e);
+      setCalibrationError(e.message || "An unexpected error occurred during calibration.");
+    } finally {
+      setIsCalibrating(false);
+    }
+  };
 
   useEffect(() => {
     if (onSelectScene && preflightId) {
@@ -454,45 +513,167 @@ export function PreproductionKit({
 
             <div className="preproduction-header">
               <div>
-                <div className="preproduction-kicker">Voice Profile</div>
-                <div className="preproduction-title">Lock the prose behavior before drafting</div>
+                <div className="preproduction-kicker">Style Calibration & Fingerprinting</div>
+                <div className="preproduction-title">Extract writing habits from your own prose</div>
               </div>
             </div>
 
-            <div className="grid-4">
-              <div className="field-group">
-                <label className="field-label">Sentence Length</label>
-                <select className="field-select" value={voice.length || "Medium"} onChange={e => updatePre("voice", "length", e.target.value)}>
-                  <option>Short/Staccato</option>
-                  <option>Medium</option>
-                  <option>Long/Flowing</option>
-                </select>
+            {!showCalibrator && !voice.calibrated && !voice.profile && (
+              <div className="calibration-placeholder-card">
+                <div className="calibration-placeholder-content">
+                  <span className="calibration-icon">🎙️</span>
+                  <div className="calibration-placeholder-title">No Voice Fingerprint Calibrated</div>
+                  <p className="calibration-placeholder-desc">
+                    Paste a 500-1500 word sample of your own writing. ProseLab will automatically extract your sentence rhythm, metaphor density, punctuation patterns, and dialogue habits to guide the rewrite engine.
+                  </p>
+                  <button className="btn btn-primary" onClick={() => setShowCalibrator(true)}>
+                    Calibrate From Writing Sample
+                  </button>
+                </div>
               </div>
-              <div className="field-group">
-                <label className="field-label">Fragment Density</label>
-                <select className="field-select" value={voice.fragments || "Occasional"} onChange={e => updatePre("voice", "fragments", e.target.value)}>
-                  <option>None</option>
-                  <option>Occasional</option>
-                  <option>Frequent</option>
-                </select>
+            )}
+
+            {showCalibrator && (
+              <div className="calibration-form-card">
+                <div className="calibration-card-header">
+                  <strong>Style Calibration Workstation</strong>
+                  <button className="btn btn-ghost btn-sm" onClick={() => { setShowCalibrator(false); setCalibrationError(null); }}>
+                    Cancel
+                  </button>
+                </div>
+                <div className="calibration-card-body">
+                  <p className="calibration-tip">
+                    For best results, choose a passage that represents your highest quality prose, including dialogue and sensory description (approx. 500 - 1500 words).
+                  </p>
+                  <textarea
+                    className="field-textarea calibration-textarea"
+                    placeholder="Paste your writing sample here..."
+                    rows={12}
+                    value={calibrationText}
+                    onChange={(e) => setCalibrationText(e.target.value)}
+                    disabled={isCalibrating}
+                  />
+                  <div className="calibration-footer">
+                    <span className="word-count-badge">
+                      {calibrationText.trim() ? `${calibrationText.trim().split(/\s+/).length} words` : "0 words"}
+                    </span>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleCalibrate}
+                      disabled={isCalibrating || !calibrationText.trim()}
+                    >
+                      {isCalibrating ? "Analyzing Style & Calibrating..." : "Calibrate Fingerprint"}
+                    </button>
+                  </div>
+                  {calibrationError && (
+                    <div className="calibration-error">
+                      ⚠️ {calibrationError}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="field-group">
-                <label className="field-label">Metaphor Frequency</label>
-                <select className="field-select" value={voice.metaphor || "Moderate"} onChange={e => updatePre("voice", "metaphor", e.target.value)}>
-                  <option>Sparse</option>
-                  <option>Moderate</option>
-                  <option>Heavy</option>
-                </select>
+            )}
+
+            {(voice.calibrated || voice.profile) && !showCalibrator && (
+              <div className="calibration-active-card">
+                <div className="calibration-active-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <span className="status-badge status-badge--active">Active Fingerprint</span>
+                    {voice.stabilityScore !== undefined && (
+                      <span className={`stability-score-pill score-${
+                        voice.stabilityScore >= 80 ? 'high' : voice.stabilityScore >= 50 ? 'medium' : 'low'
+                      }`}>
+                        Stability Score: <strong>{voice.stabilityScore}</strong>/100
+                      </span>
+                    )}
+                    <span className="calibration-timestamp">
+                      Calibrated {voice.sampleWordCount ? `from ${voice.sampleWordCount} words` : ""} {voice.calibratedAt ? `on ${new Date(voice.calibratedAt).toLocaleDateString()}` : ""}
+                    </span>
+                  </div>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setShowCalibrator(true)}>
+                    Recalibrate Profile
+                  </button>
+                </div>
+                <div className="calibration-active-body">
+                  <div className="calibration-metrics-summary">
+                    <div className="metric-summary-item">
+                      <span>Sentence Rhythm</span>
+                      <strong>{voice.fingerprint?.avgSentenceLength || voice.length || "Medium"}</strong>
+                    </div>
+                    <div className="metric-summary-item">
+                      <span>Fragments</span>
+                      <strong>{voice.fingerprint?.fragmentRate || voice.fragments || "Occasional"}</strong>
+                    </div>
+                    <div className="metric-summary-item">
+                      <span>Metaphors</span>
+                      <strong>{voice.fingerprint?.metaphorDensity || voice.metaphor || "Moderate"}</strong>
+                    </div>
+                    <div className="metric-summary-item">
+                      <span>Dialogue</span>
+                      <strong>{voice.fingerprint?.dialogueStyle || voice.dialogue || "Direct"}</strong>
+                    </div>
+                  </div>
+
+                  <div className="grid-2">
+                    <div className="fingerprint-detail-group">
+                      <span className="fingerprint-detail-label">Punctuation Signature</span>
+                      <div className="fingerprint-badges">
+                        {(() => {
+                          const rawPunc = voice.fingerprint?.punctuationHabits || voice.punctuationHabits;
+                          const puncs = Array.isArray(rawPunc)
+                            ? rawPunc
+                            : String(rawPunc || "Standard punctuation.")
+                                .split(",")
+                                .map(x => x.trim())
+                                .filter(Boolean);
+                          return puncs.map((p, idx) => (
+                            <span key={idx} className="fingerprint-badge">{p}</span>
+                          ));
+                        })()}
+                      </div>
+                    </div>
+                    <div className="fingerprint-detail-group">
+                      <span className="fingerprint-detail-label">Lexical Diction</span>
+                      <div className="fingerprint-badges">
+                        {(() => {
+                          const rawLex = voice.fingerprint?.lexicalPatterns || voice.lexicalPatterns;
+                          const lexs = Array.isArray(rawLex)
+                            ? rawLex
+                            : String(rawLex || "Standard lexical diction.")
+                                .split(",")
+                                .map(x => x.trim())
+                                .filter(Boolean);
+                          return lexs.map((l, idx) => (
+                            <span key={idx} className="fingerprint-badge">{l}</span>
+                          ));
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+
+                  {voice.compressedDirectives && voice.compressedDirectives.length > 0 && (
+                    <div className="compressed-directives-panel" style={{ marginTop: '20px' }}>
+                      <span className="fingerprint-detail-label">Prompt-Optimized Directives</span>
+                      <ul className="directives-list" style={{ listStyle: 'none', paddingLeft: '0', margin: '8px 0 0 0' }}>
+                        {voice.compressedDirectives.map((d, idx) => (
+                          <li key={idx} className="directive-item" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                            <span className="directive-bullet" style={{ color: 'var(--accent-primary)', fontWeight: 'bold' }}>✦</span>
+                            <span>{d}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="fingerprint-instructions-panel" style={{ marginTop: '20px' }}>
+                    <span className="fingerprint-detail-label">Qualitative Style Instructions</span>
+                    <div className="instructions-markdown-preview" style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '12px', background: 'var(--bg-tertiary)', padding: '12px', borderRadius: '4px', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}>
+                      {voice.profileMarkdown || voice.profile}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="field-group">
-                <label className="field-label">Dialogue Style</label>
-                <select className="field-select" value={voice.dialogue || "Direct"} onChange={e => updatePre("voice", "dialogue", e.target.value)}>
-                  <option>Direct</option>
-                  <option>Implicit</option>
-                  <option>Theatrical</option>
-                </select>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -899,7 +1080,7 @@ export function PreproductionKit({
             <div className="grid-2">
               <div className="field-group">
                 <label className="field-label">Ollama Model</label>
-                <input className="field-input" value={voice.ollamaModel || "qwen3:8b"} onChange={e => updatePre("voice", "ollamaModel", e.target.value)} />
+                <input className="field-input" value={voice.ollamaModel || "rocinante"} onChange={e => updatePre("voice", "ollamaModel", e.target.value)} />
                 <div className={`pipeline-status ${envStatusState.ollamaReachable ? "is-live" : "is-down"}`}>
                   {envStatusState.ollamaReachable ? "Live" : "Unreachable"}
                 </div>

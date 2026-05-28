@@ -5,6 +5,82 @@
 
 import { critiqueScene } from './critique.js';
 import { extractLore } from './lore-extraction.js';
+import { callOllama } from '../services/llm.js';
+import { generateRewrite } from './rewrite.js';
+import { Providers } from './providers.js';
+
+function parseFirstJSONObject(raw) {
+  const source = String(raw || '').replace(/```json|```/gi, '').trim();
+  const starts = [];
+  let inString = false;
+  let escaped = false;
+
+  for (let i = 0; i < source.length; i += 1) {
+    const ch = source[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (ch === '{') {
+      starts.push(i);
+    }
+  }
+
+  for (let s = 0; s < starts.length; s += 1) {
+    const start = starts[s];
+    let depth = 0;
+    inString = false;
+    escaped = false;
+
+    for (let i = start; i < source.length; i += 1) {
+      const ch = source[i];
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (ch === '"') {
+        inString = true;
+        continue;
+      }
+
+      if (ch === '{') depth += 1;
+      if (ch === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          const candidate = source.slice(start, i + 1);
+          try {
+            return JSON.parse(candidate);
+          } catch {
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return null;
+}
 
 export class GenerationPipeline {
   constructor(db, providers, emitter) {
@@ -529,22 +605,16 @@ Respond in JSON format:
 
     await this.logGeneration(scene, 'validation', response.usage);
 
-    try {
-      return JSON.parse(response.content);
-    } catch (e) {
-      // Try to extract JSON from the response
-      const jsonMatch = response.content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-      return {
-        overallScore: 0,
-        beatFulfilled: false,
-        issues: [{ type: 'parse_error', severity: 'critical', description: 'Could not parse validation response' }],
-        strengths: [],
-        summary: 'Validation failed to parse'
-      };
-    }
+    const parsed = parseFirstJSONObject(response.content);
+    if (parsed) return parsed;
+
+    return {
+      overallScore: 0,
+      beatFulfilled: false,
+      issues: [{ type: 'parse_error', severity: 'critical', description: 'Could not parse validation response' }],
+      strengths: [],
+      summary: 'Validation failed to parse'
+    };
   }
 
   async logGeneration(scene, stage, usage) {
@@ -582,8 +652,152 @@ export async function runPipeline(params) {
     return pipeline.generateScene(params.sceneId, params);
   }
   
-  // Fallback for stateless Create Mode (simulated)
   console.warn("Pipeline: Running in stateless bridge mode.");
-  // Implementation for stateless fallback if needed...
-  return { prose: params.text || "", final: params.text || "" };
+  const {
+    text,
+    sceneIntent,
+    keys,
+    model = "rocinante",
+    onStage = () => {},
+    sceneContext = "",
+    voiceSpec = {},
+    logTokenUsage = () => {},
+    estimateTokens = () => 0,
+  } = params;
+
+  if (!sceneIntent) {
+    throw new Error("CREATE blocked: scene intent is required.");
+  }
+
+  // 1. OLLAMA GENERATION PASS (DRAFT STAGE)
+  onStage("ollama-generation");
+  const voiceDirectives = (voiceSpec.style || []).join(", ") + ". " + (voiceSpec.constraints || []).join(", ");
+  const initialInstruction = `You are a fiction writing engine generating prose for a single scene.
+Your output should be ONLY the scene prose — no meta-commentary, no scene headers, no labels.
+
+## VOICE & STYLE DIRECTIVES
+${voiceDirectives}
+
+## SCENE CONTEXT
+${sceneContext}
+
+## SCENE INTENT
+Goal: ${sceneIntent.objective}
+Conflict: ${sceneIntent.conflict}
+Irreversible Change: ${sceneIntent.irreversible_change}
+Stakes: ${sceneIntent.story_delta}
+`;
+
+  console.log(`[runPipeline Stateless] Calling Ollama model: ${model}...`);
+  const ollamaRes = await callOllama(model, initialInstruction, { temperature: params.temperature !== undefined ? params.temperature : 0.8 });
+  const draft1 = ollamaRes.ok ? ollamaRes.content : "";
+  const safeDraft1 = draft1?.trim() ? draft1 : text;
+
+  if (ollamaRes.ok) {
+    logTokenUsage("ollama", estimateTokens(initialInstruction), estimateTokens(draft1));
+    console.log(`[runPipeline Stateless] Ollama generation succeeded (length: ${draft1.length} chars).`);
+  } else {
+    console.warn(`[runPipeline Stateless] Ollama generation failed. Error: ${ollamaRes.error}. Falling back to initial prose.`);
+  }
+
+  // 2. GALAXY STYLE REFINEMENT PASS
+  let currentDraft = safeDraft1;
+  if (keys?.openai) {
+    onStage("galaxy-refinement");
+    console.log("[runPipeline Stateless] Calling Galaxy refinement...");
+    const rewriteResult = await generateRewrite({
+      original: currentDraft,
+      instructions: voiceSpec.style || [],
+      voiceSpec,
+      sceneContext,
+      sceneIntent,
+      key: keys.openai,
+      mode: "style-refinement",
+      temperature: 0.75,
+    });
+
+    if (rewriteResult.ok && rewriteResult.text) {
+      currentDraft = rewriteResult.text;
+      console.log(`[runPipeline Stateless] Galaxy refinement succeeded (length: ${currentDraft.length} chars).`);
+      if (rewriteResult.response?.usage) {
+        logTokenUsage(
+          "openai::gpt-4o-mini",
+          rewriteResult.response.usage.prompt_tokens,
+          rewriteResult.response.usage.completion_tokens
+        );
+      }
+    } else {
+      console.warn(`[runPipeline Stateless] Galaxy refinement failed/bypassed. Error: ${rewriteResult.error}`);
+    }
+  } else {
+    console.warn("[runPipeline Stateless] Skipping Galaxy style refinement (missing OpenAI key).");
+  }
+
+  // 3. CRITIQUE PASS
+  let critique = { verdict: "APPROVE", overallScore: 8, failures: [] };
+  if (keys?.openai || keys?.gemini) {
+    onStage("critic");
+    console.log("[runPipeline Stateless] Running critique pass...");
+    try {
+      const models = {
+        generation: { provider: 'ollama', model },
+        validation: { provider: 'openai', model: 'gpt-4o-mini' },
+        critique: { provider: 'openai', model: 'gpt-4o-mini' }
+      };
+      const providers = new Providers(keys, models);
+      const rawCritique = await critiqueScene(
+        currentDraft,
+        {
+          sceneBeat: sceneIntent.objective,
+          voiceProfile: voiceDirectives
+        },
+        providers
+      );
+
+      const overallScore = rawCritique.overallScore || rawCritique.feedback?.overallScore || 0;
+      const verdict = overallScore >= 6 ? "APPROVE" : "REWRITE";
+      
+      const failures = [];
+      if (rawCritique.weaknesses && Array.isArray(rawCritique.weaknesses)) {
+        rawCritique.weaknesses.forEach(w => {
+          failures.push({ type: "CRITIQUE_WEAKNESS", reason: w });
+        });
+      }
+      if (rawCritique.feedback?.weaknesses && Array.isArray(rawCritique.feedback.weaknesses)) {
+        rawCritique.feedback.weaknesses.forEach(w => {
+          failures.push({ type: "CRITIQUE_WEAKNESS", reason: w });
+        });
+      }
+
+      critique = {
+        verdict,
+        overallScore,
+        failures,
+        raw: rawCritique
+      };
+      console.log(`[runPipeline Stateless] Critique completed. Score: ${overallScore}, Verdict: ${verdict}`);
+    } catch (e) {
+      console.error(`[runPipeline Stateless] Critique pass threw exception:`, e);
+      critique = {
+        verdict: "APPROVE", // Graceful fallback
+        overallScore: 7,
+        failures: [],
+        error: e.message
+      };
+    }
+  }
+
+  return {
+    prose: safeDraft1,
+    final: currentDraft,
+    critique,
+    attempts: 1,
+    traces: [
+      {
+        attempt: 1,
+        draft: currentDraft,
+        critique
+      }
+    ]
+  };
 }

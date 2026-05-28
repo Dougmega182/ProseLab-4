@@ -3,6 +3,79 @@
  * Verifies that generated prose respects established lore and narrative consistency.
  */
 
+function parseFirstJSONObject(raw) {
+  const source = String(raw || '').replace(/```json|```/gi, '').trim();
+  const starts = [];
+  let inString = false;
+  let escaped = false;
+
+  for (let i = 0; i < source.length; i += 1) {
+    const ch = source[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (ch === '{') {
+      starts.push(i);
+    }
+  }
+
+  for (let s = 0; s < starts.length; s += 1) {
+    const start = starts[s];
+    let depth = 0;
+    inString = false;
+    escaped = false;
+
+    for (let i = start; i < source.length; i += 1) {
+      const ch = source[i];
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (ch === '"') {
+        inString = true;
+        continue;
+      }
+
+      if (ch === '{') depth += 1;
+      if (ch === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          const candidate = source.slice(start, i + 1);
+          try {
+            return JSON.parse(candidate);
+          } catch {
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export async function validateScene(prose, sceneConfig, providers) {
   const relevantEntities = sceneConfig.relevantEntities || [];
   
@@ -75,18 +148,18 @@ Respond in JSON format:
     return { passed: true, issues: [], severity: 'none' };
   }
 
-  try {
-    const result = JSON.parse(response.content);
-    return {
-      passed: result.passed,
-      severity: result.severity,
-      issues: result.issues || [],
-      usage: response.usage
-    };
-  } catch (err) {
-    console.error('Failed to parse validation response:', err);
+  const result = parseFirstJSONObject(response.content);
+  if (!result) {
+    console.error('Failed to parse validation response');
     return { passed: true, issues: [], severity: 'none' };
   }
+
+  return {
+    passed: result.passed,
+    severity: result.severity,
+    issues: result.issues || [],
+    usage: response.usage
+  };
 }
 
 function buildLoreReference(entities) {

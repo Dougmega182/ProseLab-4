@@ -3,6 +3,79 @@
  * Evaluates prose quality and literary craft dimensions.
  */
 
+function parseFirstJSONObject(raw) {
+  const source = String(raw || '').replace(/```json|```/gi, '').trim();
+  const starts = [];
+  let inString = false;
+  let escaped = false;
+
+  for (let i = 0; i < source.length; i += 1) {
+    const ch = source[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (ch === '{') {
+      starts.push(i);
+    }
+  }
+
+  for (let s = 0; s < starts.length; s += 1) {
+    const start = starts[s];
+    let depth = 0;
+    inString = false;
+    escaped = false;
+
+    for (let i = start; i < source.length; i += 1) {
+      const ch = source[i];
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (ch === '"') {
+        inString = true;
+        continue;
+      }
+
+      if (ch === '{') depth += 1;
+      if (ch === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          const candidate = source.slice(start, i + 1);
+          try {
+            return JSON.parse(candidate);
+          } catch {
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export async function critiqueScene(prose, context, providers) {
   const systemPrompt = `You are a professional fiction editor and writing coach. You provide constructive, specific critique of prose. You evaluate craft, not content — the writer decides what happens, you evaluate how well it's executed.
 
@@ -65,18 +138,14 @@ Respond in JSON:
     return { overallScore: 0, overallNotes: 'Critique failed' };
   }
 
-  try {
-    return JSON.parse(response.content);
-  } catch (e) {
-    const jsonMatch = response.content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) return JSON.parse(jsonMatch[0]);
-    return {
-      scores: {},
-      overallScore: 0,
-      topStrengths: [],
-      topWeaknesses: [],
-      lineEdits: [],
-      overallNotes: 'Critique failed to parse'
-    };
-  }
+  const parsed = parseFirstJSONObject(response.content);
+  if (parsed) return parsed;
+  return {
+    scores: {},
+    overallScore: 0,
+    topStrengths: [],
+    topWeaknesses: [],
+    lineEdits: [],
+    overallNotes: 'Critique failed to parse'
+  };
 }

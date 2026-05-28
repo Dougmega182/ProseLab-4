@@ -15,7 +15,7 @@ export const initialPreproduction = {
     banned: []
   },
   settings: { 
-    ollamaModel: "qwen3:8b" 
+    ollamaModel: "rocinante" 
   },
   chars: [],
   scenes: [], // Each scene will have _rev: 1 and a 'narrative' object upon creation

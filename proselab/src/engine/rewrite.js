@@ -1,5 +1,6 @@
 import { callOpenAI } from "../services/llm.js";
 import { validateOutputContract } from "./guards.js";
+import { compileInstructionBudget } from "./budget.js";
 
 export const ALLOWED_TRANSFORMATIONS = {
   PHYSICAL_SUBSTITUTION: "Replace abstract labels with physical actions or sensory observations.",
@@ -19,139 +20,96 @@ export function buildRewritePrompt({
   failingSpan = null,
   reason = null,
 } = {}) {
-  const style = (voiceSpec.style || []).map((item) => `- ${item}`).join("\n");
-  const constraints = (voiceSpec.constraints || [])
-    .map((item) => `- ${item}`)
-    .join("\n");
-  const banned = (voiceSpec.banned || []).map((item) => `- ${item}`).join("\n");
-  const edits = instructions.map((item) => `- ${item}`).join("\n");
-  const transformationRules = Object.entries(ALLOWED_TRANSFORMATIONS)
-    .map(([key, val]) => `${key}: ${val}`)
-    .join("\n");
+  const style = (voiceSpec.style || []).join(", ");
+  const constraints = (voiceSpec.constraints || []).join(", ");
+  const banned = (voiceSpec.banned || []).join(", ");
+  const edits = instructions.join(", ");
 
   const preservationBlock = similarityRejection
-    ? `HARD REJECTION OVERRIDE:
-The previous rewrite was rejected for excessive similarity to the original.
-Do not reuse any sentence from the original. Not one.
-Every sentence must be structurally different from what was there before.
-You are not editing — you are replacing.`
-    : `Do not preserve any sentence verbatim from the original.
-Every sentence must be rewritten or replaced entirely.
-Inserting new sentences between unchanged original sentences is decoration, not rewriting, and will be rejected.`;
+    ? `Do not reuse or mimic any sentence from original or previous draft. Replace entirely.`
+    : `Do not preserve sentences verbatim. Every sentence must be rewritten or replaced.`;
 
   const contextBlock = sceneContext
-    ? `SCENE CONTEXT — use only objects, locations, and physical details from this context. 
-Do not invent objects not present in the scene.
-${sceneContext}`
-    : `No scene context provided. Use only physical details that could plausibly exist in any interior space. Do not invent dramatic objects.`;
+    ? `Context: ${sceneContext}`
+    : `No context provided. Use plausible details. Do not invent dramatic objects.`;
 
   const intentBlock = sceneIntent
-    ? `SCENE INTENT:
-${JSON.stringify(sceneIntent, null, 2)}`
+    ? `Intent: ${JSON.stringify(sceneIntent)}`
     : "";
 
+  const bansBlock = `CRITICAL BANS (Rejects run if violated):
+1. No emotional labels or states (unease, anxiety, felt, sad). Show body reaction.
+2. Sentences with actions must end immediately. Do not interpret meaning.
+3. No metaphors, similes (like/as), weather imagery, or abstract chest/stomach sensations.
+4. Do not copy 3+ consecutive words verbatim from original.
+5. No post-action emotional connectives (betraying, revealing, showing, indicating).`;
+
   if (mode === "intent-repair") {
-    return `You are a precision rewriter tasked with fixing a NARRATIVE LOGIC failure.
-CURRENT DATE: ${new Date().toISOString()}
+    return `You are a precision rewriter fixing a narrative logic failure. Modify the text to satisfy the scene intent.
 
-The text below has failed to satisfy the required SCENE INTENT.
+1. Goals:
+- Achieve the 'objective' so that the 'expected_outcome' is physically visible.
+- Make the SMALLEST change necessary. Provide clear, sensory evidence (no abstract labels).
+- Return ONLY the rewritten scene prose. No comments, metadata, or JSON.
 
+2. Context & Intent:
+${contextBlock}
 ${intentBlock}
 
-${contextBlock}
+3. Instructions:
+- Transformations: Physical substitution, Rhythm variation, Specific mapping, Intent injection.
+- Repair: ${edits || "Ensure events from intent are present and causally linked."}
 
-REPAIR OBJECTIVE:
-Your goal is to modify the text so that the 'objective' is achieved and the 'expected_outcome' is physically visible.
-
-TRANSFORMATION RULES:
-${transformationRules}
-
-SPECIFIC REPAIR INSTRUCTIONS:
-${edits || "- Ensure all required events from the intent are physically present and causally linked."}
-
-Rules for Intent Repair:
-1. Make the SMALLEST change necessary to satisfy the logic.
-2. Provide clear SENSORY EVIDENCE for the action. The reader must see the interaction.
-3. Do not use abstract labels or interpretation. Show the physical proof of the outcome.
-4. Preserve the existing tone while hardening the causal chain.
-5. Return ONLY the rewritten scene text.
-6. Do not include feedback, labels, analysis, metadata, JSON, or any copied instruction blocks.
-7. Do not include the original text unless it is rewritten into the new scene.
-
-CURRENT TEXT:
+Original Text:
 ---
 ${original || ""}
 ---`;
   }
 
   if (mode === "surgical") {
-    return `You are a precision surgical rewriter.
-Your goal is to replace a specific failing span of text with physically grounded prose.
+    return `You are a precision surgical rewriter. Replace the specific failing span of text.
 
-FAILING SPAN: "${failingSpan}"
-FAILURE REASON: ${reason}
+Failing Span: "${failingSpan}"
+Failure Reason: ${reason}
 
-RULES:
-1. Provide a physical, sensory interaction that confirms the narrative intent without using abstract labels.
-2. The replacement must be approximately the same length as the original span.
-3. Return ONLY the replacement text. No explanation. No quotes.
+Rules:
+1. Replace with physical, sensory interaction that confirms the intent without abstract labels.
+2. Maintain approximately same length as the original span.
+3. Return ONLY replacement text. No explanation.
 
 ${contextBlock}
 ${intentBlock}
 
-ORIGINAL CONTEXT:
+Original Context:
 ---
 ${original || ""}
 ---`;
   }
 
-  return `You are a precision rewriter. Apply ONLY these transformations:
-${transformationRules}
+  return `You are a precision rewriter. Rewrite the paragraph applying only these rules:
 
-Rewrite the paragraph using the instructions below.
+1. Guidelines:
+- Apply allowed transformations: Physical substitution, Rhythm variation, Specific mapping, Intent injection.
+- ${preservationBlock}
+- Improve style/flow only; do not change outcomes, facts, or break scene intent.
 
-Keep the scene's events and what physically happens.
-Make visible structural changes, not just synonym swaps.
-${preservationBlock}
+2. ${bansBlock}
 
+3. Context & Intent:
 ${contextBlock}
 ${intentBlock}
 
-STYLE-ONLY CONSTRAINT:
-- Improve style only.
-- Do not change outcomes.
-- Do not remove or alter key facts.
-- Do not weaken causal actions.
-- If a change risks breaking scene intent, do not make it.
+4. Voice & Edits:
+- Voice Style: ${style || "Mix short and long sentences."}
+- Voice Constraints: ${constraints || "Concrete details."}
+- Banned Patterns: ${banned || "No generic emotional statements."}
+- Rewrite Instructions: ${edits || "Increase specificity."}
 
-ABSOLUTE BANS — any sentence violating these will cause rejection:
-- A sentence containing a named physical action or object must end immediately after that action or object. Do not append any clause, phrase, or word that interprets, contextualizes, or explains what the physical action means. "He blinked rapidly, the walls closing in" violates this rule. "He blinked rapidly." does not.
-- Do not use abstract emotional labels (felt, sad, happy, anxious).
-- Do not preserve any sequence of three or more consecutive words from the original text verbatim.
-- Do not use weather imagery of any kind: clouds, storms, rain, fog, wind, sky.
-- Do not use metaphors of any kind. Direct statement only.
-- Do not use similes — no 'like' or 'as' comparisons.
-- Do not explain what a physical action means emotionally. A physical action must stand alone without interpretation.
-- Do not use these connective words after a physical action: betraying, revealing, showing, indicating, proving.
-- Do not name abstract emotional states: unease, dread, fear, anxiety, tension, despair, grief, anger. Show the body instead.
-- Do not use chest or stomach sensations described abstractly. Name the specific muscle or physical effect.
-
-VOICE STYLE:
-${style || "- Mix short and long sentences."}
-
-VOICE CONSTRAINTS:
-${constraints || "- Prefer concrete detail over abstraction."}
-
-BANNED PATTERNS:
-${banned || "- Generic emotional statements."}
-
-REWRITE INSTRUCTIONS:
-${edits || "- Increase specificity and physical detail."}
-
-ORIGINAL TEXT:
+Original Text:
 ---
 ${original || ""}
----`;
+---
+Return ONLY the rewritten prose. No explanation or meta-text.`;
 }
 
 export async function generateRewrite({
@@ -198,16 +156,21 @@ ${rejectedDraftBlock}
     presence_penalty: similarityRejection ? 0.6 : 0, 
   });
 
+  console.log("generateRewrite RAW RESPONSE:", JSON.stringify(response, null, 2));
+
   if (debug) {
     console.log({ prompt, response });
   }
 
   if (!response?.ok) {
-    return {
+    const res = {
       ok: false,
       text: original || "",
+      error: response?.error || "Underlying LLM caller returned a failed status without an error description.",
       response,
     };
+    console.log("[REWRITE PIPELINE RESULT]", res);
+    return res;
   }
 
   const rewritten = response.content?.trim() || "";
@@ -235,11 +198,13 @@ ${rejectedDraftBlock}
       });
   }
 
-  return {
+  const res = {
     ok: true,
     text: rewritten || original || "",
     response,
   };
+  console.log("[REWRITE PIPELINE RESULT]", res);
+  return res;
 }
 
 export function estimateSimilarity(a, b) {
@@ -254,11 +219,46 @@ export function estimateSimilarity(a, b) {
 }
 
 export function mapVoiceToPromptSpec(voice, delta = []) {
+  if (!voice) return { style: [], constraints: delta, banned: [] };
+  
+  const style = [];
+  const fp = voice.fingerprint || {};
+
+  // Retrieve fingerprint metrics
+  const avgSentenceLength = fp.avgSentenceLength || voice.length;
+  const fragmentRate = fp.fragmentRate || voice.fragments;
+  const metaphorDensity = fp.metaphorDensity || voice.metaphor;
+  const dialogueStyle = fp.dialogueStyle || voice.dialogue;
+
+  if (avgSentenceLength) style.push(`Sentence Length: ${avgSentenceLength}`);
+  if (fragmentRate) style.push(`Fragment Tolerance: ${fragmentRate}`);
+  if (metaphorDensity) style.push(`Metaphor Frequency: ${metaphorDensity}`);
+  if (dialogueStyle) style.push(`Dialogue Style: ${dialogueStyle}`);
+
+  // Retrieve arrays/strings for habits & patterns
+  const rawPunc = fp.punctuationHabits || voice.punctuationHabits;
+  if (rawPunc) {
+    const puncStr = Array.isArray(rawPunc) ? rawPunc.join(", ") : String(rawPunc);
+    style.push(`Punctuation Habits: ${puncStr}`);
+  }
+
+  const rawLex = fp.lexicalPatterns || voice.lexicalPatterns;
+  if (rawLex) {
+    const lexStr = Array.isArray(rawLex) ? rawLex.join(", ") : String(rawLex);
+    style.push(`Lexical Patterns: ${lexStr}`);
+  }
+
+  // Iterate over compressedDirectives and budget them
+  const directives = voice.compressedDirectives || [];
+  if (directives.length > 0) {
+    const budgeted = compileInstructionBudget(directives);
+    style.push("Style Directives:\n" + budgeted.map(d => `- ${d}`).join("\n"));
+  } else if (voice.profile || voice.profileMarkdown) {
+    style.push(`Style Guide:\n${voice.profile || voice.profileMarkdown}`);
+  }
+
   return {
-    style: [
-      `Sentence Length: ${voice.length}`,
-      `Fragment Tolerance: ${voice.fragments}`,
-    ],
+    style,
     constraints: delta,
     banned: voice.banned || [],
   };

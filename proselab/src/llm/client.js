@@ -204,7 +204,7 @@ export class LLMClient {
   }
 
   async chatOllama(messages, options) {
-    const url = this.baseUrl || 'http://localhost:11434';
+    const url = this.baseUrl || 'http://127.0.0.1:11434';
 
     const body = {
       model: this.model,
@@ -465,7 +465,7 @@ export class LLMClient {
   }
 
   async streamOllama(messages, options, onChunk) {
-    const url = this.baseUrl || 'http://localhost:11434';
+    const url = this.baseUrl || 'http://127.0.0.1:11434';
 
     const response = await fetch(`${url}/api/chat`, {
       method: 'POST',

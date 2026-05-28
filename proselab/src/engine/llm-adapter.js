@@ -48,7 +48,7 @@ export class LLMAdapter {
       case 'openai': return 'https://api.openai.com/v1';
       case 'anthropic': return 'https://api.anthropic.com/v1';
       case 'openrouter': return 'https://openrouter.ai/api/v1';
-      case 'ollama': return 'http://localhost:11434/v1'; // Standardized to v1 for compatibility
+      case 'ollama': return 'http://127.0.0.1:11434/v1'; // Standardized to v1 for compatibility
       case 'custom': return null;
       default: return null;
     }

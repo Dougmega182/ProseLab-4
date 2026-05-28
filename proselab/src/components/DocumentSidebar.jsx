@@ -25,9 +25,17 @@ export function DocumentSidebar({
   onReorderChapter,
   onReorderScene,
   onEditScene,
-  onOpenImport
+  onOpenImport,
+  onFullPageRead
 }) {
   const [expandedChapters, setExpandedChapters] = useState({});
+  const [contextMenu, setContextMenu] = useState(null);
+
+  useEffect(() => {
+    const closeMenu = () => setContextMenu(null);
+    window.addEventListener("click", closeMenu);
+    return () => window.removeEventListener("click", closeMenu);
+  }, []);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -269,6 +277,14 @@ export function DocumentSidebar({
                         onClick={() => onSelectScene(scene.id)}
                         onDoubleClick={() => onEditScene && onEditScene(scene)}
                         draggable
+                        onContextMenu={(event) => {
+                          event.preventDefault();
+                          setContextMenu({
+                            x: event.clientX,
+                            y: event.clientY,
+                            scene
+                          });
+                        }}
                         onDragStart={(event) => handleDragStart(event, "scene", scene.id, chapter.id)}
                         onDragOver={handleDragOver}
                         onDrop={(event) => {
@@ -320,28 +336,61 @@ export function DocumentSidebar({
                 >
                   +
                 </button>
+                <button
+                  className="btn-icon-sm"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (window.confirm(`Delete draft folder "${chapter.title}" and all its drafts?`)) {
+                      onDeleteChapter(chapter.id);
+                    }
+                  }}
+                  title="Delete Draft Folder"
+                >
+                  -
+                </button>
               </div>
 
               {expandedChapters[chapter.id] && (
                 <div className="scene-list">
-                  {chapter.scenes.map((scene, index) => (
-                    <div
-                      key={scene.id}
-                      className={`scene-item ${scene.id === selectedSceneId ? "active" : ""}`}
-                      onClick={() => onSelectScene(scene.id)}
-                      onDoubleClick={() => onEditScene && onEditScene(scene)}
-                      draggable
-                      onDragStart={(event) => handleDragStart(event, "scene", scene.id, chapter.id)}
-                      onDragOver={handleDragOver}
-                      onDrop={(event) => {
-                        event.dataTransfer.setData("targetChapterId", chapter.id);
-                        handleDrop(event, "scene", scene.id, index);
-                      }}
-                    >
-                      <span className="scene-status-dot" data-status="draft" />
-                      <span className="scene-title">{scene.title || "Untitled Draft"}</span>
-                    </div>
-                  ))}
+                    {chapter.scenes.map((scene, index) => (
+                      <div
+                        key={scene.id}
+                        className={`scene-item ${scene.id === selectedSceneId ? "active" : ""}`}
+                        onClick={() => onSelectScene(scene.id)}
+                        onDoubleClick={() => onEditScene && onEditScene(scene)}
+                        draggable
+                        onContextMenu={(event) => {
+                          event.preventDefault();
+                          setContextMenu({
+                            x: event.clientX,
+                            y: event.clientY,
+                            scene
+                          });
+                        }}
+                        onDragStart={(event) => handleDragStart(event, "scene", scene.id, chapter.id)}
+                        onDragOver={handleDragOver}
+                        onDrop={(event) => {
+                          event.dataTransfer.setData("targetChapterId", chapter.id);
+                          handleDrop(event, "scene", scene.id, index);
+                        }}
+                      >
+                        <span className="scene-status-dot" data-status="draft" />
+                        <span className="scene-title">{scene.title || "Untitled Draft"}</span>
+                        <button
+                          className="scene-item-delete"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            if (window.confirm(`Delete draft "${scene.title || "Untitled Draft"}"?`)) {
+                              onDeleteScene(scene.id);
+                            }
+                          }}
+                          title="Delete Draft"
+                          aria-label="Delete Draft"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                   {chapter.scenes.length === 0 && (
                     <div className="empty-chapter">No drafts here.</div>
                   )}
@@ -354,6 +403,46 @@ export function DocumentSidebar({
           )}
         </div>
       </div>
+
+      {contextMenu && (
+        <div style={{
+          position: "fixed",
+          top: contextMenu.y,
+          left: contextMenu.x,
+          backgroundColor: "#16162a",
+          border: "1px solid #3b3b5c",
+          borderRadius: "6px",
+          padding: "4px 0",
+          zIndex: 11000,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+          minWidth: "140px"
+        }}>
+          <button
+            onClick={() => {
+              if (typeof onFullPageRead === "function") {
+                onFullPageRead(contextMenu.scene);
+              }
+              setContextMenu(null);
+            }}
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "8px 16px",
+              background: "none",
+              border: "none",
+              color: "#e2e8f0",
+              textAlign: "left",
+              fontSize: "13px",
+              cursor: "pointer",
+              transition: "background 0.2s"
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = "#2d2d4a"}
+            onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+          >
+            📖 Full Page Read
+          </button>
+        </div>
+      )}
     </div>
   );
 }

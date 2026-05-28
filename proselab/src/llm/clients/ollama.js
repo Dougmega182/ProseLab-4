@@ -5,7 +5,7 @@ import { BaseLLMClient } from './base.js';
 export class OllamaClient extends BaseLLMClient {
   constructor(config = {}) {
     super(config);
-    this.baseURL = config.baseURL || 'http://localhost:11434';
+    this.baseURL = config.baseURL || 'http://127.0.0.1:11434';
   }
 
   async chat(messages, params = {}) {

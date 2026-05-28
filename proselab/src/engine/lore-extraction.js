@@ -4,6 +4,79 @@
  * and narrative contradictions. Proposes updates via Shadow Actions.
  */
 
+function parseFirstJSONObject(raw) {
+  const source = String(raw || '').replace(/```json|```/gi, '').trim();
+  const starts = [];
+  let inString = false;
+  let escaped = false;
+
+  for (let i = 0; i < source.length; i += 1) {
+    const ch = source[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (ch === '{') {
+      starts.push(i);
+    }
+  }
+
+  for (let s = 0; s < starts.length; s += 1) {
+    const start = starts[s];
+    let depth = 0;
+    inString = false;
+    escaped = false;
+
+    for (let i = start; i < source.length; i += 1) {
+      const ch = source[i];
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (ch === '"') {
+        inString = true;
+        continue;
+      }
+
+      if (ch === '{') depth += 1;
+      if (ch === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          const candidate = source.slice(start, i + 1);
+          try {
+            return JSON.parse(candidate);
+          } catch {
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export async function extractLore(prose, context, projectId, providers) {
   const { sceneId, relevantEntities } = context;
 
@@ -111,28 +184,15 @@ If no actions are needed, return {"actions": []}`;
     return [];
   }
 
-  try {
-    const parsed = JSON.parse(response.content);
-    const actions = parsed.actions || [];
+  const parsed = parseFirstJSONObject(response.content);
+  if (!parsed) return [];
 
-    // Enrich each action with metadata
-    return actions.map(action => ({
-      ...action,
-      projectId,
-      sceneId,
-      createdAt: Date.now()
-    }));
-  } catch (e) {
-    const jsonMatch = response.content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return (parsed.actions || []).map(action => ({
-        ...action,
-        projectId,
-        sceneId,
-        createdAt: Date.now()
-      }));
-    }
-    return [];
-  }
+  const actions = parsed.actions || [];
+
+  return actions.map(action => ({
+    ...action,
+    projectId,
+    sceneId,
+    createdAt: Date.now()
+  }));
 }

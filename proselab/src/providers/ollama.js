@@ -7,7 +7,7 @@ import { ProviderError } from './openai.js';
 
 export class OllamaProvider {
   constructor(config) {
-    this.baseUrl = config.baseUrl || 'http://localhost:11434';
+    this.baseUrl = config.baseUrl || 'http://127.0.0.1:11434';
   }
 
   async complete({ model, messages, temperature, max_tokens, stream }) {

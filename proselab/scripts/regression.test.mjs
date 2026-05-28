@@ -11,6 +11,8 @@ import {
   resolveImportRefreshAction,
   resolvePreferredSceneId
 } from "../src/services/projectState.js";
+import { extractGalaxyOutput } from "../src/services/llm.js";
+import { validateSceneIntent } from "../src/services/orchestration/createOrchestrator.js";
 
 test("repairMalformedProjectRefsInRecords repairs malformed chapter refs", () => {
   const input = [
@@ -135,4 +137,105 @@ test("resolveImportRefreshAction keeps import refresh logic explicit", () => {
     projectId: null,
     sceneId: null
   });
+});
+
+test("extractGalaxyOutput extracts clean response and skips request prompt", () => {
+  const mockRunData = {
+    nodeRuns: [
+      {
+        nodeType: "request",
+        output: {
+          text_field: "Say hello!",
+          some_other_field: "Should not be extracted"
+        }
+      },
+      {
+        nodeType: "response",
+        output: {
+          claude_opus_4_6: "Hello! This is a clean response."
+        }
+      },
+      {
+        nodeType: "file_input",
+        output: {}
+      }
+    ]
+  };
+
+  const output = extractGalaxyOutput(mockRunData);
+  assert.equal(output, "Hello! This is a clean response.");
+});
+
+test("extractGalaxyOutput fallback parsing skips request node when response node is missing", () => {
+  const mockLegacyRunData = {
+    nodeRuns: [
+      {
+        nodeType: "request",
+        output: {
+          text_field: "Input request text"
+        }
+      },
+      {
+        nodeType: "model_node",
+        output: {
+          output: "Fallback text response"
+        }
+      }
+    ]
+  };
+
+  const output = extractGalaxyOutput(mockLegacyRunData);
+  assert.equal(output, "Fallback text response");
+});
+
+test("validateSceneIntent approves a fully valid scene with all 6 beats", () => {
+  const validScene = {
+    goal: "Obtain the heavy iron key from the sleeping guard's belt.",
+    conflict: "The floorboards are rotting and loud, and the guard is a light sleeper.",
+    change: "The protagonist has the key, but the guard has shifted, blocking the exit.",
+    stakes: "Discovery means immediate execution for espionage in the citadel.",
+    reveal: "The key has a strange owl crest, proving the guild's involvement.",
+    causality: "She needs to unlock the basement vault to find the stolen treaty."
+  };
+
+  assert.equal(validateSceneIntent(validScene), true);
+});
+
+test("validateSceneIntent rejects scenes with missing or short beats", () => {
+  const missingScene = {
+    goal: "Obtain key.",
+    conflict: "Guard is sleeping.",
+    change: "",
+    stakes: "Will die.",
+    reveal: "Owl crest.",
+    causality: "Need treaty."
+  };
+
+  assert.throws(() => validateSceneIntent(missingScene), /insufficient description/);
+});
+
+test("validateSceneIntent rejects scenes with placeholder text", () => {
+  const placeholderScene = {
+    goal: "Obtain the heavy iron key from the sleeping guard's belt.",
+    conflict: "The floorboards are rotting and loud, and the guard is a light sleeper.",
+    change: "TBD when writing this scene in detail later.",
+    stakes: "Discovery means immediate execution for espionage in the citadel.",
+    reveal: "The key has a strange owl crest, proving the guild's involvement.",
+    causality: "She needs to unlock the basement vault to find the stolen treaty."
+  };
+
+  assert.throws(() => validateSceneIntent(placeholderScene), /Placeholder detected/);
+});
+
+test("validateSceneIntent rejects scenes with duplicate beats", () => {
+  const duplicateScene = {
+    goal: "Obtain the heavy iron key from the sleeping guard's belt.",
+    conflict: "Obtain the heavy iron key from the sleeping guard's belt.",
+    change: "The protagonist has the key, but the guard has shifted, blocking the exit.",
+    stakes: "Discovery means immediate execution for espionage in the citadel.",
+    reveal: "The key has a strange owl crest, proving the guild's involvement.",
+    causality: "She needs to unlock the basement vault to find the stolen treaty."
+  };
+
+  assert.throws(() => validateSceneIntent(duplicateScene), /contain duplicate or near-identical text/);
 });

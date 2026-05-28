@@ -32,7 +32,7 @@ export class AISettingsDialog extends BaseComponent {
         name: 'Local (Ollama/LM Studio)',
         models: [],
         defaultModel: '',
-        baseUrl: 'http://localhost:11434/v1'
+        baseUrl: 'http://127.0.0.1:11434/v1'
       }
     ];
   }
@@ -296,7 +296,12 @@ export class AISettingsDialog extends BaseComponent {
     try {
       const stored = localStorage.getItem('storyforge_ai_config');
       if (stored) {
-        return JSON.parse(stored);
+        const config = JSON.parse(stored);
+        if (config.baseUrl && config.baseUrl.includes("localhost:11434")) {
+          config.baseUrl = config.baseUrl.replace("localhost", "127.0.0.1");
+          this.persistConfig(config);
+        }
+        return config;
       }
     } catch (e) {
       console.warn('Failed to load AI config:', e);

@@ -12,7 +12,7 @@ const providerConfig = {
   openai: { apiKey: import.meta.env.VITE_OPENAI_KEY },
   anthropic: { apiKey: import.meta.env.VITE_ANTHROPIC_KEY },
   gemini: { apiKey: import.meta.env.VITE_GEMINI_KEY },
-  ollama: { baseUrl: import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434' },
+  ollama: { baseUrl: import.meta.env.VITE_OLLAMA_URL || 'http://127.0.0.1:11434' },
   modelAssignments: { analysis: 'gpt-4o' }
 };
 

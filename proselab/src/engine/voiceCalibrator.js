@@ -4,56 +4,104 @@
  * The profile is framed as instructions for direct use in generation prompts.
  */
 
-export async function calibrateVoice(sampleTexts, providers) {
-  // sampleTexts: array of { text, label? } — the writer's own prose samples
-  
-  const combinedSamples = sampleTexts
-    .map((s, i) => `--- Sample ${i + 1}${s.label ? ` (${s.label})` : ''} ---\n${s.text}`)
-    .join('\n\n');
+import { callOpenAI } from "../services/llm.js";
 
-  const response = await providers.callLLM({
-    role: 'analysis', // Use analytical model for voice calibration
-    messages: [
-      {
-        role: 'system',
-        content: `You are a literary analyst specializing in authorial voice. Analyze writing samples to create a detailed voice profile that could guide an AI to write in a similar style.
+/**
+ * Calibrates authorial voice by extracting quantitative metrics and a detailed qualitative profile.
+ * Routes LLM calls through the unified callOpenAI.
+ */
+export async function calibrateVoice(sampleText, openAIKey, llmCaller = callOpenAI) {
+  if (!sampleText || !sampleText.trim()) {
+    throw new Error("Sample text is required for voice calibration");
+  }
 
-Your analysis should cover:
+  const wordCount = sampleText.trim().split(/\s+/).length;
 
-1. **Sentence structure**: Average length, variety, use of fragments, compound vs complex sentences, rhythm patterns
-2. **Vocabulary level**: Formal/informal, Latinate vs Anglo-Saxon word preference, jargon, neologisms
-3. **Paragraph structure**: Length, density, how ideas flow between paragraphs
-4. **Dialogue style**: Tag usage (said vs alternatives), dialect rendering, subtext, interruption patterns
-5. **Narrative distance**: Close/distant, how deeply we enter character thoughts, free indirect discourse usage
-6. **Sensory preferences**: Which senses dominate, how sensory detail is integrated
-7. **Figurative language**: Metaphor density, simile style, imagery patterns, recurring motifs
-8. **Pacing techniques**: Scene vs summary, time compression, white space usage
-9. **Emotional register**: How emotions are conveyed, restraint vs expressiveness
-10. **Distinctive quirks**: Any unusual patterns, signature moves, idiosyncrasies
+  const prompt = `You are a world-class literary analyst specializing in authorial voice. Analyze the provided writing sample and produce a structured authorial voice profile.
 
-Write the profile as INSTRUCTIONS — not as analysis. Frame everything as "Write with..." or "Use..." or "Prefer..." so it can be directly used as a system prompt section.
+Calculate a "stabilityScore" from 0 to 100 based on prose consistency, sentence rhythm variance, lexical repetition, punctuation predictability, and dialogue uniformity. A highly cohesive, professional sample gets a higher score; an inconsistent, chaotic, or too-short sample gets a lower score.
 
-Keep it under 500 words. Be specific — avoid vague instructions like "write well." Instead: "Favor short declarative sentences for action, lengthening to complex structures during introspection. Average 12-15 words per sentence."`
-      },
-      {
-        role: 'user',
-        content: `Analyze these writing samples and create a voice profile:\n\n${combinedSamples}`
-      }
-    ],
-    temperature: 0.4,
-    max_tokens: 1500
+Provide your response in EXACTLY this JSON structure (return ONLY pure JSON, no markdown wrapper or extra prose):
+{
+  "stabilityScore": 85,
+  "fingerprint": {
+    "avgSentenceLength": "Short" | "Medium" | "Long",
+    "fragmentRate": "None" | "Occasional" | "Frequent",
+    "metaphorDensity": "Sparse" | "Moderate" | "Heavy",
+    "dialogueStyle": "Direct" | "Implicit" | "Theatrical",
+    "punctuationHabits": ["list of key distinctive punctuation tags, e.g. em dash, minimal semicolons, fragment cadence"],
+    "lexicalPatterns": ["list of key lexical diction tags, e.g. concrete nouns, physical verbs, sparse adjectives"]
+  },
+  "compressedDirectives": [
+    "list of highly focused direct rewrite instructions for prompt calibration, e.g. Use short declarative sentences.",
+    "Favor concrete physical nouns.",
+    "Avoid ornate metaphors."
+  ],
+  "profileMarkdown": "### Voice Calibration Report\\n\\nDetailed analysis of sentence rhythm, punctuation signature, lexical diction, and qualitative style guide."
+}
+
+Writing Sample:
+---
+${sampleText}
+---`;
+
+  const response = await llmCaller(openAIKey, prompt, {
+    temperature: 0.2, // Lower temp for strict structure extraction
   });
 
-  if (!response.ok) {
-    console.error('Voice calibration failed:', response.error);
+  if (!response || !response.ok) {
+    console.error("Voice calibration LLM call failed:", response?.error);
     return null;
   }
 
-  return {
-    profile: response.content,
-    usage: response.usage,
-    calibratedAt: Date.now(),
-    sampleCount: sampleTexts.length,
-    sampleWordCount: sampleTexts.reduce((acc, s) => acc + s.text.split(/\s+/).length, 0)
-  };
+  try {
+    const rawContent = response.content;
+    const first = rawContent.indexOf("{");
+    const last = rawContent.lastIndexOf("}");
+    if (first === -1 || last === -1 || last <= first) {
+      throw new Error("Model did not return a valid JSON object.");
+    }
+    const cleanJson = JSON.parse(rawContent.slice(first, last + 1));
+
+    // Normalize metric values to match our preproduction kit options
+    const normalizedLength = mapToDropdown(cleanJson.fingerprint?.avgSentenceLength, ["Short", "Medium", "Long"], "Medium");
+    const normalizedFragments = mapToDropdown(cleanJson.fingerprint?.fragmentRate, ["None", "Occasional", "Frequent"], "Occasional");
+    const normalizedMetaphor = mapToDropdown(cleanJson.fingerprint?.metaphorDensity, ["Sparse", "Moderate", "Heavy"], "Moderate");
+    const normalizedDialogue = mapToDropdown(cleanJson.fingerprint?.dialogueStyle, ["Direct", "Implicit", "Theatrical"], "Direct");
+
+    const stabilityScore = typeof cleanJson.stabilityScore === "number" ? cleanJson.stabilityScore : 75;
+
+    return {
+      calibrated: true,
+      stabilityScore: Math.max(0, Math.min(100, stabilityScore)),
+      fingerprint: {
+        avgSentenceLength: normalizedLength,
+        fragmentRate: normalizedFragments,
+        metaphorDensity: normalizedMetaphor,
+        dialogueStyle: normalizedDialogue,
+        punctuationHabits: Array.isArray(cleanJson.fingerprint?.punctuationHabits)
+          ? cleanJson.fingerprint.punctuationHabits
+          : [cleanJson.fingerprint?.punctuationHabits || "standard punctuation"],
+        lexicalPatterns: Array.isArray(cleanJson.fingerprint?.lexicalPatterns)
+          ? cleanJson.fingerprint.lexicalPatterns
+          : [cleanJson.fingerprint?.lexicalPatterns || "standard literary vocabulary"]
+      },
+      compressedDirectives: Array.isArray(cleanJson.compressedDirectives)
+        ? cleanJson.compressedDirectives
+        : [],
+      profileMarkdown: cleanJson.profileMarkdown || "### Calibration Report\nStandard style profile.",
+      calibratedAt: Date.now(),
+      sampleWordCount: wordCount
+    };
+  } catch (err) {
+    console.error("Failed to parse calibrated voice profile JSON:", err, response.content);
+    return null;
+  }
+}
+
+function mapToDropdown(value, allowed, fallback) {
+  if (!value) return fallback;
+  const valLower = String(value).toLowerCase();
+  const match = allowed.find(a => a.toLowerCase().includes(valLower) || valLower.includes(a.toLowerCase()));
+  return match || fallback;
 }
