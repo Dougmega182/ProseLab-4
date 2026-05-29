@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/services/orchestration/createOrchestrator.js",
+    "src/services/orchestration/rewriteOrchestrator.js",
+    "src/services/orchestration/orchestrationRunner.js",
+    "src/engine/outputValidator.js",
+    "src/engine/promptBudget.js"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

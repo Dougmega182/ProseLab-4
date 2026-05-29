@@ -1,0 +1,18 @@
+{
+  "id": "20260525135935-qiz5je",
+  "cwd": "E:\\AI\\ProseLabV2",
+  "backend": "custom",
+  "model": "cmoqyfjmd0001l504qzv02jq8",
+  "createdAt": "2026-05-25T13:59:35.456Z",
+  "updatedAt": "2026-05-25T14:00:07.239Z",
+  "messages": [
+    {
+      "role": "user",
+      "content": "what directory are you in?"
+    },
+    {
+      "role": "assistant",
+      "content": "I am in:\n\n```\nE:\\AI\\ProseLabV2\n```"
+    }
+  ]
+}

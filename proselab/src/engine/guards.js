@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { CRITIC_VERDICTS, INTENT_VERDICTS } from "./criticSchema.js";
 
 /**

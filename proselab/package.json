@@ -7,7 +7,8 @@
     "bench:run": "node bench/run.js",
     "critic:5": "node scripts/run-five-rewrite-cycles.mjs",
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run type-check && vite build",
+    "type-check": "tsc -p jsconfig.json",
     "critic:cycle": "node scripts/run-single-rewrite-cycle.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -40,6 +41,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
+    "typescript": "^5.4.5",
     "vite": "^8.0.10"
   }
 }

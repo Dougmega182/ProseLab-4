@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Generation Pipeline
  * Orchestrates the full Generate -> Validate -> Critique -> Extract loop.
@@ -8,6 +9,14 @@ import { extractLore } from './lore-extraction.js';
 import { callOllama } from '../services/llm.js';
 import { generateRewrite } from './rewrite.js';
 import { Providers } from './providers.js';
+import { analyze, buildDelta } from './analysis.js';
+import { validateStage, validateTransition } from './pipelineSchema.js';
+import { runHeuristics } from './heuristics.js';
+import { evaluateFriction } from './friction.js';
+import { arbitrate } from './arbitration.js';
+import { buildStateConstraints, injectStateConstraints } from './stateTransition.js';
+import { extractEvents } from './eventExtractor.js';
+import { evaluateDeltas } from './deltaEvaluator.js';
 
 function parseFirstJSONObject(raw) {
   const source = String(raw || '').replace(/```json|```/gi, '').trim();
@@ -659,24 +668,56 @@ export async function runPipeline(params) {
     keys,
     model = "rocinante",
     onStage = () => {},
+    onUpdate = () => {},
     sceneContext = "",
     voiceSpec = {},
     logTokenUsage = () => {},
     estimateTokens = () => 0,
+    cacheVersion,
+    characterStates = {},
   } = params;
 
   if (!sceneIntent) {
     throw new Error("CREATE blocked: scene intent is required.");
   }
 
-  // 1. OLLAMA GENERATION PASS (DRAFT STAGE)
-  onStage("ollama-generation");
-  const voiceDirectives = (voiceSpec.style || []).join(", ") + ". " + (voiceSpec.constraints || []).join(", ");
-  const initialInstruction = `You are a fiction writing engine generating prose for a single scene.
+  let currentDraft = text;
+  let analysisData = null;
+  let deltaData = null;
+
+  try {
+    // 1. ANALYSIS PASS
+    onStage("analysis");
+    analysisData = analyze(currentDraft);
+    validateStage("analysis", analysisData);
+    onUpdate({ analysis: analysisData });
+
+    // 2. DELTA PASS
+    onStage("delta");
+    deltaData = buildDelta(analysisData);
+    validateStage("delta", deltaData);
+    validateTransition("analysis", "delta", analysisData, deltaData);
+    onUpdate({ delta: deltaData });
+
+    // 3. STATE CONSTRAINT PASS (Phase 7A)
+    onStage("stateConstraints");
+    const stateConstraints = buildStateConstraints(sceneIntent, characterStates);
+
+    // 4. OLLAMA GENERATION PASS (DRAFT STAGE)
+    onStage("ollama-generation");
+    
+    // Combine delta into instructions
+    const voiceDirectives = (voiceSpec.style || []).join(", ") + ". " + (voiceSpec.constraints || []).join(", ");
+    const deltaDirectives = deltaData.join(", ");
+    
+    let initialInstruction = `You are a fiction writing engine generating prose for a single scene.
 Your output should be ONLY the scene prose — no meta-commentary, no scene headers, no labels.
 
 ## VOICE & STYLE DIRECTIVES
 ${voiceDirectives}
+
+## REWRITE INSTRUCTIONS
+${deltaDirectives}
 
 ## SCENE CONTEXT
 ${sceneContext}
@@ -688,116 +729,154 @@ Irreversible Change: ${sceneIntent.irreversible_change}
 Stakes: ${sceneIntent.story_delta}
 `;
 
-  console.log(`[runPipeline Stateless] Calling Ollama model: ${model}...`);
-  const ollamaRes = await callOllama(model, initialInstruction, { temperature: params.temperature !== undefined ? params.temperature : 0.8 });
-  const draft1 = ollamaRes.ok ? ollamaRes.content : "";
-  const safeDraft1 = draft1?.trim() ? draft1 : text;
+    initialInstruction = injectStateConstraints(initialInstruction, stateConstraints);
 
-  if (ollamaRes.ok) {
-    logTokenUsage("ollama", estimateTokens(initialInstruction), estimateTokens(draft1));
-    console.log(`[runPipeline Stateless] Ollama generation succeeded (length: ${draft1.length} chars).`);
-  } else {
-    console.warn(`[runPipeline Stateless] Ollama generation failed. Error: ${ollamaRes.error}. Falling back to initial prose.`);
-  }
+    console.log(`[runPipeline Stateless] Calling Ollama model: ${model}...`);
+    const ollamaRes = await callOllama(model, initialInstruction, { temperature: params.temperature !== undefined ? params.temperature : 0.8 });
+    const draft1 = ollamaRes.ok ? ollamaRes.content : "";
+    const safeDraft1 = draft1?.trim() ? draft1 : currentDraft;
 
-  // 2. GALAXY STYLE REFINEMENT PASS
-  let currentDraft = safeDraft1;
-  if (keys?.openai) {
-    onStage("galaxy-refinement");
-    console.log("[runPipeline Stateless] Calling Galaxy refinement...");
-    const rewriteResult = await generateRewrite({
-      original: currentDraft,
-      instructions: voiceSpec.style || [],
-      voiceSpec,
-      sceneContext,
-      sceneIntent,
-      key: keys.openai,
-      mode: "style-refinement",
-      temperature: 0.75,
-    });
+    if (ollamaRes.ok) {
+      logTokenUsage("ollama", estimateTokens(initialInstruction), estimateTokens(draft1));
+      console.log(`[runPipeline Stateless] Ollama generation succeeded (length: ${draft1.length} chars).`);
+      validateStage("ollama", safeDraft1);
+      validateTransition("delta", "ollama", deltaData, safeDraft1);
+    } else {
+      throw new Error(`Ollama generation failed: ${ollamaRes.error}`);
+    }
 
-    if (rewriteResult.ok && rewriteResult.text) {
-      currentDraft = rewriteResult.text;
-      console.log(`[runPipeline Stateless] Galaxy refinement succeeded (length: ${currentDraft.length} chars).`);
-      if (rewriteResult.response?.usage) {
-        logTokenUsage(
-          "openai::gpt-4o-mini",
-          rewriteResult.response.usage.prompt_tokens,
-          rewriteResult.response.usage.completion_tokens
-        );
+    currentDraft = safeDraft1;
+
+    // 4. GALAXY STYLE REFINEMENT PASS (OpenAI)
+    if (keys?.openai) {
+      onStage("galaxy-refinement");
+      console.log("[runPipeline Stateless] Calling Galaxy refinement...");
+      const rewriteResult = await generateRewrite({
+        original: currentDraft,
+        instructions: [...(voiceSpec.style || []), ...deltaData],
+        voiceSpec,
+        sceneContext,
+        sceneIntent,
+        key: keys.openai,
+        mode: "style-refinement",
+        temperature: 0.75,
+      });
+
+      if (rewriteResult.ok && rewriteResult.text) {
+        currentDraft = rewriteResult.text;
+        console.log(`[runPipeline Stateless] Galaxy refinement succeeded (length: ${currentDraft.length} chars).`);
+        if (rewriteResult.response?.usage) {
+          logTokenUsage(
+            "openai::gpt-4o-mini",
+            rewriteResult.response.usage.prompt_tokens,
+            rewriteResult.response.usage.completion_tokens
+          );
+        }
+        validateStage("openai", currentDraft);
+      } else {
+        throw new Error(`Galaxy refinement failed: ${rewriteResult.error}`);
       }
     } else {
-      console.warn(`[runPipeline Stateless] Galaxy refinement failed/bypassed. Error: ${rewriteResult.error}`);
+      console.warn("[runPipeline Stateless] Skipping Galaxy style refinement (missing OpenAI key).");
     }
-  } else {
-    console.warn("[runPipeline Stateless] Skipping Galaxy style refinement (missing OpenAI key).");
-  }
 
-  // 3. CRITIQUE PASS
-  let critique = { verdict: "APPROVE", overallScore: 8, failures: [] };
-  if (keys?.openai || keys?.gemini) {
-    onStage("critic");
-    console.log("[runPipeline Stateless] Running critique pass...");
-    try {
+    // 5. EVALUATION PASS (Structural + Friction)
+    let finalVerdict = "APPROVE";
+    let finalFailures = [];
+    let frictionData = null;
+    let heuristicData = null;
+    let arbitrateResult = null;
+    let critique = { verdict: "APPROVE", overallScore: 8, failures: [] };
+
+    if (keys?.openai || keys?.gemini) {
+      onStage("critic");
+      console.log("[runPipeline Stateless] Running critique and friction passes...");
       const models = {
         generation: { provider: 'ollama', model },
         validation: { provider: 'openai', model: 'gpt-4o-mini' },
         critique: { provider: 'openai', model: 'gpt-4o-mini' }
       };
       const providers = new Providers(keys, models);
-      const rawCritique = await critiqueScene(
-        currentDraft,
-        {
-          sceneBeat: sceneIntent.objective,
-          voiceProfile: voiceDirectives
-        },
-        providers
-      );
-
-      const overallScore = rawCritique.overallScore || rawCritique.feedback?.overallScore || 0;
-      const verdict = overallScore >= 6 ? "APPROVE" : "REWRITE";
       
-      const failures = [];
+      // 5a. Run Heuristics Hard Detectors
+      heuristicData = runHeuristics(currentDraft);
+
+      // 5b. Run Structural Critique & Adversarial Friction in parallel
+      const [rawCritique, rawFriction] = await Promise.all([
+        critiqueScene(
+          currentDraft,
+          { sceneBeat: sceneIntent.objective, voiceProfile: voiceDirectives },
+          providers
+        ),
+        evaluateFriction(
+          currentDraft,
+          heuristicData,
+          providers
+        )
+      ]);
+
+      // Parse structural critique failures
+      const overallScore = rawCritique.overallScore || rawCritique.feedback?.overallScore || 0;
+      const structVerdict = overallScore >= 6 ? "APPROVE" : "REWRITE";
+      const structFailures = [];
       if (rawCritique.weaknesses && Array.isArray(rawCritique.weaknesses)) {
-        rawCritique.weaknesses.forEach(w => {
-          failures.push({ type: "CRITIQUE_WEAKNESS", reason: w });
-        });
+        rawCritique.weaknesses.forEach(w => structFailures.push({ type: "CRITIQUE_WEAKNESS", reason: w }));
       }
       if (rawCritique.feedback?.weaknesses && Array.isArray(rawCritique.feedback.weaknesses)) {
-        rawCritique.feedback.weaknesses.forEach(w => {
-          failures.push({ type: "CRITIQUE_WEAKNESS", reason: w });
-        });
+        rawCritique.feedback.weaknesses.forEach(w => structFailures.push({ type: "CRITIQUE_WEAKNESS", reason: w }));
       }
+      critique = { verdict: structVerdict, overallScore, failures: structFailures, raw: rawCritique };
+      frictionData = rawFriction;
 
-      critique = {
-        verdict,
-        overallScore,
-        failures,
-        raw: rawCritique
-      };
-      console.log(`[runPipeline Stateless] Critique completed. Score: ${overallScore}, Verdict: ${verdict}`);
-    } catch (e) {
-      console.error(`[runPipeline Stateless] Critique pass threw exception:`, e);
-      critique = {
-        verdict: "APPROVE", // Graceful fallback
-        overallScore: 7,
-        failures: [],
-        error: e.message
-      };
+      // 5c. ARBITRATION KERNEL
+      onStage("arbitration");
+      arbitrateResult = arbitrate(sceneIntent, critique, frictionData);
+      
+      // 5d. STATE & DELTA EVALUATION (Phase 7A)
+      onStage("stateEvaluation");
+      const extractedEvents = await extractEvents(currentDraft, sceneIntent.attendance || [], providers);
+      const deltaEvaluation = evaluateDeltas(characterStates, stateConstraints.expectedManifolds, extractedEvents);
+
+      finalVerdict = arbitrateResult.verdict;
+      finalFailures = arbitrateResult.failures;
+      
+      if (deltaEvaluation.verdict === "REWRITE") {
+        finalVerdict = "REWRITE";
+        deltaEvaluation.failures.forEach(f => finalFailures.push(f));
+      }
+      
+      // For legacy trace compatibility, override critique object with arbitration results
+      critique.verdict = finalVerdict;
+      critique.failures = finalFailures;
+      
+      console.log(`[runPipeline Stateless] Arbitration completed. Final Verdict: ${finalVerdict}`);
     }
-  }
 
-  return {
-    prose: safeDraft1,
-    final: currentDraft,
-    critique,
-    attempts: 1,
-    traces: [
-      {
-        attempt: 1,
-        draft: currentDraft,
-        critique
-      }
-    ]
-  };
+    return {
+      prose: safeDraft1,
+      final: currentDraft,
+      critique,
+      analysis: analysisData,
+      delta: deltaData,
+      heuristics: heuristicData,
+      friction: frictionData,
+      arbitration: arbitrateResult,
+      stateTransition: {
+        extractedEvents: typeof extractedEvents !== 'undefined' ? extractedEvents : [],
+        deltaEvaluation: typeof deltaEvaluation !== 'undefined' ? deltaEvaluation : null
+      },
+      attempts: 1,
+      traces: [
+        {
+          attempt: 1,
+          draft: currentDraft,
+          critique
+        }
+      ]
+    };
+
+  } catch (error) {
+    console.error(`[runPipeline Stateless] Pipeline exception:`, error);
+    throw error;
+  }
 }

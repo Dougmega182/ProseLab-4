@@ -7,6 +7,8 @@ import AnnotationRail from "../writing/AnnotationRail.jsx";
 import { PipelineTracker } from "../Dashboard.jsx";
 
 export default function ManuscriptWorkspace({
+  providerCards,
+  runtimeCards,
   activeTab,
   setActiveTab,
   activeMode,
@@ -78,13 +80,9 @@ export default function ManuscriptWorkspace({
 
   // Output Tab
   createModeCritique,
+  modeFeedback,
   copyToEditor,
 
-  // Event Handlers for Agent actions (suggest buttons)
-  onRunCriticSuggest,
-  onRunGeneratorSuggest,
-  onRunInstrumentedCompositionTest,
-  onRunOrchestrationLoop,
   onShowValidationStats,
   renderMarkdown
 }) {
@@ -103,43 +101,11 @@ export default function ManuscriptWorkspace({
         {activeTab === "output" && (
           <>
             <button
-              className="btn btn-primary"
-              onClick={onRunCriticSuggest}
-              style={{ marginLeft: "auto", fontSize: "0.7rem", padding: "4px 12px" }}
-              disabled={running}
-            >
-              [AI] Critic Suggest
-            </button>
-            <button
-              className="btn btn-ghost"
-              onClick={onRunGeneratorSuggest}
-              style={{ marginLeft: "8px", fontSize: "0.7rem", padding: "4px 12px", border: "1px solid var(--border-subtle)" }}
-              disabled={running}
-            >
-              [AI] Generator Suggest
-            </button>
-            <button
-              className="btn btn-ghost"
-              onClick={onRunInstrumentedCompositionTest}
-              style={{ marginLeft: "8px", fontSize: "0.7rem", padding: "4px 12px", border: "1px solid var(--border-subtle)", color: "var(--accent-purple)" }}
-              disabled={running}
-            >
-              [TEST] Instrumented Composition Test
-            </button>
-            <button
               className="btn btn-ghost"
               onClick={onShowValidationStats}
-              style={{ marginLeft: "8px", fontSize: "0.7rem", padding: "4px 12px", border: "1px solid var(--accent-purple)", color: "var(--accent-purple)" }}
+              style={{ marginLeft: "auto", fontSize: "0.7rem", padding: "4px 12px", border: "1px solid var(--accent-purple)", color: "var(--accent-purple)" }}
             >
               [STATS] Final Report
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={onRunOrchestrationLoop}
-              style={{ marginLeft: "8px", fontSize: "0.7rem", padding: "4px 12px" }}
-              disabled={running}
-            >
-              [RUN] RUN ORCHESTRATION LOOP
             </button>
           </>
         )}
@@ -176,6 +142,33 @@ export default function ManuscriptWorkspace({
             onSelectScene={selectScene}
             envStatusState={envStatusState}
           />
+        )}
+
+        {activeTab === "system" && (
+          <div className="system-view-container" style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
+            <h2 style={{ marginBottom: "24px" }}>System Status & Configuration</h2>
+            <div className="provider-status-grid">
+              {providerCards?.map(card => (
+                <div key={card.key} className={`provider-status-card is-${card.status}`}>
+                  <div className="provider-status-head">
+                    <span>{card.label}</span>
+                    <div className={`env-dot ${card.status === "ready" ? "connected" : card.status === "partial" ? "info" : "missing"}`} />
+                  </div>
+                  <strong>{card.status === "ready" ? "Ready" : card.status === "partial" ? "Partial" : card.status === "warning" ? "Blocked" : "Missing"}</strong>
+                  <p>{card.detail}</p>
+                </div>
+              ))}
+              {runtimeCards?.map(card => (
+                <div key={card.label} className={`provider-status-card is-${card.tone}`}>
+                  <div className="provider-status-head">
+                    <span>{card.label}</span>
+                  </div>
+                  <strong>{card.value}</strong>
+                  <p>{card.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {activeTab === "lore" && (
@@ -356,7 +349,7 @@ export default function ManuscriptWorkspace({
                 </div>
 
                 <div className="actions-bar">
-                  <button id="run-btn" className="btn btn-primary" onClick={run} disabled={running || !text.trim() || !activeModeInfo.isConfigReady || activeModeInfo.isLocked}>
+                  <button id="run-btn" className="btn btn-primary" onClick={() => run(activeMode, activeModeInfo)} disabled={running || !text.trim() || !activeModeInfo.isConfigReady || activeModeInfo.isLocked}>
                     {running && <span className="spinner" />}
                     {running ? "Running Mode..." : `Start ${activeMode} Mode`}
                   </button>

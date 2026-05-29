@@ -45,7 +45,12 @@ Primary files:
 - `proselab/src/hooks/useDocumentManager.js`
 - `proselab/src/services/db.js`
 - `proselab/src/services/importOrchestrator.js`
-- `proselab/src/services/createModeOrchestrator.js`
+- `proselab/src/services/orchestration/createOrchestrator.js` (Modular Creation Orchestrator)
+- `proselab/src/services/orchestration/editorialOrchestrator.js` (Modular Editorial Orchestrator)
+- `proselab/src/services/orchestration/rewriteOrchestrator.js` (Modular Rewrite Orchestrator)
+- `proselab/src/services/llm/router.js` (Centralized Capability Provider & Router)
+- `proselab/src/engine/promptBudget.js` (Strict prompt word budget compression)
+- `proselab/src/engine/outputValidator.js` (Hybrid narrative output verification compiler)
 - `proselab/src/engine/pipeline.js`
 
 ## Implemented capabilities
@@ -54,9 +59,18 @@ Primary files:
 - analysis and delta flow
 - critique verdicting (`APPROVE` / `REWRITE`)
 - bounded retry/orchestration
-- scene-intent gating before create execution
+- scene-intent gating before create execution with strict length/placeholder/duplication rules
 - expansion insertion engine with polling-compatible continuation and overlap dedup
-- Opus-assisted insertion boundary recommendation from scene paragraph map (`Suggest Insertion Placement`)
+- Opus automatic insertion boundary inference from scene paragraph map during generation (with optional manual refresh action)
+- boundary-safe JSON parsing in validation/critique/extraction stages to tolerate trailing model text
+- **Centralized LLM Router** (centralizes capability mapping, fallback policies, and standardizes local Ollama calls on explicit IPv4 `127.0.0.1`)
+- **Prompt Budgeting Control** (Voice profile limit: 120 words, Scene context: 80 words, Rewrite directives: 100 words, Repair instructions: 60 words; automatically merges, deduplicates, and compresses directives using `budget.js`)
+- **Output Verification Engine (Narrative Compiler)** (Deterministic delta checks capping similarity to 5%-85%, banned abstract emotional labels block, and optional evaluative LLM checks on Goal Achievement, Conflict Acknowledgment, and Irreversible Change)
+- **Decoupled Orchestration Layer** (Standalone, contract-compliant orchestrators for create, rewrite, and editorial runs completely decoupled from React UI rendering)
+- **Centralized Orchestration Runner (`orchestrationRunner.js`)** (Standardized exponential backoff, tracing, state tracking, and retry-loop contract enforcement across all orchestrators)
+- **Word Budgeting Isolation** (Strict word limits with separate `rewrite` and `repair` parameters, line-by-line array truncation, and automatic prompt pollution prevention)
+- **Native JSON Structured Outputs** (OpenAI `response_format` strict JSON validation integrated directly with Zod schema verification in the validation layer)
+- **Strict tsc Type Safety** (Whole-engine static type checks passing cleanly via standard compilation)
 
 ### Document system
 - project -> chapter -> scene model
@@ -66,6 +80,7 @@ Primary files:
 - local reset/maintenance action
 - IndexedDB persistence with legacy migration support
 - expansion draft runs saved to `Editorial Drafts` with checkpoint metadata
+- draft scenes and draft folders are directly deletable from the sidebar drafts tree
 - expansion panel controls use responsive wrapping layout to prevent overflow in write view
 
 ### Manuscript import and planning extraction
@@ -77,6 +92,7 @@ Primary files:
 
 ### Preproduction and lore
 - preproduction surfaces: core lock, voice, world rules, dossiers, beats, inventory, preflight, pipeline settings
+- voice profile stability score (0-100) calibrator and visual badge indicator rendering
 - lore extraction, relationships, timeline, consistency tracking, query/export surfaces
 - review cues for low-confidence entities, contradictions, timeline pressure
 
@@ -88,34 +104,49 @@ Primary files:
 - Documentation must reflect runtime reality, not target fiction
 - No fake auth/login UX without real auth
 
+## Active avoidances (Banned anti-patterns)
+
+- **Narrative State Graphs (REJECTED):** Do not propose, design, or implement graph-shaped state trackers (e.g., spatial state models, causal graphs, spatial causality trackers, emotional drift trackers, narrative ontologies). The canonical data model must remain a flat JSON store tracking structured canon entries.
+- **Bypassing the LLM Abstraction Layer:** Never write direct `fetch` network calls to LLM endpoints (e.g., OpenAI/Gemini/Ollama) inside validation or business logic layers. All model interactions must route exclusively through the centralized provider router (`llm.js`).
+- **Cargo-Cult JSON String Parsing:** Do not implement manual string-stripping regex or custom-written AST parsers to isolate JSON. When strict structured JSON output is required, use OpenAI's native Structured Outputs (`response_format: { type: "json_schema", ... strict: true }`) combined with direct Zod schema mapping.
+- **Prompt Pollution & Instruction Stacking:** Never stack errors, violations, or challenger fatal flaws inside a growing accumulator prompt parameter over multiple retries. Isolated directives must be refreshed per pass using bounded parameters (`rewrite` vs. `repair`) and strict budgeting rules.
+
 ## Current phase
 
-### Phase 5: UX coherence and hardening (in progress)
-
-Goals:
-- make implemented workflows reliable and readable end-to-end
-
-Priority work:
-1. remove mojibake and stale/misleading copy
-2. continue preproduction/sidebar UX polish
-3. increase import/reload confidence with stronger tests
-4. reduce coupling and size concentration in `App.jsx`
-5. keep Gemini challenger messaging explicit: enforced on APPROVE in CREATE when key is configured
-6. reduce inline styling and presentation duplication
-
-## Next phase
-
-### Phase 6: architecture and reliability
+### Phase 6: architecture and reliability (COMPLETED)
 
 Goals:
 - lower change risk
 - make boundaries clear
 - increase regression safety
 
+Completed work:
+1. extracted orchestration and prompt-compiling/state logic from `App.jsx` into standalone modules
+2. introduced centralized capability-gated provider router with resilient loopback handling
+3. added prompt budgeting and narrative compiler output validation engines
+4. standardized local connections to IPv4 `127.0.0.1:11434` across the stack, eliminating all `localhost` ambiguous hostname errors
+5. added comprehensive unit tests for pre-inference gates in `regression.test.mjs`
+6. cleanly wired the newly isolated orchestrators (`createOrchestrator`, `editorialOrchestrator`, `rewriteOrchestrator`) into `App.jsx` UI buttons, eliminating final UI-layer orchestrator coupling.
+7. **Unified Orchestration Runner (`orchestrationRunner.js`):** Centralized retry/exponential backoff, telemetry tracing, state management, and similarity preservation controls.
+8. **Decoupled dynamic word budgeting:** Upgraded `promptBudget.js` to support line-boundary array truncation, cleanly separating original instructions (`rewrite` budget) from automated error corrections (`repair` budget), completely eliminating prompt pollution over multiple retry passes.
+9. **Native structured JSON verification:** Replaced brittle regex-based JSON extraction in `outputValidator.js` with structured Zod schema parsing enforced natively at the LLM provider API level via `response_format`.
+10. **Strict static type safety:** Integrated strict TypeScript checking (`tsc`) via a custom `jsconfig.json` configuration, achieving 100% compiler verification.
+
+Remaining work:
+1. Polish preproduction/sidebar UX and remove any remaining UI-copy mojibake characters.
+
+## Next phase
+
+### Phase 7: Narrative State Graph and Continuity Tracking
+
+Goals:
+- track physical causality and entity continuity over long spans
+
 Target work:
-1. refactor orchestration/state logic out of `App.jsx`
-2. add regression coverage for import persistence, hydration, delete cascades, critique/retry flow, mode gating
-3. centralize provider diagnostics and runtime status messaging
+1. track character emotional drift metrics
+2. map spatial locations and character/prop movements dynamically
+3. verify chronological beat sequencing
+4. automate local model fallbacks under resource pressure
 
 ## Challenger / Gemini runtime truth
 
@@ -127,9 +158,8 @@ Current behavior:
 ## Backlog priorities
 
 ### Now
-- align remaining create-mode copy to conditional runtime truth (Gemini hard gate when key is configured)
-- add real Ollama reachability checks
-- replace mojibake in visible UI copy
+- implement automatic self-corrective retry loops inside `createOrchestrator` and `rewriteOrchestrator` using the narrative compiler and challenger validations
+- replace remaining mojibake in visible UI copy
 - keep operator docs aligned with actual runtime
 
 ### Reliability
@@ -139,9 +169,7 @@ Current behavior:
 - regression coverage for expansion continuation dedup and checkpoint logging
 
 ### Architecture
-- split provider logic from UI state concentration in `App.jsx`
-- extract mode definitions, lock rules, and persona metadata into dedicated modules
-- formalize diagnostics panel model instead of ad hoc render checks
+- migrate LLM client adapters to a clean `src/services/providers/` directory with standardized driver interfaces
 
 ## Editorial quality direction
 
@@ -158,6 +186,7 @@ Quality heuristics to enforce:
 
 - Runtime: JavaScript ES modules, browser-first local runtime
 - Frontend: React 19 + Vite 8
+- Styling: Custom Vanilla CSS design tokens (custom badges, stability pills)
 - Persistence: IndexedDB as canonical live store
 - Scripts/tests: Node-based scripts and regression checks
 

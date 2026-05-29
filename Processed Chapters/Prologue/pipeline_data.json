@@ -1,0 +1,60 @@
+{
+  "verdict": "APPROVE",
+  "analysis": {
+    "word_count": 1189,
+    "rhythm": {
+      "short_ratio": 0.423,
+      "variance": "high",
+      "avg_length": 11.4,
+      "sentence_count": 104,
+      "meets_target": true
+    },
+    "physical_grounding": {
+      "physical_ratio": 0.952,
+      "body_count": 20,
+      "abstract_count": 1,
+      "meets_target": true
+    },
+    "specificity": {
+      "concrete_ratio": 0.798,
+      "vague_count": 12,
+      "meets_target": true
+    },
+    "weak_patterns": [
+      "still",
+      "maybe",
+      "rather",
+      "only",
+      "very",
+      "already",
+      "just",
+      "quite"
+    ],
+    "delta": [],
+    "needs_rewrite": false
+  },
+  "delta": [],
+  "ollama_used": false,
+  "gemini_used": false,
+  "traces": [
+    {
+      "attempt": 2,
+      "draft": "# **PROLOGUE**\n\nIn the reflection of the window, a figure finished tying its shoe a heartbeat too late.\n\nChen remained motionless, his fingers still on the laces, mentally counting his heartbeats. Outside, the Melbourne skyline basked in the soft glow of dawn. He had gazed at that view every morning for three years, and it had never acknowledged him.\n\nHe straightened up carefully. His service weapon was twelve steps away, secured in the bedroom safe. His QSA communicator lay three steps further, in the desk drawer.\n\nHe took those three steps.\n\nThe front door swung open.\n\nChen ducked behind the kitchen counter and pressed his back against the cabinet. Before he was fully aware, the comm device was in his hand. He activated it as he had countless times in the field\u2014thumb, thumb, index\u2014and placed it on the floor next to him, recording; its tiny indicator light hidden beneath his palm.\n\n\"\u2014yes, I'll have the Chen report ready by Thursday. The dimensional variance data is still being processed.\"\n\nIt was his own voice, his familiar tone, discussing his current workload.\n\nThe refrigerator door opened. A mug clattered against the counter.\n\nInstinct took over as Chen swiftly crossed to the bookshelf, gliding silently across the floor. He pulled *The Maltese Falcon* from the shelf, turned it backward\u2014spine facing inward, defying his father's strict rule\u2014and then retreated just as footsteps approached from the hallway.\n\nThe shower started.\n\nTwelve minutes. Maybe fourteen. Having taken a seven-minute shower every morning for three years, he knew the replacement wouldn't have that knowledge and would take as long as it needed. This gave him time to consider the kitchen table, the hook by the door, and the laminated schedule he updated weekly.\n\nHe checked the schedule first. The replacement had written it in his handwriting\u2014close enough that his graphology team wouldn't notice, but distinct enough for him to recognize. The pressure was inconsistent. The letter spacing slightly wider, indicating someone was reconstructing rather than creating. He snapped a photo with the comm device and replaced it precisely where it had been.\n\n07:00 workout. 07:30 tram. Coffee with cream.\n\nHe took the tram at 07:15. He drank his coffee black. For three years since the divorce, he had worked out at 06:00, clinging to the one thing he could control at that hour: whether he got out of bed.\n\nNone of this was recorded in any QSA files.\n\nMoving to the hook by the door, he noticed his security pass dangling from the bottom hook. He had always used the top hook\u2014a habit formed over three years\u2014so automatic that reasoning had faded, leaving only the action. He left the pass where the replacement had placed it and turned to the kitchen counter.\n\nThe white mug. He had never used that mug.\n\nThe shower stopped.\n\nFor a moment, he simply surveyed his surroundings: his apartment, his books, his laminated schedule, his father's novel facing the wrong way. The individual who had arranged these items had been meticulous, yet also careless.\n\nThe bathroom door opened.\n\nHe slipped toward the front door.\n\nThe replacement emerged into the hallway, and his own reflection met him across the room, with an expression that conveyed not surprise, but recognition.\n\n\"You're still here,\" the replacement said. \"That's not supposed to happen.\"\n\n\"Who are you?\"\n\n\"I'm you,\" it replied. The smile was his, yet unsettling, the facial muscles mimicking his own without achieving the right expression. \"The version of you this reality requires.\"\n\n\"You're a copy.\"\n\n\"I'm an improvement.\" The replacement advanced. \"You were flagged eighteen months ago for behavioral inconsistencies. The Agency decided\u2014\"\n\n\"The Agency doesn\u2019t replace its own agents.\"\n\n\"The QSA you know doesn\u2019t.\"\n\nIt moved faster than he anticipated\u2014beyond any calibration he had for a human body\u2014his wrist twisting with a painful pop before he hit the floor, the comm device skidding across the hardwood.\n\nThe replacement retrieved the device, examined it briefly, and pressed stop\u2014swiftly and precisely, as if it understood a threat and knew how to neutralize it. Then it turned its attention back to Chen. The body offered no warning, no shift of weight before commitment. The space between them closed in an instant, as if a frame had been cut from a film, leaving Chen with a disorienting sense of wrongness about the room's geometry.\n\nThe replacement loomed over him, the device still in hand, surveying him like a solved puzzle.\n\n\"You left evidence,\" it stated.\n\n\"Typical of you. Very pattern-oriented.\" It rotated the device once more.\n\n\"But evidence needs someone to discover it\u2014someone to comprehend it. And those who might understand are already optimized.\"\n\nChen pushed himself up using his good arm, the wrong angle of his wrist hanging painfully.\n\n\"Someone will notice,\" he insisted.\n\n\"Someone will see the differences.\"\n\n\"The differences matter.\" The replacement crouched beside him.\n\n\"You took the 07:15 tram because you feared crowds. You drank black coffee as punishment for the divorce. You worked out at 06:00 because you couldn\u2019t sleep past five anyway.\"\n\nThe smile returned, the muscles positioning themselves without conveying the true emotion.\n\n\"I take the 07:30 tram because I am confident. I drink coffee with cream because I indulge in small pleasures. I work out at 07:00 because I sleep well.\" It leaned in closer.\n\n\"I'm not imitating your life, Marcus. I'm living the life you were too broken to embrace. And no one\u2014no one\u2014will miss the version of you that was afraid of everything.\"\n\nChen's gaze fell to the device in the replacement's hand. Recording had ceased, but the device possessed a secondary function\u2014a dead-man's switch that would transmit the last sixty seconds to a secure QSA server if the agent's biometrics flatlined while in contact with it.\n\nHe just needed to touch it.\n\nHe pressed his hand against the device where the replacement held it\u2014not jerking or lunging, just allowing his palm to connect, ensuring his biometrics remained alive against the surface.\n\nThe replacement looked down, and the recognition flickered across its expression\u2014not quite swiftly enough. It began to pry at his fingers with its free hand. Chen held on. The replacement shifted its grip, its fingers finding his throat with calculated accuracy, squeezing against the carotid with the precision of something that didn\u2019t need to make estimations. Chen\u2019s vision narrowed, his pulse thrumming through his palm against the device, slowing, slowing. He clung to it. His own face loomed above him. The device warmed between their hands.\n\nThe Melbourne skyline glowed in the morning light through the window, and the room appeared entirely ordinary, except for the two men inside and the silent decision being made between them.\n\nSomeone will discover this.\n\nThe device emitted a single, faint beep.",
+      "critique": {
+        "score": {
+          "physical_grounding": 8.0,
+          "specificity": 8.0,
+          "rhythm": 7.0,
+          "overall": 7.7
+        },
+        "verdict": "APPROVE",
+        "failures": [],
+        "rewrite_directive": "",
+        "rewrite": {
+          "instructions": []
+        }
+      },
+      "similarity": 0.6876190476190476
+    }
+  ]
+}

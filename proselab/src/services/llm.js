@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* global process, Buffer */
 export const TraceManager = {
   mode: "LIVE", // LIVE | RECORD | REPLAY
@@ -499,8 +500,17 @@ export function extractGalaxyOutput(data) {
 }
 
 /**
- * callOpenAI — now routes through Galaxy AI.
+ * callOpenAI — now routes through Galaxy AI unless options.response_format is provided,
+ * in which case it routes directly to the native OpenAI chat completions API.
  * Signature preserved so all existing call sites work without changes.
+ * 
+ * @param {string} key API key
+ * @param {string} prompt Prompt text
+ * @param {object} [options] Call options
+ * @param {object} [options.response_format] Schema constraints
+ * @param {string} [options.model] OpenAI model
+ * @param {number} [options.temperature] Temperature
+ * @returns {Promise<{ ok: boolean, content: string, error?: string, raw: any }>} Standard response shape
  */
 export async function callOpenAI(key, prompt, options = {}) {
   if (CircuitBreaker.isOpen()) {
@@ -508,9 +518,49 @@ export async function callOpenAI(key, prompt, options = {}) {
   }
 
   return TraceManager.intercept(async () => {
+    if (options.response_format) {
+      try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${key}`
+          },
+          body: JSON.stringify({
+            model: options.model || "gpt-4o-mini",
+            messages: [
+              { role: "user", content: prompt }
+            ],
+            response_format: options.response_format,
+            temperature: options.temperature !== undefined ? options.temperature : 0.7,
+          })
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          return { ok: false, error: `Direct OpenAI error: ${response.status} ${errText}`, raw: errText };
+        }
+
+        const data = await response.json();
+        return {
+          ok: true,
+          content: data.choices[0].message.content,
+          usage: data.usage,
+          raw: JSON.stringify(data)
+        };
+      } catch (err) {
+        return {
+          ok: false,
+          error: err instanceof Error ? err.message : String(err),
+          raw: null
+        };
+      }
+    }
+
     return callGalaxy(key, prompt, options);
   });
 }
+
 
 export async function checkOpenAIReachability(key) {
   // Check Galaxy reachability instead of OpenAI

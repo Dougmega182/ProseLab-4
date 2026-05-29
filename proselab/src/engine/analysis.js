@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const TARGET = {
   rhythm: { shortRatio: 0.2, variance: "high" },
   emotion: { physicalRatio: 0.8 },

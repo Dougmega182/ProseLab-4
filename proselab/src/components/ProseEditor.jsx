@@ -40,6 +40,7 @@ export function ProseEditor({ value, onChange, findings = [], placeholder = "Sta
       markdown({ base: markdownLanguage, codeLanguages: languages }),
       highlightField,
       highlightTheme,
+      EditorView.lineWrapping,
     ];
     return exts;
   }, []);

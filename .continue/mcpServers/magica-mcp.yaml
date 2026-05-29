@@ -1,0 +1,9 @@
+name: Magica MCP
+version: 1.0.0
+schema: v1
+mcpServers:
+  - name: Magica MCP
+    command: node
+    args:
+      - E:\Ai\galaxy-vscode\magica-mcp.js
+    env: {}

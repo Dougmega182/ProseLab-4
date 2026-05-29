@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Lore Extraction Agent
  * Analyzes approved prose to identify new entities, state changes, 

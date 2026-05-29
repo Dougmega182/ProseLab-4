@@ -24,17 +24,16 @@ import RightSidebar from "./components/layout/RightSidebar";
 import ManuscriptWorkspace from "./components/layout/ManuscriptWorkspace";
 import AgentCard from "./components/editorial/AgentCard";
 import AnnotationRail from "./components/writing/AnnotationRail";
+import CommandPalette from "./features/commandPalette/components/CommandPalette";
+import { initCommands } from "./features/orchestration/initCommands";
+import { eventBus } from "./features/orchestration/events";
 import { callOpenAI, callOllama } from "./services/llm.js";
 
 import { analyze } from "./engine/analysis.js";
 import { INFERENCE_CACHE_CONTEXT_VERSION } from "./engine/pipeline.js";
 import { PERSONAS } from "./engine/editorial.js";
-import { runCriticAgent, runGeneratorAgent, applyAgentAction } from "./agents/runAgent.js";
-import { runTargetedRewriteOrchestration, runSparkOrchestration } from "./services/orchestration/rewriteOrchestrator.js";
-import { recommendExpansionInsertion, runExpansionInsertionDraft } from "./services/expansionOrchestrator.js";
+import { useOrchestratorPipeline } from "./hooks/useOrchestratorPipeline.js";
 import { compileScene, SCENE_PHASES } from "./services/compiler.js";
-import { runCreateOrchestration } from "./services/orchestration/createOrchestrator.js";
-import { runEditorialOrchestration } from "./services/orchestration/editorialOrchestrator.js";
 import { getModeInfo, getModeLockReason } from "./engine/modeRules.js";
 import { checkOllamaReachability, checkOpenAIReachability, checkGeminiReachability } from "./services/llm.js";
 import { CharModal, SceneModal } from "./components/Modals.jsx";
@@ -140,12 +139,6 @@ export default function ProseLabV4() {
   const [activeTab, setActiveTab] = useState("write");
   const [activeMode, setActiveMode] = useState("CREATE");
   const [text, setText] = useState("");
-  const [output, setOutput] = useState("");
-  const [stages, setStages] = useState({ draft: "", refined: "", final: "" });
-  const [createModeCritique, setCreateModeCritique] = useState(null);
-  const [analysis, setAnalysis] = useState(null);
-  const [delta, setDelta] = useState([]);
-  const [modeFeedback, setModeFeedback] = useState({ ANALYSE: {}, ENGINEER: {}, MARKET: {}, VERDICT: {} });
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showImportWizard, setShowImportWizard] = useState(false);
@@ -162,6 +155,8 @@ export default function ProseLabV4() {
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === "dark" ? "light" : "dark");
+
+  // COMMAND REGISTRY & EVENT BUS will be initialized below.
 
   // LORE AGENT INITIALIZATION
   const loreAgent = useMemo(() => new LoreAgent(), []);
@@ -277,6 +272,92 @@ export default function ProseLabV4() {
     }
   }), [ENV_KEYS.openai, ENV_KEYS.model]);
 
+  const [editingChar, setEditingChar] = useState(null);
+  const [editingScene, setEditingScene] = useState(null);
+  const [expansionPlanText, setExpansionPlanText] = useState("");
+  const [expansionPlacement, setExpansionPlacement] = useState(null);
+  const [expansionPlacementReasoning, setExpansionPlacementReasoning] = useState("");
+  const [cacheStats, setCacheStats] = useState(getCacheStats());
+  const [costStats, setCostStats] = useState(getTodayStats());
+
+  const {
+    running,
+    setRunning,
+    stage,
+    setStage,
+    output,
+    setOutput,
+    stages,
+    setStages,
+    createModeCritique,
+    setCreateModeCritique,
+    analysis,
+    setAnalysis,
+    delta,
+    modeFeedback,
+    setModeFeedback,
+    lastAnalyzedText,
+    setLastAnalyzedText,
+    run,
+    runCreateMode,
+    runTargetedRewrite,
+    runSpark,
+    handleRunExpansionInsertionDraft,
+    handleRecommendExpansionInsertion,
+    outputRef,
+  } = useOrchestratorPipeline({
+    text,
+    selectedSceneId,
+    selectedProjectId,
+    scenes,
+    core,
+    chars,
+    rules,
+    beats,
+    voice,
+    draftTree,
+    createChapter,
+    createScene,
+    saveDocument,
+    updateSceneText,
+    updateSceneMetadata,
+    expansionPlanText,
+    setExpansionPlacement,
+    setExpansionPlacementReasoning,
+    setActiveTab,
+    setCacheStats,
+    setCostStats,
+  });
+
+  // COMMAND REGISTRY & EVENT BUS
+  useEffect(() => {
+    initCommands();
+  }, []);
+
+  useEffect(() => {
+    const unsubs = [
+      eventBus.on('nav.goto', (payload) => {
+        if (payload.cmdId === 'nav.goto.write') setActiveTab('write');
+        if (payload.cmdId === 'nav.goto.preproduction') setActiveTab('preproduction');
+        if (payload.cmdId === 'nav.goto.reports') setActiveTab('reports');
+        if (payload.cmdId === 'nav.goto.lore') setActiveTab('lore');
+        if (payload.cmdId === 'nav.goto.system') setActiveTab('system');
+      }),
+      eventBus.on('system.action', (payload) => {
+        if (payload.cmdId === 'system.clear_cache') {
+          handleClearCache();
+        }
+        if (payload.cmdId === 'system.clear_token_log') {
+          handleClearCosts();
+        }
+      }),
+      eventBus.on('rewrite.run', () => {
+        runTargetedRewrite();
+      })
+    ];
+
+    return () => unsubs.forEach(unsub => unsub());
+  }, [runTargetedRewrite]);
 
   const [showMetadata, setShowMetadata] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
@@ -304,16 +385,7 @@ export default function ProseLabV4() {
     return () => clearTimeout(timer);
   }, [text, modeFeedback, selectedSceneId, saveSceneDraft]);
 
-  const [lastAnalyzedText, setLastAnalyzedText] = useState("");
-  const [editingChar, setEditingChar] = useState(null);
-  const [editingScene, setEditingScene] = useState(null);
-  const [running, setRunning] = useState(false);
-  const [stage, setStage] = useState(null);
-  const [expansionPlanText, setExpansionPlanText] = useState("");
-  const [expansionPlacement, setExpansionPlacement] = useState(null);
-  const [expansionPlacementReasoning, setExpansionPlacementReasoning] = useState("");
-  const [cacheStats, setCacheStats] = useState(getCacheStats());
-  const [costStats, setCostStats] = useState(getTodayStats());
+  // State variables and useOrchestratorPipeline are instantiated above.
   const [envStatus, setEnvStatus] = useState({
     openaiReachable: false,
     openaiReason: "Unknown",
@@ -323,7 +395,6 @@ export default function ProseLabV4() {
     ollamaReason: "Unknown"
   });
   const [now, setNow] = useState(new Date());
-  const outputRef = useRef(null);
 
   useEffect(() => {
     const handleWindowError = (event) => {
@@ -597,120 +668,8 @@ export default function ProseLabV4() {
   const dateStr = now.toLocaleDateString("en-AU", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   const timeStr = now.toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
 
-  const run = async () => {
-
-    if (!text.trim() || running || !activeModeInfo.isConfigReady || activeModeInfo.isLocked) return;
-    setRunning(true); setStage("analysis");
-
-    if (activeMode === "CREATE") {
-      await runCreateMode();
-    } else {
-      if (activeMode === "ANALYSE") setLastAnalyzedText(text);
-      const result = await runEditorialOrchestration({
-        activeMode,
-        text,
-        modeFeedback,
-        voiceSpec: voice,
-        openaiKey: ENV_KEYS.openai,
-        geminiKey: ENV_KEYS.gemini,
-        sceneIntent: scenes.find(s => String(s.id) === String(selectedSceneId)) ? {
-          objective: scenes.find(s => String(s.id) === String(selectedSceneId)).output,
-          success_state: scenes.find(s => String(s.id) === String(selectedSceneId)).output,
-          failure_state: `Failed to fulfill: ${scenes.find(s => String(s.id) === String(selectedSceneId)).output}`,
-          irreversible_change: scenes.find(s => String(s.id) === String(selectedSceneId)).causality,
-          story_delta: scenes.find(s => String(s.id) === String(selectedSceneId)).stakes
-        } : null,
-        onStage: setStage,
-      });
-
-      if (result.success || result.diagnostics?.verdict) {
-        if (result.diagnostics?.feedback) {
-          setModeFeedback(prev => ({ ...prev, [activeMode]: result.diagnostics.feedback }));
-        }
-        setActiveTab("output");
-      } else {
-        setOutput("Error: " + (result.warnings?.join(", ") || "Editorial run failed."));
-      }
-    }
-    setRunning(false);
-  };
-
-  const runCreateMode = async () => {
-    setOutput("");
-    setAnalysis(null);
-    setDelta([]);
-    setStages({ draft: "", refined: "", final: "" });
-
-    try {
-      const result = await runCreateOrchestration({
-        text,
-        preproduction: { core, chars, rules, beats, voice, scenes },
-        preflightId: selectedSceneId,
-        delta,
-        keys: { openai: ENV_KEYS.openai, gemini: ENV_KEYS.gemini },
-        cacheVersion: INFERENCE_CACHE_CONTEXT_VERSION,
-        logTokenUsage,
-        estimateTokens,
-        onStage: setStage,
-        onIntent: (intent) =>
-          setCreateModeCritique((prev) => ({ ...(prev || {}), intent })),
-        onAnalysis: setAnalysis,
-        onDelta: setDelta,
-      });
-
-      if (result.diagnostics?.verdict === "BLOCKED") {
-        setCreateModeCritique({
-          verdict: "BLOCKED",
-          score: null,
-          failures: [],
-          attempts: 0,
-          traces: [],
-          intent: result.diagnostics.intent,
-        });
-        setOutput(result.output);
-        setCacheStats(getCacheStats());
-        setCostStats(getTodayStats());
-        outputRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        setActiveTab("output");
-        return;
-      }
-
-      if (result.diagnostics?.stage === "failed" && result.diagnostics?.verdict === "ERROR") {
-        setOutput("Error: " + result.warnings.join(", "));
-        setStage(null);
-        setActiveTab("output");
-        return;
-      }
-
-      // Normal complete or quality failed retry-exhausted
-      const draft = result.diagnostics?.traces?.[0]?.draft || "";
-      setStages({ draft, refined: "", final: result.output });
-
-      const critique = {
-        verdict: result.diagnostics?.verdict,
-        score: result.diagnostics?.validation?.overallScore ?? result.diagnostics?.challenger?.score,
-        failures: result.diagnostics?.failures || [],
-        intent: result.diagnostics?.intent,
-        intent_verdict: result.diagnostics?.intent_verdict,
-        intent_alignment: result.diagnostics?.intent_alignment,
-        intent_failures: result.diagnostics?.intent_failures,
-        attempts: result.diagnostics?.attempts || 1,
-        traces: result.diagnostics?.traces || [],
-        challenger: result.diagnostics?.challenger,
-      };
-
-      setCreateModeCritique(critique);
-      setOutput(result.output);
-      setCacheStats(getCacheStats());
-      setCostStats(getTodayStats());
-      outputRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      setActiveTab("output");
-    } catch (e) {
-      setOutput("Error: " + e.message);
-      setStage(null);
-      setActiveTab("output");
-    }
-  };
+  // All AI orchestration pipelines (run, runCreateMode, runTargetedRewrite, etc.)
+  // are encapsulated within the useOrchestratorPipeline hook.
 
   const copyToEditor = (content) => {
     setText(content);
@@ -723,151 +682,6 @@ export default function ProseLabV4() {
   };
 
 
-  const runTargetedRewrite = async () => {
-    if (running || !text) return;
-    setRunning(true);
-    try {
-      const result = await runTargetedRewriteOrchestration({
-        text,
-        scenes,
-        selectedSceneId,
-        modeFeedback,
-        openaiKey: ENV_KEYS.openai,
-        geminiKey: ENV_KEYS.gemini,
-        draftTree,
-        createChapter,
-        createScene,
-        onStage: setStage,
-      });
-
-      if (result.success || result.diagnostics?.verdict) {
-        setOutput(result.output);
-        setStages(prev => ({ ...prev, final: result.output }));
-        
-        // Construct the critique object for state
-        const critique = {
-          verdict: result.diagnostics?.verdict,
-          score: result.diagnostics?.challenger?.score || null,
-          failures: result.diagnostics?.failures || [],
-          attempts: result.diagnostics?.attempts || 1,
-          traces: result.diagnostics?.traces || [],
-          challenger: result.diagnostics?.challenger,
-        };
-        setCreateModeCritique(critique);
-        setActiveTab("output");
-      } else {
-        setOutput("Error: " + result.warnings.join(", "));
-      }
-    } catch (e) {
-      setOutput("Error: " + e.message);
-    } finally {
-      setRunning(false);
-      setStage(null);
-    }
-  };
-
-  const handleRecommendExpansionInsertion = async () => {
-    if (running) return;
-    setRunning(true);
-    setStage("expansion-insertion-recommend");
-    try {
-      const activeScene = scenes.find(s => String(s.id) === String(selectedSceneId));
-      const sourceText = activeScene?.text || text || "";
-      const placement = await recommendExpansionInsertion({
-        activeScene,
-        sourceText,
-        expansionBrief: expansionPlanText,
-        openaiKey: ENV_KEYS.openai,
-        onStage: setStage,
-      });
-
-      setExpansionPlacement({ startParagraph: placement.startParagraph, endParagraph: placement.endParagraph });
-      setExpansionPlacementReasoning(placement.reasoning);
-
-      setOutput(`Recommended insertion:\nStart: before paragraph ${placement.boundary.start.paragraph} (line ${placement.boundary.start.line})\nEnd: before paragraph ${placement.boundary.end.paragraph} (line ${placement.boundary.end.line})\n\nReason: ${placement.reasoning}`);
-    } catch (e) {
-      setOutput("Error: " + e.message);
-    } finally {
-      setRunning(false);
-      setStage(null);
-    }
-  };
-
-  const runSpark = async (spark) => {
-    if (running || !text.trim()) return;
-    setRunning(true);
-    try {
-      const result = await runSparkOrchestration({
-        text,
-        scenes,
-        selectedSceneId,
-        spark,
-        openaiKey: ENV_KEYS.openai,
-        onStage: setStage,
-      });
-
-      if (result.success) {
-        setOutput(result.output);
-        setStages(prev => ({ ...prev, final: result.output }));
-        setActiveTab("output");
-      } else {
-        setOutput("Error: " + result.warnings.join(", "));
-      }
-    } catch (e) {
-      setOutput("Error: " + e.message);
-    } finally {
-      setRunning(false);
-      setStage(null);
-    }
-  };
-
-  const handleRunExpansionInsertionDraft = async () => {
-    if (running) return;
-    const activeScene = scenes.find(s => String(s.id) === String(selectedSceneId));
-    const sourceText = activeScene?.text || text || "";
-
-    setRunning(true);
-    try {
-      await runExpansionInsertionDraft({
-        activeScene,
-        sourceText,
-        expansionBrief: expansionPlanText,
-        openaiKey: ENV_KEYS.openai,
-        selectedProjectId,
-        draftTree,
-        createChapter,
-        createScene,
-        saveDocument,
-        updateSceneText,
-        updateSceneMetadata,
-        logTokenUsage,
-        estimateTokens,
-        onStage: setStage,
-        onChunk: async ({ pass, composedDraft }) => {
-          setSaveStatus("saving");
-          setOutput(composedDraft);
-          setStages(prev => ({ ...prev, final: composedDraft }));
-          setSaveStatus("saved");
-          setTimeout(() => setSaveStatus("idle"), 1200);
-        },
-        onComplete: ({ finalText, placement }) => {
-          setExpansionPlacement({ startParagraph: placement.startParagraph, endParagraph: placement.endParagraph });
-          setExpansionPlacementReasoning(placement.reasoning);
-          setOutput(finalText);
-          setStages(prev => ({ ...prev, final: finalText }));
-          setActiveTab("output");
-        },
-        onError: (e) => {
-          setOutput("Error: " + e.message);
-        }
-      });
-    } catch (e) {
-      setOutput("Error: " + e.message);
-    } finally {
-      setRunning(false);
-      setStage(null);
-    }
-  };
 
   const handleClearCache = () => {
     clearInferenceCache();
@@ -987,9 +801,11 @@ export default function ProseLabV4() {
   const cacheDiagnostics = getCacheDiagnostics();
 
   return (
-    <WorkspaceLayout
-      isFocusMode={isFocusMode}
-      focusHeader={
+    <>
+      <CommandPalette />
+      <WorkspaceLayout
+        isFocusMode={isFocusMode}
+        focusHeader={
         <div className="focus-header">
           <div className="focus-scene-title">{currentScene?.title || "Untitled Scene"}</div>
           <button className="btn btn-ghost" onClick={() => setIsFocusMode(false)} style={{ fontSize: '20px', padding: '0 10px' }}>x</button>
@@ -1033,6 +849,19 @@ export default function ProseLabV4() {
             activeModeInfo={activeModeInfo}
             CREATE_PIPELINE_SUMMARY={CREATE_PIPELINE_SUMMARY}
           />
+        ) : activeTab === "output" ? (
+          <div className="right-sidebar" style={{ width: '380px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px', padding: '24px', overflowY: 'auto' }}>
+            <h3 className="sidebar-heading" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>EDITORIAL REVIEW</h3>
+            {modeFeedback && Object.entries(modeFeedback).map(([mode, feedback]) => {
+              if (!feedback || Object.keys(feedback).length === 0) return null;
+              let personaName = mode;
+              if (mode === "ANALYSE") personaName = "MARGARET (PROSE)";
+              if (mode === "ENGINEER") personaName = "JAMES (STRUCTURE)";
+              if (mode === "MARKET") personaName = "SAOIRSE (MARKET)";
+              if (mode === "VERDICT") personaName = "VICTOR (VERDICT)";
+              return <AgentCard key={mode} pKey={mode} personaName={personaName} feedback={feedback} />;
+            })}
+          </div>
         ) : null
       }
       topNav={
@@ -1047,18 +876,17 @@ export default function ProseLabV4() {
       }
       statusBar={
         <StatusBar
-          providerCards={providerCards}
-          runtimeCards={runtimeCards}
-          cacheDiagnostics={cacheDiagnostics}
-          handleClearCache={handleClearCache}
-          handleClearCosts={handleClearCosts}
-          handleResetLocalData={handleResetLocalData}
+          cacheStats={cacheStats}
+          costStats={costStats}
+          wordCount={wordCount}
           isFocusMode={isFocusMode}
           setIsFocusMode={setIsFocusMode}
         />
       }
     >
       <ManuscriptWorkspace
+        providerCards={providerCards}
+        runtimeCards={runtimeCards}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         activeMode={activeMode}
@@ -1130,44 +958,9 @@ export default function ProseLabV4() {
 
         // Output Tab
         createModeCritique={createModeCritique}
+        modeFeedback={modeFeedback}
         copyToEditor={copyToEditor}
 
-        // Event Handlers for Agent suggestions
-        onRunCriticSuggest={() => {
-          runCriticAgent({
-            openaiKey: ENV_KEYS.openai,
-            project: { core, chars, rules, beats, voice },
-            scenes,
-            logShadowAction
-          }).then(res => setOutput(res.message));
-        }}
-        onRunGeneratorSuggest={() => {
-          runGeneratorAgent({
-            openaiKey: ENV_KEYS.openai,
-            project: { core, chars, rules, beats, voice },
-            scenes,
-            logShadowAction
-          }).then(res => setOutput(res.message));
-        }}
-        onRunInstrumentedCompositionTest={async () => {
-          setRunning(true);
-          const genRes = await runGeneratorAgent({
-            openaiKey: ENV_KEYS.openai,
-            project: { core, chars, rules, beats, voice },
-            scenes,
-            logShadowAction
-          });
-          if (genRes.ok) {
-            await runCriticAgent({
-              openaiKey: ENV_KEYS.openai,
-              project: { core, chars, rules, beats, voice },
-              scenes,
-              logShadowAction,
-              contextPatch: genRes.action?.payload?.patch
-            });
-          }
-          setRunning(false);
-        }}
         onShowValidationStats={() => {
           const report = generateValidationReport();
           if (report) {
@@ -1176,44 +969,6 @@ export default function ProseLabV4() {
           } else {
             alert("No metrics collected yet.");
           }
-        }}
-        onRunOrchestrationLoop={async () => {
-          setRunning(true);
-          setStage("intent");
-          const genRes = await runGeneratorAgent({
-            openaiKey: ENV_KEYS.openai,
-            project: { core, chars, rules, beats, voice },
-            scenes
-          });
-          if (genRes.ok) {
-            if (!genRes.action) {
-              alert("Generator did not propose any changes.");
-              setStage(null);
-              setRunning(false);
-              return;
-            }
-            setStage("critique");
-            const criticRes = await runCriticAgent({
-              openaiKey: ENV_KEYS.openai,
-              project: { core, chars, rules, beats, voice },
-              scenes,
-              logShadowAction,
-              contextPatch: genRes.action?.payload?.patch
-            });
-
-            if (criticRes.autoApply) {
-              applyAgentAction(criticRes.action.id, { shadowActions, scenes, removeShadowAction });
-              alert("Scene refined and applied automatically.");
-            } else {
-              const reason = criticRes.gate?.reason || criticRes.message;
-              const costTag = criticRes.gate?.cost_tier ? ` [${criticRes.gate.cost_tier}]` : "";
-              alert(`Blocked${costTag}: ${reason}. \n\nThe trace has been kept in the Pending Agent Proposals below so you can inspect it!`);
-            }
-          } else {
-            alert(`Generator failed: ${genRes.message}`);
-          }
-          setStage(null);
-          setRunning(false);
         }}
         renderMarkdown={renderMarkdown}
       />
@@ -1239,5 +994,6 @@ export default function ProseLabV4() {
           />
         )}
     </WorkspaceLayout>
+    </>
   );
 }

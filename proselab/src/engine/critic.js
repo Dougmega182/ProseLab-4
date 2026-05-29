@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Critic Agent
  * Evaluates prose quality and craft dimensions.

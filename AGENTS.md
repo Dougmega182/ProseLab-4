@@ -2,7 +2,7 @@
 # Tool Roster & Routing Rules
 # Author: Dale Ryan | Last updated: see git log
 
----
+***
 
 ## TOOL STACK OVERVIEW
 
@@ -13,11 +13,11 @@
 | **Galaxy AI** | Claude Opus 4.6 | Executor | Precision, reasoning, voice-sensitive output |
 | **ABACUS.ai CLI** | — | Orchestrator | Loads GOVERNANCE/MEMORY/AGENTS, routes tasks, manages state |
 
----
+***
 
 ## AGENT DEFINITIONS
 
----
+***
 
 ### AGENT: FLASH
 **Tool:** Gemini Flash 3
@@ -41,7 +41,7 @@
 **Handoff to Executor (Opus 4.6):** When the draft needs to be finalised, polished, or is going to a human.
 **Handoff to Auditor (Pro 3):** When the task has grown beyond ~10 files or needs cross-file analysis.
 
----
+***
 
 ### AGENT: AUDITOR
 **Tool:** Gemini Pro 3
@@ -65,7 +65,7 @@
 **Handoff to Executor:** Audit findings are in — now need targeted fixes or documented output.
 **Handoff to Flash:** Audit findings just need quick reformatting or simple transforms.
 
----
+***
 
 ### AGENT: EXECUTOR
 **Tool:** Galaxy AI (Claude Opus 4.6)
@@ -85,7 +85,7 @@
 
 **Voice rule:** All output from this agent must follow the voice spec in GOVERNANCE.md §4. No exceptions.
 
----
+***
 
 ### AGENT: ABACUS CLI
 **Tool:** ABACUS.ai CLI
@@ -102,7 +102,7 @@
 - Write prose
 - Override routing rules from GOVERNANCE.md
 
----
+***
 
 ## ROUTING DECISION TREE
 
@@ -124,7 +124,7 @@ New task arrives
 └─ Unclear? Default to EXECUTOR. Escalate to Auditor if context explodes.
 ```
 
----
+***
 
 ## PROJECT-SPECIFIC ROUTING
 
@@ -175,7 +175,7 @@ New task arrives
 | Cover letter / CV edits | Executor | Voice-critical |
 | Research synthesis | Flash → Executor | Flash drafts, Executor finalises |
 
----
+***
 
 ## HANDOFF PROTOCOL
 
@@ -276,35 +276,38 @@ Relevant code:
 - `proselab/src/engine/autoApplyGate.js`
 
 ### 5. Challenger / Adjudication Layer
-Status: partial
+Status: implemented
 
 Role:
 - adversarial verification of approvals
 
 Current reality:
-- Gemini support exists in the provider layer
-- critique guardrails and truth/adjudication scaffolding exist
-- documentation previously overstated Gemini as an always-active final stage
-
-What is still missing:
-- one explicit, always-on challenger pass in the main create pipeline with clear UI visibility
+- Gemini 1.5 Pro is fully integrated into the creation orchestration layer (`createOrchestrator.js`) as a live adversarial challenger.
+- Runs dynamically on all `APPROVE` verdicts if `VITE_GEMINI_KEY` is provided.
+- An adversarial challenger `VETO` automatically downgrades the final verdict to `REWRITE`, appending detailed diagnostic flaw details to the run telemetry.
+- Decoupled from hard execution gates to ensure consistent survival pass telemetry when keys are absent.
 
 ### 6. Orchestrator
-Status: implemented, still evolving
+Status: fully refactored, decoupled, and transactionally resilient
 
 Role:
 - control the bounded generate -> critique -> retry flow
 
 Current behavior:
-- blocks `CREATE` if scene intent is incomplete
-- runs analysis, delta, generation, validation, critique
-- records attempts and final disposition
-- enforces bounded retry behavior
+- Fully extracted from UI layers into contract-compliant orchestration modules under `src/services/orchestration/` (`createOrchestrator.js`, `editorialOrchestrator.js`, `rewriteOrchestrator.js`).
+- Runs on top of a centralized `runWithRetry` transaction runner (`orchestrationRunner.js`) enforcing standardized multi-pass retries and exponential backoff policies.
+- Blocks `CREATE` if scene intent is incomplete by running deterministic validation.
+- Enforces strict prompt word budgeting control dynamically on all inputs, cleanly isolating the `rewrite` budget (user directives) from the `repair` budget (active validator/challenger feedback) to prevent prompt pollution over iterations.
+- Standardizes all returns to a strict execution contract (`success`, `output`, `diagnostics`, `warnings`, `metrics`).
+- Runs native structured JSON verification (`outputValidator.js`) leveraging OpenAI `response_format` strict schemas and Zod schema mapping.
+- Automatically handles adversarial Gemini Challenger `VETO` verdicts by auto-downgrading them and feeding collected fatal flaws as precise repair directives.
 
 Relevant code:
-- `proselab/src/services/createModeOrchestrator.js`
-- `proselab/src/engine/pipeline.js`
-- `proselab/src/engine/orchestrator.js`
+- `proselab/src/services/orchestration/orchestrationRunner.js`
+- `proselab/src/services/orchestration/createOrchestrator.js`
+- `proselab/src/services/orchestration/rewriteOrchestrator.js`
+- `proselab/src/engine/promptBudget.js`
+- `proselab/src/engine/outputValidator.js`
 
 ## Current Product Surfaces
 
@@ -322,12 +325,8 @@ Includes:
 - Pipeline settings
 
 Recent state:
-- imported manuscript metadata now lands in these surfaces
-- GUI was refreshed to make dossiers/world/beats more readable
-- evaluation cues now exist across dossiers, world rules, beats, inventory, and preflight:
-  - provenance labels
-  - review flags
-  - scene readiness scoring
+- Voice profile page includes advanced calibration metrics, rendering a computed `stabilityScore` (0-100) and visual pill/badge tags for lexical habits and punctuation patterns.
+- Evaluation cues now exist across dossiers, world rules, beats, inventory, and preflight.
 
 ### Document System
 Status: implemented
@@ -391,22 +390,23 @@ Recent state:
 - Docs must describe current runtime honestly, not just the target vision.
 - No fake login/auth UX should be introduced without real auth.
 
+## Active Avoidances (Banned Anti-patterns)
+
+- **Narrative State Graphs (REJECTED):** Do not propose, design, or implement graph-shaped state trackers (e.g., spatial state models, causal graphs, spatial causality trackers, emotional drift trackers, narrative ontologies). The canonical data model must remain a flat JSON store tracking structured canon entries.
+- **Bypassing the LLM Abstraction Layer:** Never write direct `fetch` network calls to LLM endpoints (e.g., OpenAI/Gemini/Ollama) inside validation or business logic layers. All model interactions must route exclusively through the centralized provider router (`llm.js`).
+- **Cargo-Cult JSON String Parsing:** Do not implement manual string-stripping regex or custom-written AST parsers to isolate JSON. When strict structured JSON output is required, use OpenAI's native Structured Outputs (`response_format: { type: "json_schema", ... strict: true }`) combined with direct Zod schema mapping.
+- **Prompt Pollution & Instruction Stacking:** Never stack errors, violations, or challenger fatal flaws inside a growing accumulator prompt parameter over multiple retries. Isolated directives must be refreshed per pass using bounded parameters (`rewrite` vs. `repair`) and strict budgeting rules.
+
 ## Known Gaps
 
-- Some UI copy and icons still contain mojibake / encoding damage.
-- The broader shell still has layout inconsistency outside the refreshed import/preproduction surfaces.
-- The main `App.jsx` remains too large and still carries too much orchestration/state/UI coupling.
-- Gemini/challenger behavior still needs one clean, documented truth path in the main runtime.
-- Tests are still lighter than they should be for orchestration, imports, and mode gating.
+- Some UI copy still contains minor mojibake / encoding damage.
+- The broader shell has layout inconsistency outside the refreshed import/preproduction surfaces.
+- The main `App.jsx` still carries React rendering and legacy action hooks that need wiring to the new orchestrators.
+- Tests for long-running multi-pass expansion cycles need more extensive coverage.
 
 ## Near-Term Priorities
 
-1. Finish aligning UI copy and provider messaging with the real pipeline.
-2. Continue breaking orchestration/state concerns out of `App.jsx`.
-3. Add regression coverage for:
-   - import persistence
-   - project/chapter/scene hydration
-   - create-mode gating
-   - critic/retry behavior
+1. Wire the decoupled orchestrators cleanly into the React UI actions in `App.jsx`.
+2. Add automated repair loops inside the orchestrators based on the narrative compiler's validation feedback.
+3. Fix remaining UI copy mojibake.
 4. Continue improving preproduction and sidebar UX coherence.
-5. Decide whether challenger/Gemini becomes a first-class enforced stage or remains optional infrastructure.

@@ -30,6 +30,7 @@ export function DocumentSidebar({
 }) {
   const [expandedChapters, setExpandedChapters] = useState({});
   const [contextMenu, setContextMenu] = useState(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     const closeMenu = () => setContextMenu(null);
@@ -38,8 +39,6 @@ export function DocumentSidebar({
   }, []);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const hoverTimer = React.useRef(null);
 
   useEffect(() => {
     if (searchQuery.trim().length >= 2 && selectedProjectId) {
@@ -135,35 +134,21 @@ export function DocumentSidebar({
     }
   };
 
-  const handleMouseEnter = () => {
-    if (hoverTimer.current) {
-      clearTimeout(hoverTimer.current);
-      hoverTimer.current = null;
-    }
-    setIsCollapsed(false);
-  };
-
-  const handleMouseLeave = () => {
-    if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    hoverTimer.current = setTimeout(() => {
-      setIsCollapsed(true);
-      hoverTimer.current = null;
-    }, 5000);
-  };
+  if (isCollapsed) {
+    return (
+      <div className="doc-sidebar is-collapsed" style={{ width: "48px", flex: "0 0 48px", overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", padding: "12px 0" }} onClick={() => setIsCollapsed(false)}>
+        <span style={{ fontSize: "14px", fontWeight: "bold", color: "var(--text-muted)", writingMode: "vertical-rl", transform: "rotate(180deg)", letterSpacing: "4px" }}>FILES</span>
+        <button className="btn-icon" style={{ marginTop: "16px" }} aria-label="Expand sidebar">[&gt;]</button>
+      </div>
+    );
+  }
 
   return (
-    <div 
-      className={`doc-sidebar ${isCollapsed ? "is-collapsed" : "is-expanded"}`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
+    <div className="doc-sidebar">
       <div className="sidebar-header">
-        <div className="sidebar-brand">
-          <img className="sidebar-brand-mark" src="/logo.png" alt="ProseLab" />
-          <div className="sidebar-brand-copy">
-            <h3>PROSELAB</h3>
-            <span>Precision Analytical Engine</span>
-          </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", fontSize: "11px", letterSpacing: "1px", color: "var(--text-muted)" }}>
+          <span>FILES</span>
+          <button className="btn-icon" onClick={() => setIsCollapsed(true)} aria-label="Collapse sidebar" style={{ fontSize: "12px" }}>[&lt;]</button>
         </div>
         <div className="sidebar-project-row">
           <select

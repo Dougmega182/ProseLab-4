@@ -13,16 +13,16 @@ export default function WorkspaceLayout({ leftSidebar, rightSidebar, topNav, sta
   }
 
   return (
-    <div className="workspace-container" style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", background: "var(--bg-primary)" }}>
+    <div className="workspace-container" style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", background: "var(--bg-primary)", position: "relative" }}>
       {topNav && <div className="workspace-topnav">{topNav}</div>}
       <div className="workspace-main-area" style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {leftSidebar && <div className="workspace-left-sidebar" style={{ width: "280px", borderRight: "1px solid var(--border-subtle)", background: "var(--bg-secondary)", display: "flex", flexDirection: "column", overflowY: "auto" }}>{leftSidebar}</div>}
+        {leftSidebar}
         <div className="workspace-content" style={{ flex: 1, overflowY: "auto", padding: "24px", position: "relative" }}>
           {children}
         </div>
-        {rightSidebar && <div className="workspace-right-sidebar" style={{ width: "320px", borderLeft: "1px solid var(--border-subtle)", background: "var(--bg-secondary)", display: "flex", flexDirection: "column", overflowY: "auto" }}>{rightSidebar}</div>}
+        {rightSidebar}
       </div>
-      {statusBar && <div className="workspace-statusbar" style={{ borderTop: "1px solid var(--border-subtle)", background: "var(--bg-card)" }}>{statusBar}</div>}
+      {statusBar && <div className="workspace-statusbar" style={{ flexShrink: 0, width: "100%", zIndex: 100 }}>{statusBar}</div>}
     </div>
   );
 }

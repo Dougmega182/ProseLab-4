@@ -12,7 +12,7 @@ export default function RightSidebar({
   CREATE_PIPELINE_SUMMARY 
 }) {
   return (
-    <div className="right-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '24px' }}>
+    <div className="right-sidebar" style={{ width: '380px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '24px', padding: '24px' }}>
       
       <div className="sidebar-section">
         <h3 className="sidebar-heading">Mission Control</h3>
@@ -47,11 +47,11 @@ export default function RightSidebar({
           <div className="telemetry-grid">
             <div className="telemetry-item">
               <span className="telemetry-label">Physical Grounding</span>
-              <span className="telemetry-value">{analysis.physical_grounding || 0}/10</span>
+              <span className="telemetry-value">{(analysis.emotion?.physicalRatio ? Math.round(analysis.emotion.physicalRatio * 10) : 0)}/10</span>
             </div>
             <div className="telemetry-item">
               <span className="telemetry-label">Specificity</span>
-              <span className="telemetry-value">{analysis.specificity || 0}/10</span>
+              <span className="telemetry-value">{(analysis.specificity?.concreteRatio ? Math.round(analysis.specificity.concreteRatio * 10) : 0)}/10</span>
             </div>
           </div>
         </div>

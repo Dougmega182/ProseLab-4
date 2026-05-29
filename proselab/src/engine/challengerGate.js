@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * challengerGate.js — Gemini Adversarial Challenger
  *

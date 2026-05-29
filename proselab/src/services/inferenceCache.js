@@ -1,3 +1,4 @@
+// @ts-nocheck
 const CACHE_KEY = "plab_cache_v3";
 const CACHE_ENABLED_KEY = "plab_cache_enabled";
 const CACHE_VERSION_KEY = "plab_cache_version_override";
@@ -52,6 +53,7 @@ function stableStringify(obj) {
 function buildCacheKeyPayload({ name, input, context = {} }) {
   return {
     version: getEffectiveCacheVersion(),
+    schemaVersion: context.schemaVersion || "1.0",
     name,
     input: normalizeInput(input),
     context, 
@@ -128,7 +130,8 @@ export async function cachedInference({
 
   const keyPayload = buildCacheKeyPayload({ name, input, context });
   const hash = await hashStr(stableStringify(keyPayload));
-  const key = `${name}::${hash}`;
+  const schemaVersion = context.schemaVersion || "1.0";
+  const key = `${name}::${schemaVersion}::${hash}`;
 
   if (!cacheAllowed) {
     console.log("CACHE BYPASS:", {

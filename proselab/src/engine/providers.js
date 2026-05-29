@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Providers Bridge
  * Normalizes calls to different LLM services (OpenAI, Ollama, Gemini) 

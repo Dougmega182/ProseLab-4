@@ -3,6 +3,7 @@
  * Evaluates prose quality and literary craft dimensions.
  */
 
+// @ts-nocheck
 function parseFirstJSONObject(raw) {
   const source = String(raw || '').replace(/```json|```/gi, '').trim();
   const starts = [];

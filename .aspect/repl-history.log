@@ -1,0 +1,14 @@
+change my dashboard to match "E:\Ai\ProseLabV2\proselab4-newdashboard.png"
+/exit
+change my dashboard to match "E:\Ai\ProseLabV2\proselab4-newdashboard.png"
+/exit
+/exit
+change my dashboard to match "E:\Ai\ProseLabV2\proselab4-newdashboard.png"
+Select-String -Path $log -Pattern "still in progress|get_run_status" -Context 0,30
+change my dashboard to match "E:\Ai\ProseLabV2\proselab4-newdashboard.png"
+change my dashboard to match "E:\Ai\ProseLabV2\proselab4-newdashboard.png"
+continue
+execute: Aspect: Based on my analysis of `App.jsx` and `ReportDashboard.jsx`, there are **three bugs** to fix:
+start the plan dude what are you waiting for?
+i dont care about ai buttons
+/exit

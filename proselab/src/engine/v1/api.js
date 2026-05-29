@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { runPipeline, ENGINE_FLAGS } from "../pipeline.js";
 import { callCritic } from "../critic.js";
 

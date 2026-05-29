@@ -123,6 +123,16 @@ echo   ------------------------------------------------------
 echo   ProseLab V4 is ACTIVE at http://localhost:!PORT!
 echo   ------------------------------------------------------
 echo.
+echo   [!] HIGHLY IMPORTANT FOR DEBUGGING DEVELOPMENT RUNTIME:
+echo       1. Browser is served with direct in-memory dev assets.
+echo       2. Please DO NOT run "npm run build" during debugging.
+echo       3. Open http://localhost:!PORT! and perform a hard refresh:
+echo          [Ctrl + F5] or [Cmd + Shift + R]
+echo       This forces the browser to pull the freshly instrumented
+echo       telemetry blocks ([GALAXY EXTRACTED OUTPUT], [REWRITE PIPELINE RESULT]).
+echo.
+echo   ------------------------------------------------------
+echo.
 echo   [PRESS ANY KEY TO TEARDOWN SESSION]
 echo.
 

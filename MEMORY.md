@@ -158,6 +158,17 @@ Cache entries go in `§ INFERENCE CACHE`. Decisions go in `§ DECISIONS LOG`. Pr
 **Stale if:** rewrite pipeline files change (App.jsx rewrite action, rewrite.js prompt construction, guards.js contract checks).
 **Handed off from:** ABACUS.ai CLI Executor
 
+### [CACHE] proselab-retrieval-service-stub | cached: 2026-05-25 | status: FRESH
+**Source:** proselab/src/services/retrievalService.js, proselab/src/services/adapters/dexieRetrievalAdapter.js, proselab/src/services/initServices.js, proselab/src/main.jsx
+**Summary:**
+- Decoupled, stateless retrievalService established and wired into main.jsx via initServices at app startup.
+- Currently, retrievalService.js and dexieRetrievalAdapter.js are STUBS that only implement the `getPassages(projectId, query, options)` method (using a robust case-insensitive keyword search fallback over raw scene prose).
+- The remaining seven database methods described in the contract spec (e.g., `getEntities`, `getRelationships`, `getTimeline`, `getContradictions`, `getSceneContext`, `getVoiceProfile`, `getProjectManifest`) ARE NOT IMPLEMENTED YET. Do not invoke them.
+**Key identifiers:** retrievalService, dexieRetrievalAdapter, initServices, getPassages, getEntities, getRelationships
+**Used in:** Quantum Shadows — Book 1: Entangled
+**Stale if:** The remaining retrieval adapter methods are implemented or the API changes.
+**Handed off from:** Claude Code Executor
+
 ### [CACHE] governance-memory-agents-baseline | cached: 2026-05-15 | status: FRESH
 **Source:** GOVERNANCE.md, MEMORY.md, AGENTS.md
 **Summary:**
@@ -175,8 +186,10 @@ Cache entries go in `§ INFERENCE CACHE`. Decisions go in `§ DECISIONS LOG`. Pr
 - Expansion generation is polling-compatible and non-streaming, with automatic continuation passes until end marker.
 - Continuation de-dup is handled with overlap merge to reduce repeated output between passes.
 - Expansion output is written into Editorial Drafts with chapter + insertion boundary labels (paragraph and line references), with checkpoint autosave and log records.
-- Expansion panel now supports Opus-assisted insertion placement suggestion and responsive control wrapping to prevent overflow.
-**Key identifiers:** generateExpansionInsertionDraft, describeInsertionAnchors, recommendExpansionInsertion, runExpansionInsertionDraft, expansion_log, Editorial Drafts
+- Expansion panel now supports fully automatic Opus insertion placement during generation, optional placement refresh preview, and responsive control wrapping to prevent overflow.
+- Sidebar drafts tree now supports direct deletion of draft scenes and draft folders.
+- Pipeline validation/critique/lore extraction now use boundary-safe JSON object parsing to tolerate trailing non-JSON model text and prevent parse-block failures.
+**Key identifiers:** generateExpansionInsertionDraft, describeInsertionAnchors, recommendExpansionInsertion, runExpansionInsertionDraft, parseFirstJSONObject, validateProse, critiqueScene, extractLore, expansion_log, Editorial Drafts
 **Used in:** Quantum Shadows — Book 1: Entangled
 **Stale if:** expansion runtime flow, placement recommendation behavior, or insertion labeling/layout behavior changes in App.jsx or expansionWriter.js.
 **Handed off from:** ABACUS.ai CLI Executor
@@ -254,7 +267,11 @@ Cache entries go in `§ INFERENCE CACHE`. Decisions go in `§ DECISIONS LOG`. Pr
 | 2026-05-15 | Quantum Shadows — Book 1: Entangled | Diagnosed and fixed Apply Full Editorial Rewrite prompt leakage; aligned runtime context from governance docs | proselab-rewrite-flow-apply-full-editorial, governance-memory-agents-baseline | proselab-rewrite-output-contract-hardening |
 | 2026-05-15 | Quantum Shadows — Book 1: Entangled | Implemented and wired expansion insertion workflow with polling continuation, overlap dedup, draft checkpoint autosave/logging, and updated runtime docs | proselab-expansion-insertion-flow | proselab-expansion-runtime-polling-continuation |
 | 2026-05-15 | Quantum Shadows — Book 1: Entangled | Added Opus-guided insertion placement recommendation and fixed expansion panel overflow with responsive layout; updated docs to match runtime | proselab-expansion-insertion-flow | proselab-expansion-runtime-polling-continuation |
+| 2026-05-15 | Quantum Shadows — Book 1: Entangled | Switched expansion insertion to fully automatic Opus boundary inference (no manual start/end inputs), hardened responsive wrapping to stop panel overflow, and updated all runtime docs | proselab-expansion-insertion-flow | proselab-expansion-runtime-polling-continuation |
+| 2026-05-15 | Quantum Shadows — Book 1: Entangled | Added direct delete controls for draft scenes/folders in sidebar DRAFTS section and updated runtime docs | proselab-expansion-insertion-flow | proselab-expansion-runtime-polling-continuation |
+| 2026-05-15 | Quantum Shadows — Book 1: Entangled | Hardened pipeline JSON parsing with boundary-safe object extraction in validation/critique/lore extraction to stop trailing-text parse blocks; verified with build+tests and synced runtime docs | proselab-expansion-insertion-flow | proselab-expansion-runtime-polling-continuation |
 | 2026-05-15 | Project Expansion | Staged, committed, and pushed 103 files including Docker architecture, Ingestion/Python services, and `galaxy-vscode` extension. Sanitized API keys. | none | none |
+| 2026-05-25 | Quantum Shadows — Book 1: Entangled | Implemented deterministic Ollama temperature settings and decoupled retrievalService/dexieRetrievalAdapter stub wired via initServices; verified with integration tests | proselab-retrieval-service-stub | none |
 
 ---
 
