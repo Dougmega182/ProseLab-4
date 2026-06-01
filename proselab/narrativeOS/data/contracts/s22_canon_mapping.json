@@ -1,0 +1,52 @@
+{
+  "section_22_mappings": [
+    {
+      "guard_id": "s22.guard.no_aspect_identity_reveal",
+      "s22_item": "Aspect is Alain Aspect.",
+      "canon_fact_id": "aspect.identity",
+      "description": "The handler designated 'Aspect' is actually Alain Aspect, the original founder/architect of the QSA."
+    },
+    {
+      "guard_id": "s22.guard.no_solis_physical_interaction",
+      "s22_item": "Solis is B-734 residue, not a living architect.",
+      "canon_fact_id": "solis.identity",
+      "description": "Martina Solis is a projection/echo (B-734 residue), despite characters believing she is alive and sequestered."
+    },
+    {
+      "guard_id": "s22.guard.no_chen_replacement_confirmation",
+      "s22_item": "Chen was replaced by an anomaly; original Chen left a dead-man's switch.",
+      "canon_fact_id": "chen.identity",
+      "description": "Marcus Chen was replaced in his apartment; the original Chen successfully triggered a biometric dead-man's switch device before his death."
+    },
+    {
+      "guard_id": "s22.guard.no_explicit_varn_timeline_falsification",
+      "s22_item": "Varn's operation contradicts official QSA records.",
+      "canon_fact_id": "varn.identity",
+      "description": "Elias Varn's actual operation timeline involves a 4-year gap that the official QSA timeline covers up or denies."
+    },
+    {
+      "guard_id": "s22.guard.no_explicit_laughing_woman_merge",
+      "s22_item": "The laughing woman is B-734 residue / Hayden's subject memory.",
+      "canon_fact_id": "hayden.identity",
+      "description": "The unidentified laughing woman carrier is a B-734 residue echo of a specific memory belonging to Hayden."
+    },
+    {
+      "guard_id": "s22.guard.no_kain_absolute_death",
+      "s22_item": "Kain survived past his two-jumps-left prognosis.",
+      "canon_fact_id": "kain.bleed_status",
+      "description": "Despite his clinical prognosis (neurological cascade irreversible within two jumps), Kain survives to the Epilogue state."
+    },
+    {
+      "guard_id": "s22.guard.no_early_hayden_objective_reveal",
+      "s22_item": "Hayden executed 412 transitions for a larger sustained campaign.",
+      "canon_fact_id": "hayden.transit_arc",
+      "description": "Hayden's transition count is exactly 412, indicating a massive, hidden, sustained objective beyond the Winters data theft."
+    },
+    {
+      "guard_id": "s22.guard.no_kain_ics_misattribution",
+      "s22_item": "Bell discovers Hayden's ICS data, not Kain's.",
+      "canon_fact_id": "bell.discovery",
+      "description": "Bell finds the hidden readings of her own partner (Hayden)."
+    }
+  ]
+}

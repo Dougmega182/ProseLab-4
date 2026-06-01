@@ -1,0 +1,69 @@
+{
+  "title": "Solis Apartment - Scene Fixture",
+  "chapter": 9,
+  "pov": "Kain",
+  "location": "Solis's Apartment",
+  "target_min_words": 700,
+  "target_max_words": 890,
+  "global_constraints": [
+    "Target length: 700-890 words total.",
+    "Three structural beats: Entry (180-230 words), Journals (260-330 words), A&S Mug (260-330 words).",
+    "Do not name Alain Aspect.",
+    "Do not prove Solis is flesh and blood.",
+    "Do not let Kain deduce what A&S means.",
+    "Do not mention Kain's ICS readings.",
+    "Use Kain's clinical, proprioceptive observation style.",
+    "Adhere strictly to the All-in-One Banned Items List for prose filtering (no 'vibrant', 'delve', rule of three lists, or direct emotional crutches)."
+  ],
+  "beats": [
+    {
+      "label": "The Entry",
+      "target_min_words": 180,
+      "target_max_words": 230,
+      "outline": "Kain executes an off-book infiltration into Solis's apartment. He registers the room geometry and security baseline.",
+      "required_facts": [
+        "Entry is an off-book infiltration.",
+        "Solis is absent or residue only.",
+        "Living-room analysis must be limited to one or two details only.",
+        "Kain must reach the study by the end of Beat 1."
+      ],
+      "pov_constraints": [
+        "Kain can observe physical evidence.",
+        "Kain cannot know Solis's true nature.",
+        "Kain does not speculate about N.K. or Alain Aspect."
+      ]
+    },
+    {
+      "label": "The Journals",
+      "target_min_words": 260,
+      "target_max_words": 330,
+      "outline": "Kain locates the records of the early insertion trials in the study. Subject 7 appears in the records.",
+      "required_facts": [
+        "Subject 7 must appear in the records.",
+        "The insertion trials must become the main revelation.",
+        "Avoid lingering on generic shelf/journal counting.",
+        "No line confirms Solis has a living body."
+      ],
+      "pov_constraints": [
+        "Kain records data and anomalies.",
+        "Kain does not convert observation into final explanation."
+      ]
+    },
+    {
+      "label": "The A&S Mug",
+      "target_min_words": 260,
+      "target_max_words": 330,
+      "outline": "Kain spots the deep blue mug with gold A&S lettering after examining the Subject 7 records. He extracts concrete data and exits.",
+      "required_facts": [
+        "The A&S mug appears after Subject 7, not before.",
+        "Kain extracts one concrete data point: a date, subject number, or photographed page.",
+        "End on the apartment feeling staged/assembled, not on an explanation."
+      ],
+      "pov_constraints": [
+        "Kain may register the mug as anomalous.",
+        "Kain must not conclude that A&S means Alain and Solis.",
+        "Kain exits without leaving a trace."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "project": "Quantum Shadows",
+  "book": "Book 1",
+  "source_path": "decisions.md",
+  "source_hash": "29e10e40cebd1a2dc98eca0f7731b858445440255c5c4a42b5c1fd9205d2f053",
+  "rules": [
+    {
+      "guard_id": "s22.guard.no_aspect_identity_reveal",
+      "kind": "reveal",
+      "text": "Aspect is Alain Aspect.",
+      "section_ref": "Section 23.1",
+      "severity": "hard",
+      "canon_refs": [
+        "aspect.identity"
+      ]
+    },
+    {
+      "guard_id": "s22.guard.no_solis_physical_interaction",
+      "kind": "reveal",
+      "text": "Solis is B-734 residue, not a living architect.",
+      "section_ref": "Section 23.2",
+      "severity": "hard",
+      "canon_refs": [
+        "solis.identity"
+      ]
+    },
+    {
+      "guard_id": "s22.guard.no_chen_replacement_confirmation",
+      "kind": "reveal",
+      "text": "Chen was replaced by an anomaly; original Chen left a dead-man's switch.",
+      "section_ref": "Section 23.3",
+      "severity": "hard",
+      "canon_refs": [
+        "chen.identity"
+      ]
+    },
+    {
+      "guard_id": "s22.guard.no_explicit_varn_timeline_falsification",
+      "kind": "reveal",
+      "text": "Varn's operation contradicts official QSA records.",
+      "section_ref": "Section 23.4",
+      "severity": "hard",
+      "canon_refs": [
+        "varn.identity"
+      ]
+    },
+    {
+      "guard_id": "s22.guard.no_explicit_laughing_woman_merge",
+      "kind": "reveal",
+      "text": "The laughing woman is B-734 residue / Hayden's subject memory.",
+      "section_ref": "Section 23.5",
+      "severity": "hard",
+      "canon_refs": [
+        "hayden.identity"
+      ]
+    },
+    {
+      "guard_id": "s22.guard.no_kain_absolute_death",
+      "kind": "reveal",
+      "text": "Kain survived past his two-jumps-left prognosis.",
+      "section_ref": "Section 23.6",
+      "severity": "hard",
+      "canon_refs": [
+        "kain.bleed_status"
+      ]
+    },
+    {
+      "guard_id": "s22.guard.no_early_hayden_objective_reveal",
+      "kind": "reveal",
+      "text": "Hayden executed 412 transitions for a larger sustained campaign.",
+      "section_ref": "Section 23.7",
+      "severity": "hard",
+      "canon_refs": [
+        "hayden.transit_arc"
+      ]
+    },
+    {
+      "guard_id": "s22.guard.no_kain_ics_misattribution",
+      "kind": "reveal",
+      "text": "Bell discovers Hayden's ICS data, not Kain's.",
+      "section_ref": "Section 23.8",
+      "severity": "hard",
+      "canon_refs": [
+        "bell.discovery"
+      ]
+    },
+    {
+      "guard_id": "s22.signal.permitted_notice_aspect_s_impossible_age",
+      "kind": "permitted_signal",
+      "text": "Reader permitted to notice Aspect's impossible age/historical knowledge.",
+      "section_ref": "Section 23.1",
+      "severity": "soft",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.signal.permitted_notice_solis_interacts_physical_objects",
+      "kind": "permitted_signal",
+      "text": "Reader permitted to notice Solis never interacts with physical objects like humans do.",
+      "section_ref": "Section 23.2",
+      "severity": "soft",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.signal.permitted_notice_gaps_chen_s_awareness",
+      "kind": "permitted_signal",
+      "text": "Reader permitted to notice gaps in Chen's awareness of his own replacement.",
+      "section_ref": "Section 23.3",
+      "severity": "soft",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.signal.permitted_notice_dates_durations_don_t",
+      "kind": "permitted_signal",
+      "text": "Reader permitted to notice dates/durations don't align with the official record for Varn.",
+      "section_ref": "Section 23.4",
+      "severity": "soft",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.signal.permitted_connect_laughing_woman_s_auditory",
+      "kind": "permitted_signal",
+      "text": "Reader permitted to connect the laughing woman's auditory signature to Hayden's past.",
+      "section_ref": "Section 23.5",
+      "severity": "soft",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.signal.permitted_notice_kain_s_prognosis_might",
+      "kind": "permitted_signal",
+      "text": "Reader permitted to notice Kain's prognosis might be based on flawed QSA assumptions.",
+      "section_ref": "Section 23.6",
+      "severity": "soft",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.signal.permitted_realize_412_transitions_implies_much",
+      "kind": "permitted_signal",
+      "text": "Reader permitted to realize 412 transitions implies a much larger hidden objective.",
+      "section_ref": "Section 23.7",
+      "severity": "soft",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.signal.permitted_see_full_extent_hayden_s",
+      "kind": "permitted_signal",
+      "text": "Reader permitted to see the full extent of Hayden's deterioration before he does.",
+      "section_ref": "Section 23.8",
+      "severity": "soft",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.signal.lighter_name_s",
+      "kind": "permitted_signal",
+      "text": "Prose may show the lighter; prose may not name A.S.",
+      "section_ref": "Section 23.9",
+      "severity": "soft",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.guard.narrate_attribution_wrong_character_voices_suspicion",
+      "kind": "foreclosure_guard",
+      "text": "Never narrate the attribution as wrong; no character voices the suspicion aloud in Book 1.",
+      "section_ref": "Section 23.1",
+      "severity": "hard",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.guard.narrate_concrete_physical_interaction_that_proves",
+      "kind": "foreclosure_guard",
+      "text": "Never narrate a concrete physical interaction that proves Solis is human flesh.",
+      "section_ref": "Section 23.2",
+      "severity": "hard",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.guard.confirm_chen_s_pov_that_he",
+      "kind": "foreclosure_guard",
+      "text": "Never confirm to Chen's POV that he is a replacement.",
+      "section_ref": "Section 23.3",
+      "severity": "hard",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.guard.explicitly_state_qsa_records_varn_falsified",
+      "kind": "foreclosure_guard",
+      "text": "Never explicitly state the QSA records on Varn are falsified.",
+      "section_ref": "Section 23.4",
+      "severity": "hard",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.guard.narrative_voice_explicitly_merge_laughing_woman",
+      "kind": "foreclosure_guard",
+      "text": "Never have the narrative voice explicitly merge the laughing woman and Hayden's memory.",
+      "section_ref": "Section 23.5",
+      "severity": "hard",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.guard.coexist_hard_number_ics_32_being",
+      "kind": "foreclosure_guard",
+      "text": "Must coexist with the hard number ICS 32 being narrated honestly; never lock out Book 2's hand-restoration arc.",
+      "section_ref": "Section 23.6",
+      "severity": "hard",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.guard.reveal_hayden_s_ultimate_objective_before",
+      "kind": "foreclosure_guard",
+      "text": "Never reveal Hayden's ultimate objective before the culmination.",
+      "section_ref": "Section 23.7",
+      "severity": "hard",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.guard.misattribute_ics_readings_kain",
+      "kind": "foreclosure_guard",
+      "text": "Never misattribute the ICS readings to Kain in prose.",
+      "section_ref": "Section 23.8",
+      "severity": "hard",
+      "canon_refs": []
+    },
+    {
+      "guard_id": "s22.guard.character_speculates_n_k_1",
+      "kind": "foreclosure_guard",
+      "text": "No character speculates on N.K. in Book 1.",
+      "section_ref": "Section 23.9",
+      "severity": "hard",
+      "canon_refs": []
+    }
+  ],
+  "created_at": "2026-06-01T20:32:54.782952Z"
+}
