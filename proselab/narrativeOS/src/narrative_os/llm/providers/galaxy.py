@@ -68,12 +68,21 @@ class GalaxyProvider(LLMProvider):
             }
         }
 
-        try:
-            start_resp = requests.post(self.base_url, headers=headers, json=payload, timeout=30)
-            start_resp.raise_for_status()
-            start_data = start_resp.json()
-        except Exception as e:
-            raise ProviderAPIError(f"Galaxy start run failed: {e}") from e
+        # Start run with retry handling for connection / timeout exceptions
+        max_start_retries = 3
+        start_data = None
+        for attempt in range(1, max_start_retries + 1):
+            try:
+                start_resp = requests.post(self.base_url, headers=headers, json=payload, timeout=90)
+                start_resp.raise_for_status()
+                start_data = start_resp.json()
+                break
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                if attempt == max_start_retries:
+                    raise ProviderAPIError(f"Galaxy start run failed after {max_start_retries} attempts: {e}") from e
+                time.sleep(2.0 * attempt)
+            except Exception as e:
+                raise ProviderAPIError(f"Galaxy start run failed: {e}") from e
 
         run_id = start_data.get("runId")
         if not run_id:
@@ -85,9 +94,12 @@ class GalaxyProvider(LLMProvider):
         while time.time() < deadline:
             poll_url = f"{self.base_url}/{run_id}?inDetails=true"
             try:
-                poll_resp = requests.get(poll_url, headers=headers, timeout=30)
+                poll_resp = requests.get(poll_url, headers=headers, timeout=60)
                 poll_resp.raise_for_status()
                 final_data = poll_resp.json()
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                time.sleep(5.0)
+                continue
             except Exception as e:
                 raise ProviderAPIError(f"Galaxy polling failed: {e}") from e
 
