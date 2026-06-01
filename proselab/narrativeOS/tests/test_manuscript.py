@@ -112,6 +112,41 @@ class TestParse:
         assert ms.chapter_by_number(99) is None
         assert ms.chapter_by_number("not_a_chapter") is None
 
+    def test_current_draft_export_heading_styles(self, tmp_path: Path):
+        p = tmp_path / "draft.md"
+        p.write_text(
+            """\
+# **QS - BOOK 1 - ENTANGLEMENT**
+
+[CHAPTER 1 — BLACK PEARL BAR](#chapter-1)
+
+# **PROLOGUE**  
+
+Prologue body.
+
+# **CHAPTER 1 — BLACK PEARL BAR** {#chapter-1-black-pearl-bar}
+
+Chapter one body.
+
+# **CHAPTER 11 **— BELL DISCOVERS THE LIE 
+
+Chapter eleven body.
+
+# **EPILOGUE — THE WAKING WORLD** 
+
+Epilogue body.
+""",
+            encoding="utf-8",
+        )
+
+        ms = Manuscript.load(p)
+
+        assert ms.chapter_count == 4
+        assert ms.chapter_by_number("PROLOGUE") is not None
+        assert ms.chapter_by_number(1).title == "BLACK PEARL BAR"
+        assert ms.chapter_by_number(11).title == "BELL DISCOVERS THE LIE"
+        assert ms.chapter_by_number("EPILOGUE").title == "THE WAKING WORLD"
+
 
 class TestHashing:
     def test_content_hash_stable(self, sample_path: Path):

@@ -55,6 +55,22 @@ _HEADER_RE = re.compile(
 PROLOGUE_NUM = 0.0
 EPILOGUE_NUM = 999.0
 
+# Override the legacy mojibake pattern above with the actual heading format used
+# by the current manuscript export. This accepts real em/en dashes, optional
+# markdown anchors, and the malformed Chapter 11 bold closure in the draft.
+_HEADER_RE = re.compile(
+    r"""^\#\s*
+        \*\*?
+        (?P<kind>PROLOGUE|EPILOGUE|CHAPTER)
+        (?:\s+(?P<num>\d+(?:\.\d+)?))?
+        \s*\**
+        (?:\s*(?:[—–\-:]|â€”)\s*(?P<title>[^*{]+?))?
+        (?:\s*\*\*)?
+        (?:\s*\{\#[^}]+\})?
+        \s*$""",
+    re.VERBOSE | re.IGNORECASE,
+)
+
 
 # ---------------------------------------------------------------------------
 # Data class
