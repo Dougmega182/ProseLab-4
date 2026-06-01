@@ -1,0 +1,31 @@
+{
+  "chapter": "8",
+  "chapter_title": "Bell Discovers The Lie",
+  "pass_id": "test-correction-001",
+  "cache_hit": false,
+  "usage": {},
+  "raw_text": "",
+  "delta": {
+    "chapter": 8,
+    "pass_id": "test-correction-001",
+    "new_entries": [
+      {
+        "id": "bell.discovery",
+        "namespace": "character",
+        "entity": "Bell",
+        "value": "Bell discovers Hayden's ICS data, not Kain's.",
+        "aliases": [],
+        "confidence": "event",
+        "source_chapter": 8,
+        "extracted_at_pass": "test-correction-001",
+        "created_at": "2026-05-25T04:45:26.429568Z",
+        "superseded_by": null
+      }
+    ],
+    "resolved_loops": [],
+    "new_loops": [],
+    "tone_notes": [],
+    "created_at": "2026-05-25T04:45:26.429568Z"
+  },
+  "logged_at": "2026-05-25T04:45:26.430117+00:00"
+}

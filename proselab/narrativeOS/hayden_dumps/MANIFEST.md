@@ -1,0 +1,15 @@
+=== Hayden: 82 active entries across 13 passes ===
+
+  hayden__20260525T003313Z.md  (17 entries)
+  hayden__backfill_ch10_20260525.md  (1 entries)
+  hayden__backfill_ch11_20260525.md  (3 entries)
+  hayden__backfill_ch12_20260525.md  (5 entries)
+  hayden__backfill_ch12_5_20260525.md  (8 entries)
+  hayden__backfill_ch13_20260525.md  (6 entries)
+  hayden__backfill_ch14_20260525.md  (1 entries)
+  hayden__backfill_ch15_20260525.md  (7 entries)
+  hayden__backfill_ch16_20260525.md  (7 entries)
+  hayden__backfill_ch8_20260525.md  (18 entries)
+  hayden__backfill_ch9_20260525.md  (2 entries)
+  hayden__backfill_epilogue_20260525.md  (5 entries)
+  hayden__seed.md  (2 entries)

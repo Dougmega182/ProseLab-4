@@ -1,0 +1,87 @@
+Total Chen-active entries: 193
+Unique root IDs: 152
+
+Root IDs with multiple active versions (these are the real problem):
+  chen.apartment_location: 5 versions
+    - chen.apartment_location.v2
+    - chen.apartment_location.v3
+    - chen.apartment_location.v4
+    - chen.apartment_location.v5
+    - chen.apartment_location.v6
+  chen.caseload: 2 versions
+    - chen.caseload.v2
+    - chen.caseload.v3
+  chen.comm_device_activation: 3 versions
+    - chen.comm_device_activation.v2
+    - chen.comm_device_activation.v3
+    - chen.comm_device_activation.v4
+  chen.dead_mans_switch_activation: 5 versions
+    - chen.dead_mans_switch_activation.v2
+    - chen.dead_mans_switch_activation.v3
+    - chen.dead_mans_switch_activation.v4
+    - chen.dead_mans_switch_activation.v5
+    - chen.dead_mans_switch_activation.v6
+  chen.divorce: 5 versions
+    - chen.divorce.v2
+    - chen.divorce.v3
+    - chen.divorce.v4
+    - chen.divorce.v5
+    - chen.divorce.v6
+  chen.fathers_rule: 2 versions
+    - chen.fathers_rule.v2
+    - chen.fathers_rule.v3
+  chen.flagged_eighteen_months: 2 versions
+    - chen.flagged_eighteen_months.v2
+    - chen.flagged_eighteen_months.v3
+  chen.schedule_forgery: 2 versions
+    - chen.schedule_forgery.v2
+    - chen.schedule_forgery.v3
+  chen.white_mug: 3 versions
+    - chen.white_mug.v2
+    - chen.white_mug.v3
+    - chen.white_mug.v4
+  chen.wrist_injury: 5 versions
+    - chen.wrist_injury.v2
+    - chen.wrist_injury.v3
+    - chen.wrist_injury.v4
+    - chen.wrist_injury.v5
+    - chen.wrist_injury.v6
+  plot.loop_already_optimised: 2 versions
+    - plot.loop_already_optimised
+    - plot.loop_already_optimised.v2
+  plot.loop_chen_behavioural_flag: 3 versions
+    - plot.loop_chen_behavioural_flag
+    - plot.loop_chen_behavioural_flag.v2
+    - plot.loop_chen_behavioural_flag.v3
+  plot.loop_chen_cover_up: 2 versions
+    - plot.loop_chen_cover_up
+    - plot.loop_chen_cover_up.v2
+  plot.loop_chen_evidence_trail: 3 versions
+    - plot.loop_chen_evidence_trail
+    - plot.loop_chen_evidence_trail.v2
+    - plot.loop_chen_evidence_trail.v3
+  plot.loop_dead_mans_switch_recipient: 3 versions
+    - plot.loop_dead_mans_switch_recipient
+    - plot.loop_dead_mans_switch_recipient.v2
+    - plot.loop_dead_mans_switch_recipient.v3
+  plot.loop_differences_are_the_point: 2 versions
+    - plot.loop_differences_are_the_point
+    - plot.loop_differences_are_the_point.v2
+  plot.loop_reflection_delay: 3 versions
+    - plot.loop_reflection_delay
+    - plot.loop_reflection_delay.v2
+    - plot.loop_reflection_delay.v3
+  plot.loop_reflection_mechanism: 2 versions
+    - plot.loop_reflection_mechanism
+    - plot.loop_reflection_mechanism.v2
+  plot.loop_replacement_knowledge_source: 2 versions
+    - plot.loop_replacement_knowledge_source
+    - plot.loop_replacement_knowledge_source.v2
+  replacement.recognition_not_surprise: 4 versions
+    - replacement.recognition_not_surprise.v2
+    - replacement.recognition_not_surprise.v3
+    - replacement.recognition_not_surprise.v4
+    - replacement.recognition_not_surprise.v5
+  replacement.voice_mimicry: 2 versions
+    - replacement.voice_mimicry.v2
+    - replacement.voice_mimicry.v3

@@ -1,0 +1,48 @@
+{
+  "chapter": "0",
+  "chapter_title": "Prologue",
+  "pass_id": "verify-fix-001",
+  "cache_hit": false,
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  },
+  "raw_text": "",
+  "delta": {
+    "chapter": 0,
+    "pass_id": "verify-fix-001",
+    "new_entries": [
+      {
+        "id": "plot.prologue_reflection_anomaly",
+        "namespace": "plot",
+        "entity": null,
+        "value": "The reflection finished tying its shoe a half-second late.",
+        "aliases": [],
+        "confidence": "event",
+        "source_chapter": 0,
+        "extracted_at_pass": "verify-fix-001",
+        "created_at": "2026-05-31T23:03:30.580278Z",
+        "superseded_by": null
+      }
+    ],
+    "resolved_loops": [],
+    "new_loops": [
+      {
+        "id": "plot.loop_reflection_mechanism",
+        "namespace": "plot",
+        "entity": null,
+        "value": "OPEN: What caused the temporal desynchronisation?",
+        "aliases": [],
+        "confidence": "inferred",
+        "source_chapter": 0,
+        "extracted_at_pass": "verify-fix-001",
+        "created_at": "2026-05-31T23:03:30.580278Z",
+        "superseded_by": null
+      }
+    ],
+    "tone_notes": [],
+    "created_at": "2026-05-31T23:03:30.580278Z"
+  },
+  "logged_at": "2026-05-31T23:03:30.580848+00:00"
+}

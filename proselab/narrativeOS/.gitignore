@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# Runtime artifacts (project state lives at data/canon_store.json which IS versioned)
+data/.cache/
+data/logs/
+data/pending/
+*.log
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+magica_debug.json
+
+# Scratch
+*.scratch.py
+audit_*.py

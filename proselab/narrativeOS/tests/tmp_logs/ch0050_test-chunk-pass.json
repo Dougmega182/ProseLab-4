@@ -1,0 +1,62 @@
+{
+  "chapter": "5",
+  "chapter_title": "Parallel Clues",
+  "pass_id": "test-chunk-pass",
+  "cache_hit": false,
+  "usage": {
+    "prompt_tokens": 22,
+    "completion_tokens": 11,
+    "total_tokens": 33
+  },
+  "raw_text": "--- Chunk 1/2 ---\n\n\n--- Chunk 2/2 ---\n",
+  "delta": {
+    "chapter": 5,
+    "pass_id": "test-chunk-pass",
+    "new_entries": [
+      {
+        "id": "kain.genotype_discovery",
+        "namespace": "character",
+        "entity": "Kain",
+        "value": "Kain discovers Emily's hidden file.",
+        "aliases": [],
+        "confidence": "event",
+        "source_chapter": 5,
+        "extracted_at_pass": "test-chunk-pass",
+        "created_at": "2026-05-25T12:01:24.438212Z",
+        "superseded_by": null
+      },
+      {
+        "id": "bell.hayden_confrontation",
+        "namespace": "character",
+        "entity": "Bell",
+        "value": "Bell confronts Hayden about ICS degradation.",
+        "aliases": [],
+        "confidence": "event",
+        "source_chapter": 5,
+        "extracted_at_pass": "test-chunk-pass",
+        "created_at": "2026-05-25T12:01:24.438212Z",
+        "superseded_by": null
+      }
+    ],
+    "resolved_loops": [
+      "plot.loop_some_previous_loop"
+    ],
+    "new_loops": [
+      {
+        "id": "plot.loop_emily_secret",
+        "namespace": "plot",
+        "entity": null,
+        "value": "OPEN: Why did Emily hide the genotype file?",
+        "aliases": [],
+        "confidence": "inferred",
+        "source_chapter": 5,
+        "extracted_at_pass": "test-chunk-pass",
+        "created_at": "2026-05-25T12:01:24.438212Z",
+        "superseded_by": null
+      }
+    ],
+    "tone_notes": [],
+    "created_at": "2026-05-25T12:01:24.438212Z"
+  },
+  "logged_at": "2026-05-25T12:01:24.438767+00:00"
+}

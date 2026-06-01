@@ -1,0 +1,24 @@
+[project]
+name = "narrative_os"
+version = "0.1.0"
+description = "Continuity analysis system for Quantum Shadows"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+narrative-os = "narrative_os.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["narrative_os*"]
