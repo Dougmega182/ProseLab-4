@@ -29,16 +29,20 @@ from .schemas import ConflictReport
 from .store import DEFAULT_STORE_PATH, stats as store_stats
 
 
-def _print_result(result, verbose: bool = False) -> None:
+def _print_result(result, verbose: bool = False, prefix: str = "") -> None:
     """Pretty-print an AnalysisResult to stdout."""
     chapter_label = (
         f"{int(result.chapter)}" if result.chapter == int(result.chapter)
         else f"{result.chapter}"
     )
+    
+    # Add a space after prefix if it exists to maintain clean formatting
+    p = f"{prefix} " if prefix else ""
+    
     if result.status == AnalysisStatus.MERGED:
         m = result.merge
         print(
-            f"  [SUCCESS] Ch {chapter_label:<6}  merged   "
+            f"{p} [SUCCESS] Ch {chapter_label:<6}  merged   "
             f"+{m.new_entries_added} entries, "
             f"+{m.loops_opened} loops, "
             f"-{m.loops_resolved} resolved"
@@ -47,14 +51,14 @@ def _print_result(result, verbose: bool = False) -> None:
     elif result.status == AnalysisStatus.PENDING_REVIEW:
         r = result.report
         print(
-            f"  [PENDING] Ch {chapter_label:<6}  pending  "
+            f"{p} [PENDING] Ch {chapter_label:<6}  pending  "
             f"{len(r.high())} HIGH, {len(r.medium())} MEDIUM, {len(r.low())} LOW"
             f"  → {result.pending_path}"
         )
     elif result.status == AnalysisStatus.SKIPPED_IDEMPOTENT:
-        print(f"  [SKIPPED] Ch {chapter_label:<6}  skipped  (pass already applied)")
+        print(f"{p} [SKIPPED] Ch {chapter_label:<6}  skipped  (pass already applied)")
     elif result.status == AnalysisStatus.FAILED:
-        print(f"  [FAILED]  Ch {chapter_label:<6}  failed   {result.error}")
+        print(f"{p} [FAILED]  Ch {chapter_label:<6}  failed   {result.error}")
         if verbose and result.report:
             print(result.report.model_dump_json(indent=2))
 
@@ -84,12 +88,13 @@ def cmd_analyze_all(args: argparse.Namespace) -> int:
     else:
         ms = Manuscript.load(p)
     print(f"Manuscript: {ms}")
-    print(f"Analysing {ms.chapter_count} chapters...")
+    chapters_to_process = [ch for ch in ms.chapters if not (args.skip and ch.display_number in args.skip)]
+    total = len(chapters_to_process)
+    
+    print(f"Analysing {total} chapters...")
     print()
     failures = 0
-    for chapter in ms.chapters:
-        if args.skip and chapter.display_number in args.skip:
-            continue
+    for i, chapter in enumerate(chapters_to_process, 1):
         try:
             result = analyze_chapter(
                 manuscript=ms,
@@ -98,7 +103,7 @@ def cmd_analyze_all(args: argparse.Namespace) -> int:
                 pass_id=args.pass_id,
                 auto_merge_clean=not args.dry_run,
             )
-            _print_result(result, verbose=args.verbose)
+            _print_result(result, verbose=args.verbose, prefix=f"[{i}/{total}]")
             if result.status == AnalysisStatus.FAILED:
                 failures += 1
                 if not args.continue_on_error:
