@@ -485,3 +485,15 @@ To solve the persistent challenge of long-horizon story consistency—preventing
 * **Prose narrates:** The discovery of the readings in context of Hayden's cascade.
 * **Reader permitted:** To see the full extent of Hayden's deterioration before he does.
 * **Foreclosure guard:** Never misattribute the ICS readings to Kain in prose.
+
+---
+
+## 21. Book 1 Contract Commit Decision
+
+To balance velocity and build transparency, `book1_contract.json` is committed as canonical generated data in the repository rather than being dynamically generated in CI from `decisions.md`. 
+
+**Rationale:**
+- **Auditability:** Committing the JSON allows for explicit tracking of contract modifications via git diffs, making changes to guards and severity visible to developers and authors.
+- **Independence:** Decouples execution steps and makes CI runs less complex by avoiding python/decisions dependencies during linting-only tasks.
+- **Regeneration Protocol:** The CLI command `python -m narrative_os build-contract` remains the source of truth for updating the contract whenever `decisions.md` or `s22_canon_mapping.json` is altered.
+

@@ -242,9 +242,9 @@ CHARACTER_ENTRIES: list[CanonEntry] = [
     _entry(
         "hayden.transit_arc",
         "character",
-        "Hayden has a designated Transit chapter (Ch 12.5, 'THE "
+        "Hayden has a designated Transit chapter (Ch 17, 'THE "
         "INSTRUMENT'S CONSENT') and is the technical narrator of the "
-        "Sphere/SEP-NULL exposure sequence in Ch 13–14.",
+        "Sphere/SEP-NULL exposure sequence in Ch 19–20.",
         entity="Hayden",
         confidence="inferred",
     ),
@@ -497,21 +497,21 @@ PLOT_ENTRIES: list[CanonEntry] = [
         source_chapter=12,
     ),
     _entry(
-        "plot.ch125_instruments_consent",
+        "plot.ch17_instruments_consent",
         "plot",
-        "Ch 12.5 (THE INSTRUMENT'S CONSENT): Hayden's POV / Transit "
+        "Ch 17 (THE INSTRUMENT'S CONSENT): Hayden's POV / Transit "
         "chapter, situated between the breach and the descent.",
         confidence="event",
-        source_chapter=12,
+        source_chapter=17,
     ),
     _entry(
-        "plot.ch13_descent_sphere",
+        "plot.ch19_descent_sphere",
         "plot",
-        "Ch 13 (THE DESCENT): Kain and Hayden enter the Sphere. ICS "
+        "Ch 19 (THE DESCENT): Kain and Hayden enter the Sphere. ICS "
         "burning through reserve at predicted rate. Coordinates progress "
         "through Coherence Offset gradient toward the SEP-NULL.",
         confidence="event",
-        source_chapter=13,
+        source_chapter=19,
     ),
 
     # ----- Key narrative facts -------------------------------------------

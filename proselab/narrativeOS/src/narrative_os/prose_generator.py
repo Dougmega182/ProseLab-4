@@ -181,6 +181,8 @@ contradict canon.
 
 Before writing prose, you MUST open a <thinking> block:
 
+CRITICAL: Keep your <thinking> block analysis extremely concise (under 500 words total). Do NOT write long essays, extensive internal drafts, or over-analyze. Focus on the core facts and proceed quickly to emitting <prose_output>.
+
 1. Identify three predictable cliches a hack writer would make in this
    scene. For each, state how the voice rules and canon facts make it
    impossible. Reference at least one canon entry by id.
@@ -255,6 +257,7 @@ Rules for rewriting:
 3. Do not contradict or omit any facts from <canon_slice>.
 
 Before writing the new prose, you MUST open a <thinking> block:
+CRITICAL: Keep your <thinking> block analysis extremely concise (under 300 words total).
 1. Specifically identify why the previous attempt triggered each of the listed <lint_failures>.
 2. Plan how you will restructure or rewrite those specific lines to eliminate the failures.
 3. Review your plan against <forbidden_patterns> to ensure zero new violations.
@@ -339,10 +342,14 @@ def generate_scene_with_retry(
     max_retries: int = 5,
     use_cache: bool = True,
     verbose: bool = True,
+    target_min_words: Optional[int] = None,
+    target_max_words: Optional[int] = None,
+    must_include_terms: Optional[list[str]] = None,
+    forbidden_terms: Optional[list[str]] = None,
 ) -> dict:
     """
     Generate a scene, running a mechanical lint check on the output and
-    triggering repair loops if there are hard or soft cap violations.
+    triggering repair loops if there are hard, soft cap, word budget, or custom term violations.
     """
     from .prose_lint import lint_prose
     from .contract_lint import lint_contract
@@ -360,16 +367,42 @@ def generate_scene_with_retry(
     thinking = result["thinking"]
     raw = result["raw"]
     
-    lint = lint_prose(prose)
-    if len(prose.split()) < MIN_GENERATED_PROSE_WORDS:
-        lint.hard_violations.append(("missing_or_short_prose_output", prose[:80]))
-    c_lint = (
-        lint_contract(prose, contract_path=contract_path, use_cache=use_cache)
-        if contract_path
-        else None
-    )
-    
-    passed = lint.passed and (c_lint.passed if c_lint else True)
+    def _run_checks(p: str, use_c: bool) -> tuple[LintResult, Optional[ContractLintResult], Optional[CriticResult], bool]:
+        lint = lint_prose(p)
+        min_limit = min(MIN_GENERATED_PROSE_WORDS, target_min_words) if target_min_words is not None else MIN_GENERATED_PROSE_WORDS
+        if len(p.split()) < min_limit:
+            lint.hard_violations.append(("missing_or_short_prose_output", p[:80]))
+        
+        # Word budget checks
+        if target_min_words is not None and lint.word_count < target_min_words:
+            lint.cap_violations.append(("beat_word_budget_under", lint.word_count, target_min_words))
+        if target_max_words is not None and lint.word_count > target_max_words:
+            lint.cap_violations.append(("beat_word_budget_over", lint.word_count, target_max_words))
+            
+        # Term checks
+        lower_p = p.lower()
+        if must_include_terms:
+            for term in must_include_terms:
+                if term.lower() not in lower_p:
+                    lint.hard_violations.append(("missing_required_term", term))
+        if forbidden_terms:
+            for term in forbidden_terms:
+                if term.lower() in lower_p:
+                    lint.hard_violations.append(("contains_forbidden_term", term))
+                    
+        c_lint = (
+            lint_contract(p, contract_path=contract_path, use_cache=use_c)
+            if contract_path
+            else None
+        )
+        
+        from .critic import call_semantic_critic, CriticResult
+        critic_res = call_semantic_critic(p, use_cache=use_c)
+        
+        passed = lint.passed and (c_lint.passed if c_lint else True) and critic_res.passed
+        return lint, c_lint, critic_res, passed
+
+    lint, c_lint, critic_res, passed = _run_checks(prose, use_cache)
     
     def _build_lint_report() -> str:
         rep = lint.render()
@@ -377,6 +410,10 @@ def generate_scene_with_retry(
             rep += "\n\n=== CONTRACT LINT FAILURES ===\n"
             for f in c_lint.findings:
                 rep += f"\n[{f.severity}] {f.guard_id}\n  Span: {f.span}\n  Rationale: {f.rationale}\n"
+        if critic_res and critic_res.findings:
+            rep += "\n\n=== SEMANTIC CRITIC FINDINGS ===\n"
+            for f in critic_res.findings:
+                rep += f"\n[{f.severity}] {f.rule_name}\n  Span: {f.span}\n  Rationale: {f.rationale}\n"
         return rep
     
     history = [{
@@ -386,10 +423,11 @@ def generate_scene_with_retry(
         "lint": {
             "passed": passed,
             "word_count": lint.word_count,
-            "hard_violations": lint.hard_violations,
-            "cap_violations": lint.cap_violations,
-            "soft_flags": lint.soft_flags,
+            "hard_violations": list(lint.hard_violations),
+            "cap_violations": list(lint.cap_violations),
+            "soft_flags": list(lint.soft_flags),
             "contract_findings": [f.model_dump() for f in c_lint.findings] if c_lint else [],
+            "critic_findings": [f.model_dump() for f in critic_res.findings] if critic_res else [],
             "report": _build_lint_report(),
         }
     }]
@@ -414,12 +452,25 @@ def generate_scene_with_retry(
         
         violations = []
         for name, match in lint.hard_violations:
-            violations.append(f"- HARD VIOLATION: {name} (matched '{match}')")
+            if name == "missing_required_term":
+                violations.append(f"- HARD VIOLATION: Missing required term '{match}' which must be included in the prose.")
+            elif name == "contains_forbidden_term":
+                violations.append(f"- HARD VIOLATION: Contains forbidden term/phrase '{match}' which must be removed.")
+            else:
+                violations.append(f"- HARD VIOLATION: {name} (matched '{match}')")
         for name, count, cap in lint.cap_violations:
-            violations.append(f"- SOFT CAP VIOLATION: {name} was used {count} times (cap is {cap})")
+            if name == "beat_word_budget_under":
+                violations.append(f"- SOFT CAP VIOLATION: Word count {count} is under the target minimum of {cap} words.")
+            elif name == "beat_word_budget_over":
+                violations.append(f"- SOFT CAP VIOLATION: Word count {count} is over the target maximum of {cap} words.")
+            else:
+                violations.append(f"- SOFT CAP VIOLATION: {name} was used {count} times (cap is {cap})")
         if c_lint:
             for f in c_lint.findings:
                 violations.append(f"- CONTRACT {f.severity} VIOLATION ({f.guard_id}): {f.rationale}. Offending span: '{f.span}'")
+        if critic_res:
+            for f in critic_res.findings:
+                violations.append(f"- SEMANTIC CRITIC {f.severity.upper()} VIOLATION ({f.rule_name}): {f.rationale}. Offending span: '{f.span}'")
                 
         lint_failures_str = "\n".join(violations)
         
@@ -448,15 +499,7 @@ def generate_scene_with_retry(
         raw = llm_result.text
         thinking = _extract_tag(raw, "thinking")
         prose = _extract_tag(raw, "prose_output")
-        lint = lint_prose(prose)
-        if len(prose.split()) < MIN_GENERATED_PROSE_WORDS:
-            lint.hard_violations.append(("missing_or_short_prose_output", prose[:80]))
-        c_lint = (
-            lint_contract(prose, contract_path=contract_path, use_cache=False)
-            if contract_path
-            else None
-        )
-        passed = lint.passed and (c_lint.passed if c_lint else True)
+        lint, c_lint, critic_res, passed = _run_checks(prose, False)
         
         history.append({
             "attempt": attempt,
@@ -465,10 +508,11 @@ def generate_scene_with_retry(
             "lint": {
                 "passed": passed,
                 "word_count": lint.word_count,
-                "hard_violations": lint.hard_violations,
-                "cap_violations": lint.cap_violations,
-                "soft_flags": lint.soft_flags,
+                "hard_violations": list(lint.hard_violations),
+                "cap_violations": list(lint.cap_violations),
+                "soft_flags": list(lint.soft_flags),
                 "contract_findings": [f.model_dump() for f in c_lint.findings] if c_lint else [],
+                "critic_findings": [f.model_dump() for f in critic_res.findings] if critic_res else [],
                 "report": _build_lint_report(),
             }
         })

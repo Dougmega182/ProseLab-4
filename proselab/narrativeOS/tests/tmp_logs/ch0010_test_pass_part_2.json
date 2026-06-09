@@ -1,0 +1,52 @@
+{
+  "chapter": "1",
+  "chapter_title": "Walk",
+  "pass_id": "test_pass_part_2",
+  "cache_hit": false,
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  },
+  "raw_text": "",
+  "delta": {
+    "chapter": 1,
+    "pass_id": "test_pass",
+    "new_entries": [
+      {
+        "id": "kain.walking",
+        "namespace": "character",
+        "entity": "Kain",
+        "value": "Kain arrived at his apartment.",
+        "aliases": [],
+        "confidence": "event",
+        "source_chapter": 1,
+        "extracted_at_pass": "test_pass",
+        "created_at": "2026-06-08T21:41:50.090376Z",
+        "superseded_by": null
+      },
+      {
+        "id": "bell.location",
+        "namespace": "character",
+        "entity": "Bell",
+        "value": "Bell is inside Kain's apartment.",
+        "aliases": [],
+        "confidence": "event",
+        "source_chapter": 1,
+        "extracted_at_pass": "test_pass",
+        "created_at": "2026-06-08T21:41:50.090376Z",
+        "superseded_by": null
+      }
+    ],
+    "resolved_loops": [
+      "plot.loop_walking_destination"
+    ],
+    "new_loops": [],
+    "tone_notes": [
+      "Tense environment",
+      "Fast pacing"
+    ],
+    "created_at": "2026-06-08T21:41:50.090376Z"
+  },
+  "logged_at": "2026-06-08T21:41:50.090376+00:00"
+}

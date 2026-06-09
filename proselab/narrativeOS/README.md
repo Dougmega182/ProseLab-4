@@ -96,13 +96,12 @@ data/
     s22_canon_mapping.json
     banned_items_list.md
   prose_test/
-    ch9.5_brief.md
-    ch9.5_scene_plan.json
-    ch9.5_generated_draft.md
+    solis_apartment_brief.md
+    solis_apartment_scene_plan.json
+    solis_apartment_generated_draft.md
 ```
 
-The `ch9.5_*` filenames are legacy fixture names. They now represent the Solis
-apartment scene fixture, not a canonical fractional chapter.
+The `solis_apartment_*` files represent the Solis apartment scene fixture, not a canonical fractional chapter.
 
 ## Common Commands
 
@@ -135,7 +134,7 @@ python -m narrative_os audit-contamination --entity Kain
 Generate from a scene plan:
 
 ```bash
-python -m narrative_os generate-scene-plan data/prose_test/ch9.5_scene_plan.json --contract data/contracts/book1_contract.json --out data/prose_test/ch9.5_generated_draft.md
+python -m narrative_os generate-scene-plan data/prose_test/solis_apartment_scene_plan.json --contract data/contracts/book1_contract.json --out data/prose_test/solis_apartment_generated_draft.md
 ```
 
 ## Banned Items Policy

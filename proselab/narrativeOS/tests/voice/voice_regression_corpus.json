@@ -1,0 +1,40 @@
+[
+  {
+    "id": "perfect_match",
+    "input": "Hayden stepped into the sterile hall, the sharp hum of the chron-drives vibrating in his teeth. He checked the readout. Thirty-four.",
+    "expected_pass": true,
+    "mock_llm_metrics": {
+      "lexical_density": 0.95,
+      "rhythm_delta": 0.90,
+      "sentence_variance": 0.92,
+      "forbidden_drift": 0.98,
+      "rationale": "Matches canonical style well."
+    }
+  },
+  {
+    "id": "slang_drift",
+    "input": "Hayden stepped into the hall. He was super stressed out, literally shaking as the drives hummed. It was totally insane.",
+    "expected_pass": false,
+    "expected_failed_metrics": ["forbidden_drift"],
+    "mock_llm_metrics": {
+      "lexical_density": 0.88,
+      "rhythm_delta": 0.85,
+      "sentence_variance": 0.86,
+      "forbidden_drift": 0.40,
+      "rationale": "Uses colloquialisms 'super stressed out', 'literally shaking', 'totally insane' which violate the sci-fi noir tone."
+    }
+  },
+  {
+    "id": "run_on_sentence_rhythm_break",
+    "input": "Hayden stepped into the hall while the drives hummed and he looked at the readout that said thirty-four because it had dropped from thirty-seven just yesterday when he crossed the boundary.",
+    "expected_pass": false,
+    "expected_failed_metrics": ["rhythm_delta", "sentence_variance"],
+    "mock_llm_metrics": {
+      "lexical_density": 0.86,
+      "rhythm_delta": 0.60,
+      "sentence_variance": 0.50,
+      "forbidden_drift": 0.96,
+      "rationale": "Fails to match the punchy, staccato sentence rhythm of the reference."
+    }
+  }
+]

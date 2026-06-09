@@ -82,15 +82,7 @@ export async function runWithRetry({
         console.warn(`[ORCHESTRATION RUNNER] Generation exception on pass ${passes} (Attempt ${networkRetry}/${maxNetworkRetries}): ${errorMsg}`);
 
         if (networkRetry >= maxNetworkRetries) {
-          warnings.push(`Generation permanently failed after ${maxNetworkRetries} network attempts on pass ${passes}: ${errorMsg}`);
-          return {
-            output: currentText,
-            duration: Date.now() - startTime,
-            passes,
-            approved: false,
-            warnings,
-            diagnostics: lastDiagnostics
-          };
+          throw new Error(`Generation permanently failed after ${maxNetworkRetries} attempts: ${errorMsg}`);
         }
 
         // Exponential backoff with random jitter
@@ -109,7 +101,14 @@ export async function runWithRetry({
     if (originalText && originalText.trim()) {
       const similarity = estimateSimilarity(originalText, generatedOutput);
       if (similarity < 0.05) {
-        console.warn(`[ORCHESTRATION RUNNER] Severe drift detected (Similarity: ${(similarity * 100).toFixed(1)}% < 5%). Resetting draft to original text.`);
+        console.warn(`[ORCHESTRATION RUNNER] Severe drift detected (Similarity: ${(similarity * 100).toFixed(1)}% < 5%). The generation was completely unrelated to the original intent.`);
+        
+        // If the generated output is very short or matches common failure patterns (e.g. LLM apologies or API errors that leaked through)
+        const lowerOut = generatedOutput.toLowerCase();
+        if (generatedOutput.length < 50 || lowerOut.includes("i'm sorry") || lowerOut.includes("i cannot") || lowerOut.includes("error")) {
+            throw new Error(`LLM provider failed to generate a coherent response. Raw output: ${generatedOutput.slice(0, 100)}`);
+        }
+
         warnings.push(`Severe semantic drift detected on pass ${passes}. Reverted text to prevent compounding hallucinations.`);
         
         // Throw away the drifted generation and force a repair attempt directly on originalText

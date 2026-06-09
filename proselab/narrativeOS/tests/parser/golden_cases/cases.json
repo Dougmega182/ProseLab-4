@@ -1,0 +1,138 @@
+[
+  {
+    "id": "overlapping_spans",
+    "input": "The [lock [jammed]{#local_rewrite: inner} hard]{#local_rewrite: outer}.",
+    "valid_outputs": [
+      {
+        "mode": "SPAN_REPAIR_INNER_PRIORITY",
+        "ast": {
+          "type": "PARTIAL_PARSE",
+          "clean_text": "The lock jammed hard.",
+          "recovered_nodes": [
+            {
+              "route": "local_rewrite",
+              "original_span": "jammed",
+              "note": "inner",
+              "confidence": 0.9
+            }
+          ],
+          "dropped_tokens": ["{#local_rewrite: outer}"],
+          "recovery_strategy": "DROP_OUTER_AMBIGUITY"
+        }
+      },
+      {
+        "mode": "SPAN_REPAIR_OUTER_PRIORITY",
+        "ast": {
+          "type": "PARTIAL_PARSE",
+          "clean_text": "The lock jammed hard.",
+          "recovered_nodes": [
+            {
+              "route": "local_rewrite",
+              "original_span": "lock jammed hard",
+              "note": "outer",
+              "confidence": 0.6
+            }
+          ],
+          "dropped_tokens": ["{#local_rewrite: inner}", "[", "]"],
+          "recovery_strategy": "STRIP_INNER_TOKENS"
+        }
+      }
+    ]
+  },
+  {
+    "id": "unclosed_span_with_valid_route",
+    "input": "The pick took [eleven seconds{#local_rewrite: Make this seven}. Kain entered.",
+    "valid_outputs": [
+      {
+        "mode": "SPAN_REPAIR_LEFT_BIAS",
+        "ast": {
+          "type": "PARTIAL_PARSE",
+          "clean_text": "The pick took [eleven seconds. Kain entered.",
+          "recovered_nodes": [
+            {
+              "route": "local_rewrite",
+              "original_span": null,
+              "note": "Make this seven",
+              "confidence": 0.8
+            }
+          ],
+          "dropped_tokens": [],
+          "recovery_strategy": "CONVERT_TO_FREESTANDING_NOTE"
+        }
+      },
+      {
+        "mode": "SPAN_GREEDY_CONSUME_UNTIL_PUNCTUATION",
+        "ast": {
+          "type": "PARTIAL_PARSE",
+          "clean_text": "The pick took eleven seconds. Kain entered.",
+          "recovered_nodes": [
+            {
+              "route": "local_rewrite",
+              "original_span": "eleven seconds",
+              "note": "Make this seven",
+              "confidence": 0.5
+            }
+          ],
+          "dropped_tokens": ["[", "{#local_rewrite: Make this seven}"],
+          "recovery_strategy": "INFER_SPAN_FROM_CONTEXT"
+        }
+      }
+    ]
+  },
+  {
+    "id": "invalid_route_well_formed_span",
+    "input": "He walked down the [street]{#banana: test}. End.",
+    "valid_outputs": [
+      {
+        "mode": "SPAN_DROP_INVALID_ROUTE",
+        "ast": {
+          "type": "PARTIAL_PARSE",
+          "clean_text": "He walked down the street. End.",
+          "recovered_nodes": [],
+          "dropped_tokens": ["{#banana: test}", "[", "]"],
+          "recovery_strategy": "STRIP_AND_IGNORE"
+        }
+      },
+      {
+        "mode": "SPAN_PRESERVE_AS_UNKNOWN",
+        "ast": {
+          "type": "PARTIAL_PARSE",
+          "clean_text": "He walked down the street. End.",
+          "recovered_nodes": [
+            {
+              "route": "UNKNOWN",
+              "original_span": "street",
+              "note": "test",
+              "confidence": 1.0
+            }
+          ],
+          "dropped_tokens": [],
+          "recovery_strategy": "PRESERVE_UNKNOWN_ROUTE"
+        }
+      }
+    ]
+  },
+  {
+    "id": "multiline_span_broken_syntax",
+    "input": "He walked down.\n\n[The street was wet.\nIt rained a lot.\n{#local_rewrite: dry it out}",
+    "valid_outputs": [
+      {
+        "mode": "SPAN_EOF_CLOSURE",
+        "ast": {
+          "type": "PARTIAL_PARSE",
+          "clean_text": "He walked down.\n\nThe street was wet.\nIt rained a lot.",
+          "recovered_nodes": [
+            {
+              "route": "local_rewrite",
+              "original_span": "The street was wet.\nIt rained a lot.",
+              "note": "dry it out",
+              "confidence": 0.7
+            }
+          ],
+          "dropped_tokens": ["["],
+          "recovery_strategy": "ASSUME_EOF_CLOSURE"
+        }
+      }
+    ]
+  }
+]

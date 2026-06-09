@@ -1,0 +1,50 @@
+{
+  "chapter": "1",
+  "chapter_title": "Walk",
+  "pass_id": "test_pass_part_1",
+  "cache_hit": false,
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  },
+  "raw_text": "",
+  "delta": {
+    "chapter": 1,
+    "pass_id": "test_pass",
+    "new_entries": [
+      {
+        "id": "kain.walking",
+        "namespace": "character",
+        "entity": "Kain",
+        "value": "Kain walks down the street.",
+        "aliases": [],
+        "confidence": "event",
+        "source_chapter": 1,
+        "extracted_at_pass": "test_pass",
+        "created_at": "2026-06-08T21:41:50.087755Z",
+        "superseded_by": null
+      }
+    ],
+    "resolved_loops": [],
+    "new_loops": [
+      {
+        "id": "plot.loop_walking_destination",
+        "namespace": "plot",
+        "entity": null,
+        "value": "OPEN: Where is Kain walking to?",
+        "aliases": [],
+        "confidence": "inferred",
+        "source_chapter": 1,
+        "extracted_at_pass": "test_pass",
+        "created_at": "2026-06-08T21:41:50.087755Z",
+        "superseded_by": null
+      }
+    ],
+    "tone_notes": [
+      "Fast pacing"
+    ],
+    "created_at": "2026-06-08T21:41:50.087755Z"
+  },
+  "logged_at": "2026-06-08T21:41:50.088266+00:00"
+}

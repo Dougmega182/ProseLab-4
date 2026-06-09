@@ -23,6 +23,8 @@ def mock_galaxy() -> MockProvider:
     clear_providers()
     mock = MockProvider(name="galaxy")
     register_provider("galaxy", mock)
+    google_mock = MockProvider(name="google")
+    register_provider("google", google_mock)
     yield mock
     clear_providers()
 
@@ -181,6 +183,8 @@ def test_prose_generator_retry_success(populated_store: Path):
     
     mock = SequenceMockProvider(responses=responses, name="galaxy")
     register_provider("galaxy", mock)
+    google_mock = MockProvider(name="google")
+    register_provider("google", google_mock)
     
     outline = "Kain sits in the Black Pearl."
     result = generate_scene_with_retry(
@@ -244,6 +248,8 @@ def test_prose_generator_retry_on_contract_failure(
     ]
     mock = SequenceMockProvider(responses=responses, name="galaxy")
     register_provider("galaxy", mock)
+    google_mock = MockProvider(name="google")
+    register_provider("google", google_mock)
 
     result = generate_scene_with_retry(
         scene_outline="Bell reads the file.",
@@ -264,3 +270,182 @@ def test_prose_generator_retry_on_contract_failure(
     )
     assert "CONTRACT hard VIOLATION" in mock.last_request.user_message
     clear_providers()
+
+
+def test_prose_generator_enforces_beat_constraints(populated_store: Path):
+    from narrative_os.llm.providers.base import LLMCall, LLMResult
+
+    class SequenceMockProvider(MockProvider):
+        def __init__(self, responses: list[dict], name: str = "galaxy"):
+            super().__init__(name=name)
+            self.responses = responses
+
+        def call(self, request: LLMCall) -> LLMResult:
+            self.call_count += 1
+            self.last_request = request
+            response = self.responses.pop(0) if self.responses else {"text": ""}
+            return LLMResult(
+                text=response.get("text", ""),
+                parsed=response.get("parsed"),
+                model_id=request.model_id,
+                usage={"input_tokens": 100, "output_tokens": 50},
+                cache_hit=False,
+            )
+
+    clear_providers()
+    responses = [
+        # Pass 1: fails because of forbidden term "unleash" and word count under target (3 words)
+        {
+            "text": (
+                "<thinking>\n"
+                "Attempt 1 thinking\n"
+                "</thinking>\n"
+                "<prose_output>\n"
+                "Kain did unleash.\n"
+                "</prose_output>"
+            )
+        },
+        # Pass 2: fails because required term "A&S" is missing (word count is ok)
+        {
+            "text": (
+                "<thinking>\n"
+                "Attempt 2 thinking\n"
+                "</thinking>\n"
+                "<prose_output>\n"
+                "Kain stood by the mahogany table for twelve seconds, counting the hums from the cooling fixture.\n"
+                "</prose_output>"
+            )
+        },
+        # Pass 3: passes (word count ok, forbidden word "unleash" gone, required term "A&S" present)
+        {
+            "text": (
+                "<thinking>\n"
+                "Attempt 3 thinking\n"
+                "</thinking>\n"
+                "<prose_output>\n"
+                "Kain stood by the A&S table for twelve seconds, counting the hums from the cooling fixture.\n"
+                "</prose_output>"
+            )
+        }
+    ]
+
+    mock = SequenceMockProvider(responses=responses, name="galaxy")
+    register_provider("galaxy", mock)
+    google_mock = MockProvider(name="google")
+    register_provider("google", google_mock)
+
+    result = generate_scene_with_retry(
+        scene_outline="Kain waits.",
+        chapter_num=1,
+        store_path=populated_store,
+        max_retries=4,
+        use_cache=False,
+        verbose=False,
+        target_min_words=10,
+        target_max_words=30,
+        must_include_terms=["A&S"],
+        forbidden_terms=["unleash"],
+    )
+
+    assert mock.call_count == 3
+    assert result["passed"] is True
+    assert result["attempts"] == 3
+    assert "A&S" in result["prose"]
+    assert "unleash" not in result["prose"]
+    # Check that retry 1 had budget and forbidden term failures reported
+    assert any("beat_word_budget_under" in str(v) for v in result["history"][0]["lint"]["cap_violations"])
+    assert any("contains_forbidden_term" in str(v) for v in result["history"][0]["lint"]["hard_violations"])
+    # Check that retry 2 had missing required term failure reported
+    assert any("missing_required_term" in str(v) for v in result["history"][1]["lint"]["hard_violations"])
+
+    clear_providers()
+
+
+def test_prose_generator_retry_on_semantic_critic_failure(populated_store: Path):
+    from narrative_os.llm.providers.base import LLMCall, LLMResult
+
+    class SequenceMockProvider(MockProvider):
+        def __init__(self, responses: list[dict], name: str = "galaxy"):
+            super().__init__(name=name)
+            self.responses = responses
+
+        def call(self, request: LLMCall) -> LLMResult:
+            self.call_count += 1
+            self.last_request = request
+            response = self.responses.pop(0) if self.responses else {"text": ""}
+            return LLMResult(
+                text=response.get("text", ""),
+                parsed=response.get("parsed"),
+                model_id=request.model_id,
+                usage={"input_tokens": 100, "output_tokens": 50},
+                cache_hit=False,
+            )
+
+    clear_providers()
+    responses = [
+        # Pass 1: fails because critic returns hard failure
+        {
+            "text": (
+                "<thinking>\nAttempt 1\n</thinking>\n"
+                "<prose_output>\nKain bent his arm like a mechanical pipe.\n</prose_output>"
+            )
+        },
+        # Pass 2: passes
+        {
+            "text": (
+                "<thinking>\nAttempt 2\n</thinking>\n"
+                "<prose_output>\n"
+                "Kain stood by the A&S table for twelve seconds, counting the hums from the cooling fixture. "
+                "The air smelled of ozone and dust, and the silence of the corridor was heavy, unbroken by any footstep or alarm.\n"
+                "</prose_output>"
+            )
+        },
+    ]
+    mock = SequenceMockProvider(responses=responses, name="galaxy")
+    register_provider("galaxy", mock)
+
+    class CriticMockProvider(MockProvider):
+        def __init__(self):
+            super().__init__(name="google")
+            self.call_count = 0
+
+        def call(self, request: LLMCall) -> LLMResult:
+            self.call_count += 1
+            if self.call_count == 1:
+                # First pass: return a hard failure for mechanical simile
+                text = '{"findings": [{"rule_name": "awkward_simile", "severity": "hard_failure", "span": "like a mechanical pipe", "rationale": "Mechanical/cybernetic posture description is forbidden."}]}'
+            else:
+                text = '{"findings": []}'
+            import json
+            parsed = json.loads(text)
+            return LLMResult(
+                text=text,
+                parsed=parsed,
+                model_id=request.model_id,
+                usage={"input_tokens": 100, "output_tokens": 50},
+                cache_hit=False,
+            )
+
+    google_mock = CriticMockProvider()
+    register_provider("google", google_mock)
+
+    result = generate_scene_with_retry(
+        scene_outline="Kain waits.",
+        chapter_num=1,
+        store_path=populated_store,
+        max_retries=3,
+        use_cache=False,
+        verbose=False,
+    )
+
+    assert mock.call_count == 2
+    assert google_mock.call_count == 2
+    assert result["passed"] is True
+    assert result["attempts"] == 2
+    # Check that retry 1 had semantic critic findings reported
+    assert len(result["history"][0]["lint"]["critic_findings"]) == 1
+    assert result["history"][0]["lint"]["critic_findings"][0]["rule_name"] == "awkward_simile"
+    assert "SEMANTIC CRITIC HARD_FAILURE VIOLATION" in mock.last_request.user_message
+
+    clear_providers()
+

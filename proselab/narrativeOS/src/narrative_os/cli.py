@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import sys
 import json
+import time
 from pathlib import Path
 from typing import Sequence
 
@@ -27,6 +28,7 @@ from .pipeline import (
 )
 from .schemas import ConflictReport
 from .store import DEFAULT_STORE_PATH, stats as store_stats
+from .markup_parser import apply_feedback
 
 
 def _print_result(result, verbose: bool = False, prefix: str = "") -> None:
@@ -109,6 +111,9 @@ def cmd_analyze_all(args: argparse.Namespace) -> int:
                 if not args.continue_on_error:
                     print(f"\nStopping due to failure on chapter {chapter.display_number}.")
                     return 1
+            elif i < total and args.delay > 0:
+                print(f"Waiting {args.delay}s before next chapter to avoid rate limits...")
+                time.sleep(args.delay)
         except KeyboardInterrupt:
             print("\nInterrupted.")
             return 130
@@ -434,6 +439,36 @@ def cmd_generate_scene_plan(args: argparse.Namespace) -> int:
     print(draft.lint_report)
     return 0 if draft.passed else 1
 
+def cmd_apply_feedback(args: argparse.Namespace) -> int:
+    p = Path(args.draft_file)
+    if not p.exists():
+        print(f"Error: Draft file {args.draft_file} does not exist.")
+        return 1
+        
+    text = p.read_text(encoding="utf-8")
+    out_path = Path(args.out) if args.out else p
+    log_path = Path(args.log) if args.log else Path("data/contracts/amendments.log.jsonl")
+    
+    decisions_path = Path("decisions.md")
+    store_path = args.store or DEFAULT_STORE_PATH
+    prompt_tuning_path = Path("data/contracts/prompt_tuning.txt")
+    
+    print(f"Reading marked-up draft from {p}...")
+    clean_text, notes = apply_feedback(
+        text,
+        use_cache=not args.no_cache,
+        log_path=str(log_path),
+        source=p.name,
+        decisions_path=decisions_path,
+        store_path=store_path,
+        prompt_tuning_path=prompt_tuning_path,
+    )
+    
+    out_path.write_text(clean_text, encoding="utf-8")
+    print(f"Wrote clean rewritten prose to {out_path}")
+    print(f"Applied {len(notes)} feedback note(s).")
+    return 0
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="narrative_os",
@@ -461,6 +496,8 @@ def build_parser() -> argparse.ArgumentParser:
                     help="Don't stop on extractor/merge failures.")
     sp.add_argument("--dry-run", action="store_true",
                     help="Extract and detect conflicts without modifying the canon store.")
+    sp.add_argument("--delay", type=int, default=45,
+                    help="Seconds to wait between chapters to avoid rate limits.")
     sp.set_defaults(fn=cmd_analyze_all)
 
     # stats
@@ -535,6 +572,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--no-cache", action="store_true")
     sp.add_argument("--skip-bridge-preflight", action="store_true")
     sp.set_defaults(fn=cmd_generate_scene_plan)
+
+    # apply-feedback
+    sp = sub.add_parser("apply-feedback", help="Apply marked-up human feedback to a draft scene.")
+    sp.add_argument("draft_file", help="Path to text file containing markup.")
+    sp.add_argument("--out", type=Path, default=None, help="Output path for cleaned/regenerated text.")
+    sp.add_argument("--log", type=Path, default=Path("data/contracts/amendments.log.jsonl"), help="Path to amendment log.")
+    sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
+    sp.set_defaults(fn=cmd_apply_feedback)
 
     return p
 

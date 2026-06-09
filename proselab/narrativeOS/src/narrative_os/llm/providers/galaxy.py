@@ -68,8 +68,8 @@ class GalaxyProvider(LLMProvider):
             }
         }
 
-        # Start run with retry handling for connection / timeout exceptions
-        max_start_retries = 3
+        # Start run with retry handling for connection / timeout / rate limit (429) exceptions
+        max_start_retries = 6
         start_data = None
         for attempt in range(1, max_start_retries + 1):
             try:
@@ -80,7 +80,21 @@ class GalaxyProvider(LLMProvider):
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
                 if attempt == max_start_retries:
                     raise ProviderAPIError(f"Galaxy start run failed after {max_start_retries} attempts: {e}") from e
-                time.sleep(2.0 * attempt)
+                time.sleep(3.0 * attempt)
+            except requests.exceptions.HTTPError as e:
+                if e.response is not None and e.response.status_code == 429:
+                    if attempt == max_start_retries:
+                        error_msg = f"{e}"
+                        if e.response is not None:
+                            error_msg += f" Response body: {e.response.text}"
+                        raise ProviderAPIError(f"Galaxy start run failed after {max_start_retries} attempts due to 429: {error_msg}") from e
+                    # Backoff sleep: 5s, 10s, 15s, etc.
+                    time.sleep(5.0 * attempt)
+                    continue
+                error_msg = f"{e}"
+                if e.response is not None:
+                    error_msg += f" Response body: {e.response.text}"
+                raise ProviderAPIError(f"Galaxy start run failed: {error_msg}") from e
             except Exception as e:
                 raise ProviderAPIError(f"Galaxy start run failed: {e}") from e
 

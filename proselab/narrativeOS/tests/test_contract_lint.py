@@ -1,4 +1,5 @@
-from narrative_os.contract_lint import lint_contract, render_contract_for_prompt
+from pathlib import Path
+from narrative_os.contract_lint import lint_contract, render_contract_for_prompt, load_contract
 from narrative_os.contracts import BookContract, ContractRule
 
 
@@ -53,3 +54,37 @@ def test_contract_renders_for_prompt():
 
     assert "s22.guard.no_kain_ics_misattribution" in rendered
     assert "Section 23.8" in rendered
+
+
+def test_chapter_3_prose_fixtures_against_real_contract():
+    contract_path = Path(__file__).parent.parent / "data" / "contracts" / "book1_contract.json"
+    real_contract = load_contract(contract_path)
+
+    # 1. Clean Chapter 3 prose fixture
+    clean_prose = (
+        "Aspect — the name was a designation, not a surname, the kind of "
+        "single-word identifier the QSA assigned to personnel whose operational "
+        "role required a layer of institutional distance between their function "
+        "and their person — was perhaps sixty, with the lean, careful build "
+        "of someone who had spent decades in environments where excess was a liability."
+    )
+    result = lint_contract(clean_prose, contract=real_contract)
+    assert result.passed
+    assert not result.findings
+
+    # 2. Corrupted reveal: directly naming Alain Aspect
+    corrupted_reveal = (
+        "The man beside it was not what Kain had expected. Aspect was Alain Aspect."
+    )
+    result_reveal = lint_contract(corrupted_reveal, contract=real_contract)
+    assert not result_reveal.passed
+    assert any(f.guard_id == "s22.guard.no_aspect_identity_reveal" for f in result_reveal.findings)
+
+    # 3. Corrupted wrong attribution: stating Aspect was not a title
+    corrupted_wrong_attribution = (
+        "Kain reasoned that Aspect was not a title, but rather the name of the original founder."
+    )
+    result_wrong = lint_contract(corrupted_wrong_attribution, contract=real_contract)
+    assert not result_wrong.passed
+    assert any(f.guard_id == "s22.guard.no_aspect_identity_reveal" for f in result_wrong.findings)
+

@@ -9,8 +9,10 @@ Public entry point: llm_call()
 """
 
 from __future__ import annotations
-
 from typing import Any, Optional
+
+from dotenv import load_dotenv
+load_dotenv("E:/Ai/ProseLabV2/proselab/.env")
 
 from .cache.local import LocalCache, make_cache_key
 from .providers.base import LLMCall, LLMProvider, LLMResult

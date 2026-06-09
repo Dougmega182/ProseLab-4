@@ -203,6 +203,7 @@ export default function ProseLabV4() {
     generateValidationReport,
     saveDocument,
     updateDocument,
+    updateChapter,
     findDocuments,
     createCharacter,
     createWorldRule,
@@ -711,6 +712,16 @@ export default function ProseLabV4() {
     await updateProjectMetadata({ title });
   };
 
+  const handleRenameChapter = async (chapterId) => {
+    const chapter = chapters.find((c) => c.id === chapterId);
+    if (!chapter) return;
+    const proposedName = window.prompt("Rename chapter", chapter.title || "Untitled Chapter");
+    if (proposedName === null) return;
+    const title = proposedName.trim();
+    if (!title || title === chapter.title) return;
+    await updateChapter(selectedProjectId, chapterId, { title });
+  };
+
   const handleResetLocalData = async () => {
     const confirmed = window.confirm(
       "Reset local ProseLab data? This clears IndexedDB, imported manuscripts, cache, costs, and shadow logs. AI settings will be kept."
@@ -822,6 +833,7 @@ export default function ProseLabV4() {
           onDeleteProject={deleteProject}
           onCreateProject={handleCreateProject}
           onRenameProject={handleRenameProject}
+          onRenameChapter={handleRenameChapter}
           onSelectScene={selectScene}
           onCreateChapter={createChapter}
           onCreateDraftChapter={(data) => createChapter({ ...data, isDraft: true })}

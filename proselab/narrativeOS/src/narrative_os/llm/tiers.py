@@ -26,6 +26,8 @@ Role = Literal[
     "prose_rewriting",
     "fast_iteration",
     "continuity_timeline",
+    "prose_critic",
+    "voice_critic",
 ]
 
 
@@ -47,6 +49,8 @@ ROLE_TIERS: dict[str, str] = {
     "prose_rewriting":       "T2_premium",
     "fast_iteration":        "T3_fast",
     "continuity_timeline":   "T4_reasoning",
+    "prose_critic":          "T1_default",
+    "voice_critic":          "T1_default",
 }
 
 

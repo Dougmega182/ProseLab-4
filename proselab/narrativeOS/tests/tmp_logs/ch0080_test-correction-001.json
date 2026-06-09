@@ -22,14 +22,14 @@
         "confidence": "event",
         "source_chapter": 8,
         "extracted_at_pass": "test-correction-001",
-        "created_at": "2026-05-31T23:03:30.575972Z",
+        "created_at": "2026-06-08T21:41:50.107182Z",
         "superseded_by": null
       }
     ],
     "resolved_loops": [],
     "new_loops": [],
     "tone_notes": [],
-    "created_at": "2026-05-31T23:03:30.575972Z"
+    "created_at": "2026-06-08T21:41:50.107182Z"
   },
-  "logged_at": "2026-05-31T23:03:30.576502+00:00"
+  "logged_at": "2026-06-08T21:41:50.107182+00:00"
 }

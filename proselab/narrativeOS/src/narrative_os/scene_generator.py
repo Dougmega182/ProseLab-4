@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field, model_validator
 
 from .contract_lint import ContractLintResult, lint_contract
 from .prose_lint import LintResult, lint_prose
+from .voice_linter import lint_voice, VoiceScoreResult
+from .failures import FailureType, NarrativeFailure
 
 
 class Beat(BaseModel):
@@ -67,7 +69,12 @@ GeneratorFn = Callable[..., dict]
 StitchFn = Callable[[ScenePlan, list[BeatDraft]], str]
 
 
-def render_beat_outline(plan: ScenePlan, beat: Beat, beat_index: int) -> str:
+def render_beat_outline(
+    plan: ScenePlan,
+    beat: Beat,
+    beat_index: int,
+    previous_prose: Optional[str] = None,
+) -> str:
     """Render one beat with enough scene context for the beat generator."""
     lines = [
         f"Scene: {plan.title}",
@@ -77,6 +84,14 @@ def render_beat_outline(plan: ScenePlan, beat: Beat, beat_index: int) -> str:
         "",
         beat.outline,
     ]
+    if previous_prose:
+        lines.extend([
+            "",
+            "Prose from the immediately preceding beat (for continuity and flow reference):",
+            "<previous_beat_prose>",
+            previous_prose,
+            "</previous_beat_prose>",
+        ])
     if plan.global_constraints:
         lines.extend(["", "Scene constraints:"])
         lines.extend(f"- {item}" for item in plan.global_constraints)
@@ -86,6 +101,16 @@ def render_beat_outline(plan: ScenePlan, beat: Beat, beat_index: int) -> str:
     if beat.pov_constraints:
         lines.extend(["", "POV constraints for this beat:"])
         lines.extend(f"- {item}" for item in beat.pov_constraints)
+    
+    lines.extend([
+        "",
+        "CRITICAL DIRECTIVE FOR THIS TASK:",
+        f"You are generating ONLY the prose for Beat {beat_index}: '{beat.label}'.",
+        "Do NOT write, draft, or outline any other beats in the scene.",
+    ])
+    if beat.target_min_words is not None and beat.target_max_words is not None:
+        lines.append(f"Target word count for this beat: {beat.target_min_words}-{beat.target_max_words} words.")
+        
     return "\n".join(lines)
 
 
@@ -148,16 +173,30 @@ def generate_scene_draft(
         generator_fn = generate_scene_with_retry
 
     beat_drafts: list[BeatDraft] = []
+    import inspect
     for index, beat in enumerate(plan.beats, start=1):
-        result = generator_fn(
-            scene_outline=render_beat_outline(plan, beat, index),
-            chapter_num=plan.chapter,
-            store_path=store_path,
-            contract_path=contract_path,
-            max_retries=max_retries,
-            use_cache=use_cache,
-            verbose=verbose,
-        )
+        previous_prose = beat_drafts[-1].prose if beat_drafts else None
+        kwargs = {
+            "scene_outline": render_beat_outline(plan, beat, index, previous_prose=previous_prose),
+            "chapter_num": plan.chapter,
+            "store_path": store_path,
+            "contract_path": contract_path,
+            "max_retries": max_retries,
+            "use_cache": use_cache,
+            "verbose": verbose,
+        }
+        sig = inspect.signature(generator_fn)
+        has_var_keyword = any(p.kind == p.VAR_KEYWORD for p in sig.parameters.values())
+        if has_var_keyword or "target_min_words" in sig.parameters:
+            kwargs["target_min_words"] = beat.target_min_words
+        if has_var_keyword or "target_max_words" in sig.parameters:
+            kwargs["target_max_words"] = beat.target_max_words
+        if has_var_keyword or "must_include_terms" in sig.parameters:
+            kwargs["must_include_terms"] = beat.must_include_terms
+        if has_var_keyword or "forbidden_terms" in sig.parameters:
+            kwargs["forbidden_terms"] = list(set(beat.forbidden_terms + plan.forbidden_terms))
+
+        result = generator_fn(**kwargs)
         beat_drafts.append(
             BeatDraft(
                 beat=beat,
@@ -170,6 +209,15 @@ def generate_scene_draft(
         )
 
     prose = stitch_fn(plan, beat_drafts)
+    
+    voice_lint = lint_voice(prose, use_cache=use_cache)
+    if not voice_lint.passed:
+        raise NarrativeFailure(
+            FailureType.VOICE_FAILURE,
+            f"Scene failed voice consistency check (Score Version: {voice_lint.score_version}). Failed Metrics: {', '.join(voice_lint.failed_metrics)}.",
+            payload=voice_lint.model_dump()
+        )
+        
     final_lint = lint_prose(prose)
     contract_lint = (
         lint_contract(prose, contract_path=contract_path, use_cache=use_cache)

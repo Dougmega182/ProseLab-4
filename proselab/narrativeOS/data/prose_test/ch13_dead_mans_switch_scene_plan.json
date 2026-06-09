@@ -1,0 +1,101 @@
+{
+  "title": "Chapter 13 - Dead Man's Switch",
+  "chapter": 13,
+  "pov": "Kain",
+  "location": "QSA Annex / Fitzroy Library Plant Room",
+  "target_min_words": 800,
+  "target_max_words": 1200,
+  "global_constraints": [
+    "Target length: 800-1200 words total.",
+    "Four structural beats: The Confrontation (200-300 words), The Diagnosis (200-300 words), Going Off-Network (200-300 words), The Switch (200-300 words).",
+    "Use Kain's clinical, proprioceptive observation style: counting pulse, focusing on physical textures, concrete anchors, absolute avoidance of emotional melodrama.",
+    "Do not mention or attribute any specific ICS reading to Kain (ICS readings belong to Hayden/Bell's partner). Emily may say his ICS is not tracked, but the severity of his Bleed is.",
+    "Do not state that Kain's death is a biological certainty that cannot be averted under any circumstances (allowed to state that the QSA's prognosis is terminal with two jumps left, but do not foreclose future survival).",
+    "Do not reveal Hayden's ultimate objective or explain why he has executed transitions.",
+    "Do not explicitly merge the laughing woman with Hayden's memories.",
+    "Adhere strictly to the All-in-One Banned Items List (no 'vibrant', 'delve', rule of three lists, or direct emotional crutches)."
+  ],
+  "beats": [
+    {
+      "label": "The Confrontation",
+      "target_min_words": 200,
+      "target_max_words": 300,
+      "outline": "Kain meets Emily in her private operations office on the third floor of the QSA annex. He drops the Solis journals data chip on the desk, confronting her about her secret identity as Delta-6 and the hidden records.",
+      "required_facts": [
+        "Emily is Delta-6.",
+        "Solis's journals are on the data chip."
+      ],
+      "pov_constraints": [
+        "Kain maintains clinical detachment.",
+        "Kain does not speak with emotional melodrama."
+      ],
+      "must_include_terms": [
+        "Delta-6",
+        "data chip"
+      ]
+    },
+    {
+      "label": "The Diagnosis",
+      "target_min_words": 200,
+      "target_max_words": 300,
+      "outline": "Emily details the truth about his genotype: he is an active TUBA1A-PQ carrier in Bleed. She tells him he is terminal and has exactly two jumps left. She offers a choice: Threshold sequestration (stabilization protocol) or completing the sequence (two final jumps to find the network, ending in erasure).",
+      "required_facts": [
+        "TUBA1A-PQ genotype is terminal.",
+        "Kain has two jumps left.",
+        "Threshold sequestration is offered as a stabilization option."
+      ],
+      "pov_constraints": [
+        "Kain does not accept the deal.",
+        "Never state that Kain's death is a mathematical/biological absolute impossibility to prevent.",
+        "Never misattribute any ICS reading to Kain."
+      ],
+      "must_include_terms": [
+        "TUBA1A-PQ",
+        "two jumps",
+        "Threshold"
+      ]
+    },
+    {
+      "label": "Going Off-Network",
+      "target_min_words": 200,
+      "target_max_words": 300,
+      "outline": "Kain rejects the deal, walks out of the office, and goes off-network. He discards his Myki card, leaves his phone on a northbound tram, and walks through the cold streets of Fitzroy.",
+      "required_facts": [
+        "Kain rejects the stabilization protocol.",
+        "Kain discards his Myki card and phone to sever connection.",
+        "Kain walks off-network."
+      ],
+      "pov_constraints": [
+        "Kain observes the urban geometry and cold air to anchor himself."
+      ],
+      "must_include_terms": [
+        "Myki card",
+        "tram",
+        "off-network"
+      ]
+    },
+    {
+      "label": "The Switch",
+      "target_min_words": 200,
+      "target_max_words": 300,
+      "outline": "Kain enters the Fitzroy library plant room behind the HVAC panel. He boots the legacy QSA terminal, enters the VOSSEV key from the folded paper, decrypts CONV-PQ-GEN-549, and reads the truth: he is an instrument being calibrated for his 12th deployment, and Emily has tracked his degradation for fourteen months.",
+      "required_facts": [
+        "Legacy terminal is booted in the plant room.",
+        "Folder key is VOSSEV.",
+        "File designation is CONV-PQ-GEN-549.",
+        "Kain is at 11 deployments; the next is 12.",
+        "Emily has known and tracked his degradation for fourteen months."
+      ],
+      "pov_constraints": [
+        "Kain updates his environmental model without grief or shock.",
+        "Never explicitly state the laughing woman is Hayden's memory."
+      ],
+      "must_include_terms": [
+        "VOSSEV",
+        "CONV-PQ-GEN-549",
+        "fourteen months",
+        "eleventh deployment"
+      ]
+    }
+  ]
+}

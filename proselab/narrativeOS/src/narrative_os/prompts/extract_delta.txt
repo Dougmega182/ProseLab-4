@@ -79,9 +79,42 @@ Return ONE JSON object matching the StateDelta schema. No prose, no markdown fen
 - `new_entries[].created_at` and `new_loops[].created_at`: OMIT these fields entirely. Do NOT invent, copy, or include them in your output.
 - `new_entries[].updated_at` and `new_loops[].updated_at`: OMIT these fields entirely. Do NOT invent, copy, or include them in your output.
 
+**CONCRETE TEMPLATE EXAMPLE:**
+```json
+{
+  "chapter": 5,
+  "pass_id": "<PASS_ID>",
+  "new_entries": [
+    {
+      "id": "entity.slug",
+      "namespace": "character",
+      "entity": "EntityName",
+      "value": "Exactly quoted or established fact from the chapter text.",
+      "aliases": ["Alias1"],
+      "confidence": "event",
+      "source_chapter": 5,
+      "extracted_at_pass": "<PASS_ID>"
+    }
+  ],
+  "resolved_loops": ["plot.loop_example_id"],
+  "new_loops": [
+    {
+      "id": "plot.loop_new_id",
+      "namespace": "plot",
+      "value": "OPEN: What is the new setup or question?",
+      "confidence": "inferred",
+      "source_chapter": 5,
+      "extracted_at_pass": "<PASS_ID>"
+    }
+  ],
+  "tone_notes": ["Note about register or pacing."]
+}
+```
+
 CRITICAL PREVENTIVE RULE: You MUST NOT under any circumstances output, invent, or include fields representing timestamps, dates, or creation/update times (e.g. `created_at`, `updated_at`, `extracted_at`, `2025-07-08T12:00:00`, etc.) inside any element of `new_entries` or `new_loops` other than setting `extracted_at_pass` exactly as specified above. Fabricating dates or timestamps contaminates the provenance chain and will cause severe execution failure.
 
 The literal pass_id for this run is shown again below for clarity:
 
 `<PASS_ID>` ← use this exact string.
+
 

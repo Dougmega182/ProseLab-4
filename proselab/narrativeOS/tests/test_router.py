@@ -39,7 +39,18 @@ class MockProvider(LLMProvider):
     def call(self, request: LLMCall) -> LLMResult:
         self.call_count += 1
         self.last_request = request
-        response = self.next_response or {"text": '{"chapter": 5, "pass_id": "x"}'}
+        if self.next_response:
+            response = self.next_response
+        elif self.name == "google":
+            if request.schema and "findings" in request.schema.get("required", []):
+                response = {"text": '{"findings": []}'}
+            elif request.schema and "score" in request.schema.get("required", []):
+                response = {"text": '{"passed": true, "score": 10, "rationale": "mock voice pass"}'}
+            else:
+                response = {"text": '{"findings": []}'}
+        else:
+            response = {"text": '{"chapter": 5, "pass_id": "x"}'}
+            
         return LLMResult(
             text=response.get("text", ""),
             parsed=response.get("parsed"),

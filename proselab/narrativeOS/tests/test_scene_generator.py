@@ -10,6 +10,22 @@ from narrative_os.scene_generator import (
 )
 
 
+@pytest.fixture(autouse=True)
+def mock_providers():
+    from narrative_os.llm.router import clear_providers, register_provider
+    from .test_router import MockProvider
+    clear_providers()
+    galaxy = MockProvider(name="galaxy")
+    google = MockProvider(name="google")
+    # For voice_linter.py which decodes json with passed/score/rationale
+    google.next_response = {"text": '{"passed": true, "score": 9, "rationale": "mock pass"}'}
+    register_provider("galaxy", galaxy)
+    register_provider("google", google)
+    yield (galaxy, google)
+    clear_providers()
+
+
+
 def _plan() -> ScenePlan:
     return ScenePlan(
         title="Solis Apartment - Scene Fixture",
@@ -78,9 +94,10 @@ def test_generate_scene_draft_preserves_required_facts_across_beats():
         "Three journals lay open under a dead desk lamp.",
         "The deep blue mug showed two gold letters: A&S.",
     ]
+    received_outlines = []
 
     def fake_generator(**kwargs):
-        del kwargs
+        received_outlines.append(kwargs.get("scene_outline", ""))
         prose = outputs.pop(0)
         return {
             "thinking": "mock",
@@ -102,6 +119,15 @@ def test_generate_scene_draft_preserves_required_facts_across_beats():
     assert "Three journals" in draft.prose
     assert "A&S" in draft.prose
     assert len(draft.beat_drafts) == 3
+
+    # Beat 1 outline should not have previous_prose
+    assert "Prose from the immediately preceding beat" not in received_outlines[0]
+    # Beat 2 outline should include Beat 1 prose
+    assert "Prose from the immediately preceding beat" in received_outlines[1]
+    assert "The lock yielded. Kain entered." in received_outlines[1]
+    # Beat 3 outline should include Beat 2 prose
+    assert "Prose from the immediately preceding beat" in received_outlines[2]
+    assert "Three journals lay open" in received_outlines[2]
 
 
 def test_stitch_pass_does_not_delete_beat_output():
@@ -126,7 +152,7 @@ def test_stitch_pass_does_not_delete_beat_output():
 
 
 def test_solis_apartment_scene_plan_fixture_validates():
-    fixture = Path("data/prose_test/ch9.5_scene_plan.json")
+    fixture = Path("data/prose_test/solis_apartment_scene_plan.json")
 
     plan = ScenePlan.model_validate_json(fixture.read_text(encoding="utf-8"))
 

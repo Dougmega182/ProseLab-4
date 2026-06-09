@@ -15,6 +15,7 @@ export function DocumentSidebar({
   onDeleteProject,
   onCreateProject,
   onRenameProject,
+  onRenameChapter,
   onSelectScene,
   onCreateChapter,
   onCreateDraftChapter,
@@ -246,6 +247,13 @@ export function DocumentSidebar({
                   <span className="chapter-title">{chapter.title}</span>
                   <button
                     className="btn-icon-sm"
+                    onClick={(event) => { event.stopPropagation(); onRenameChapter(chapter.id); }}
+                    title="Rename Chapter"
+                  >
+                    ✎
+                  </button>
+                  <button
+                    className="btn-icon-sm"
                     onClick={(event) => { event.stopPropagation(); onCreateScene(chapter.id); }}
                     title="Add Scene"
                   >
@@ -314,6 +322,13 @@ export function DocumentSidebar({
               >
                 <span className={`chevron ${expandedChapters[chapter.id] ? "expanded" : ""}`}>▶</span>
                 <span className="chapter-title">{chapter.title}</span>
+                <button
+                  className="btn-icon-sm"
+                  onClick={(event) => { event.stopPropagation(); onRenameChapter(chapter.id); }}
+                  title="Rename Draft Folder"
+                >
+                  ✎
+                </button>
                 <button
                   className="btn-icon-sm"
                   onClick={(event) => { event.stopPropagation(); onCreateDraftScene(chapter.id); }}
