@@ -4,7 +4,7 @@ A staged plan from where you are now (operational Phase 6 canon + §22/§23 cont
 
 ---
 
-## Phase 7 — Prose Generation Stub (current)
+## Phase 7 — Prose Generation Stub (completed)
 
 **Goal:** Prove §22 is enforceable, not just architecturally elegant.
 
@@ -48,11 +48,11 @@ A staged plan from where you are now (operational Phase 6 canon + §22/§23 cont
 **Goal:** Move from beat to scene. This is the first phase where the system produces something a human reader would call "prose."
 
 - Beat-chain assembly — generator takes a scene outline (3–8 beats), generates each beat with §22 context, stitches with continuity prompts
-- Voice consistency check — separate lint pass against established voice samples (Opus reads Ch 3, asks "does this sound like the same narrator?")
+- Voice consistency check — implemented strict sub-metric gating (Lexical Density, Rhythm Delta, Sentence Variance, Forbidden Drift) with immutable `VoiceScoreResult` objects and mutually exclusive failure routing (`VOICE_FAILURE`).
 - Per-character POV discipline — §22 entries gain a `pov_constraints` field (what Bell can know vs. what Hayden can know vs. what the narrator can know)
 - Test against a real Ch 9.5 (Solis's apartment, A&S mug payoff) draft — your existing open author action item becomes the first real-stakes test
 
-**Exit criterion:** a generated scene reads cleanly, obeys §22, matches canon, and survives your editorial markup without a structural rewrite.
+**Status:** Completed. Scene-scale voice governance is sealed and strictly evaluated.
 
 ---
 
@@ -60,16 +60,30 @@ A staged plan from where you are now (operational Phase 6 canon + §22/§23 cont
 
 **Goal:** The iterative draft → markup → re-run loop becomes a first-class system feature, not a manual habit.
 
-- `markup_parser.py` — reads your annotated drafts (margin notes, strikethroughs, replacement spans), emits structured feedback
-- Feedback routes to three destinations: (a) §22 amendments if the note reveals a missing guard, (b) canon corrections if the note reveals a fact error, (c) prompt tuning if the note reveals a generator habit
-- Diff-aware regeneration — generator can take "rewrite this paragraph keeping X, changing Y" without re-rolling the whole scene
-- Markup → §22 amendment audit log so you can see which guards were learned from which feedback rounds
+- `ast_parser.py` — Adversarial stack-based token parser that reads annotated drafts and drops unclosed/corrupted tokens cleanly.
+- `ast_normalizer.py` and `ast_freeze.py` — Enforce strict determinism and deep structural immutability of the AST.
+- Snapshot Rollback Infrastructure — `snapshot_manager.py` enforces cryptographically verified, atomic snapshots with strict `SnapshotManifest` lineage.
+- Feedback routes to three destinations: (a) §22 amendments, (b) canon corrections, (c) prompt tuning.
 
-**Exit criterion:** a markup round genuinely improves the next generation without you having to manually translate notes into prompt changes.
+**Status:** Completed. Fuzz-tested parsing survives absolute entropy, and rollback logic strictly isolates transformations.
 
 ---
 
-## Phase 12 — Open Author Action Items (Batch 3)
+## Phase 12 — Chaos & Recovery Testing (current)
+
+**Goal:** Prove NarrativeOS can survive failures without data loss, corruption, undefined state, or silent divergence.
+
+- **Crash Injection Harness:** Simulate process death at `CREATE_TMP_DIR`, `WRITE_CANON`, `WRITE_MANIFEST`, `RENAME`.
+- **Snapshot Fuzz Testing:** Generate corrupted snapshots (missing files, invalid json, truncated files, schema mismatch) and assert deterministic failure.
+- **Rollback Replay Matrix:** For every snapshot: verify -> rollback -> reload -> verify -> bit-for-bit equality check.
+- **Snapshot Lineage Validation:** Enforce ancestry validation via `parent_snapshot_id`.
+- **Tamper Audit Trail:** Implement an append-only `SnapshotAuditEvent` log.
+
+**Exit criterion:** System recovers from all injected crashes seamlessly, rejects all corrupted snapshots deterministically, and rollback replay matches bit-for-bit.
+
+---
+
+## Phase 13 — Open Author Action Items (Batch 3)
 
 **Goal:** Use the system to do the work it was built for.
 
@@ -83,7 +97,7 @@ A staged plan from where you are now (operational Phase 6 canon + §22/§23 cont
 
 ---
 
-## Phase 13 — Book 2 Spine Activation
+## Phase 14 — Book 2 Spine Activation
 
 **Goal:** §23's Book 2 entries graduate from placeholder shape to populated entries.
 
@@ -96,7 +110,7 @@ A staged plan from where you are now (operational Phase 6 canon + §22/§23 cont
 
 ---
 
-## Phase 14 — Trilogy Convergence Layer
+## Phase 15 — Trilogy Convergence Layer
 
 **Goal:** The three-candidate Aspect-meta-question (what Aspect serves) gets resolved in §23, and Book 3's spine populates.
 
@@ -109,7 +123,7 @@ A staged plan from where you are now (operational Phase 6 canon + §22/§23 cont
 
 ---
 
-## Phase 15 — "Interview with the Devil" Template Reuse
+## Phase 16 — "Interview with the Devil" Template Reuse
 
 **Goal:** Prove the architecture generalises.
 

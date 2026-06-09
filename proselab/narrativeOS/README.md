@@ -38,12 +38,9 @@ outstanding work.
 
 Current status:
 
-- Phase 7 complete: Section 22 contract parser, schema, linter, generator
-  wiring.
-- Phase 8 complete: canon audit commands and clean canon snapshot baseline.
-- Phase 9 complete: contract/canon bridge with canonical mapping file.
-- Phase 10 in progress: scene-scale generation, using the Solis apartment scene
-  as the strict fixture.
+- Phase 7-9 complete: Generator wiring, canon audits, contract/canon bridge.
+- Phase 10 & 11 complete: Scene-scale generation, adversarial AST parser, strict Voice Consistency gating, and atomic Snapshot Rollback infrastructure.
+- Phase 12 in progress: Chaos & Recovery Testing (crash injections, corruption simulation, rollback replay matrix).
 
 ## Canonical Chapter Map
 
@@ -87,6 +84,12 @@ src/narrative_os/
   prose_generator.py        beat-level generation
   scene_generator.py        scene-scale generation
   prose_lint.py             mechanical prose lint
+  ast_parser.py             stack-based markup parser
+  ast_normalizer.py         AST canonicalization
+  ast_freeze.py             AST immutability contract
+  voice_linter.py           strict voice sub-metric gating
+  failures.py               mutually exclusive failure routing
+  snapshot_manager.py       atomic snapshots & verification
 
 data/
   canon_store.json
@@ -135,6 +138,19 @@ Generate from a scene plan:
 
 ```bash
 python -m narrative_os generate-scene-plan data/prose_test/solis_apartment_scene_plan.json --contract data/contracts/book1_contract.json --out data/prose_test/solis_apartment_generated_draft.md
+```
+
+Run Parser Fuzzing and Mutation Safety:
+
+```bash
+python -m pytest tests/parser -v
+```
+
+Run Snapshot Crash & Recovery tests:
+
+```bash
+python -m pytest tests/test_snapshot_crash_recovery.py -v
+python -m pytest tests/test_snapshot_integrity.py -v
 ```
 
 ## Banned Items Policy
