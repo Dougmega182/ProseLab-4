@@ -28,6 +28,16 @@ DEFAULT_STORE_PATH = Path(__file__).parents[2] / "data" / "canon_store.json"
 STORE_VERSION = 1
 
 
+def resolve_store_path(path: Path | str | None = None) -> Path:
+    if path:
+        return Path(path)
+    from .project import get_project
+    try:
+        return get_project().canon
+    except RuntimeError:
+        return DEFAULT_STORE_PATH
+
+
 class CanonStoreError(Exception):
     """Raised on store-level invariant violations (duplicate ids, etc.)."""
 
@@ -75,7 +85,7 @@ def _read_raw(path: Path) -> dict:
 
 def load(path: Path | str | None = None) -> list[CanonEntry]:
     """Load all entries from disk. Returns [] if file does not exist."""
-    p = Path(path) if path else DEFAULT_STORE_PATH
+    p = resolve_store_path(path)
     data = _read_raw(p)
     return [CanonEntry.model_validate(e) for e in data["entries"]]
 
@@ -86,7 +96,7 @@ def save(entries: list[CanonEntry], path: Path | str | None = None) -> None:
 
     Enforces id uniqueness across the entire store.
     """
-    p = Path(path) if path else DEFAULT_STORE_PATH
+    p = resolve_store_path(path)
 
     # Invariant: no duplicate ids
     seen: set[str] = set()
@@ -230,7 +240,7 @@ def supersede(
     save(new_entries, path)
 
 
-def stats(path: Path | str | None = None) -> dict:
+def store_stats(path: Path | str | None = None) -> dict:
     """Summary counts. Useful for debugging and the CLI."""
     entries = load(path)
     by_ns: dict[str, int] = {}

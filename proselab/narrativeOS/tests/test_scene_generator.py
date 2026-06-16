@@ -17,8 +17,8 @@ def mock_providers():
     clear_providers()
     galaxy = MockProvider(name="galaxy")
     google = MockProvider(name="google")
-    # For voice_linter.py which decodes json with passed/score/rationale
-    google.next_response = {"text": '{"passed": true, "score": 9, "rationale": "mock pass"}'}
+    # For voice_linter.py which decodes json with VoiceCriticPayload fields
+    google.next_response = {"text": '{"lexical_density": 1.0, "rhythm_delta": 1.0, "sentence_variance": 1.0, "forbidden_drift": 1.0, "rationale": "mock pass"}'}
     register_provider("galaxy", galaxy)
     register_provider("google", google)
     yield (galaxy, google)

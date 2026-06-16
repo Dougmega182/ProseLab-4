@@ -325,10 +325,19 @@ def apply_canon_correction(
     else:
         print(f"Warning: Unknown action {action!r} in canon correction plan.")
 
+def resolve_decisions_path(path: Path | str | None = None) -> Path:
+    if path:
+        return Path(path)
+    from .project import get_project
+    try:
+        return get_project().decisions
+    except RuntimeError:
+        return Path("decisions.md")
+
 def apply_feedback(
     text: str,
     use_cache: bool = True,
-    log_path: str = "data/contracts/amendments.log.jsonl",
+    log_path: str | None = None,
     source: str = "draft",
     decisions_path: Optional[Path | str] = None,
     store_path: Optional[Path | str] = None,
@@ -339,6 +348,25 @@ def apply_feedback(
     strips other feedback tags, writes amendments to the audit log,
     and returns the final updated clean text.
     """
+    from .store import resolve_store_path
+    
+    decisions_path = resolve_decisions_path(decisions_path)
+    store_path = resolve_store_path(store_path)
+    
+    if log_path is None:
+        from .project import get_project
+        try:
+            log_path = str(get_project().data / "contracts" / "amendments.log.jsonl")
+        except RuntimeError:
+            log_path = "data/contracts/amendments.log.jsonl"
+            
+    if prompt_tuning_path is None:
+        from .project import get_project
+        try:
+            prompt_tuning_path = get_project().data / "contracts" / "prompt_tuning.txt"
+        except RuntimeError:
+            prompt_tuning_path = Path("data/contracts/prompt_tuning.txt")
+
     pattern = re.compile(r'(?:\[([^\]]+)\])?\{#([a-z_]+):\s*([^\}]+)\}')
     matches = list(pattern.finditer(text))
     

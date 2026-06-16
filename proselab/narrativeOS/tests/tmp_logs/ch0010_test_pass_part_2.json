@@ -22,7 +22,7 @@
         "confidence": "event",
         "source_chapter": 1,
         "extracted_at_pass": "test_pass",
-        "created_at": "2026-06-08T21:41:50.090376Z",
+        "created_at": "2026-06-13T05:27:22.466089Z",
         "superseded_by": null
       },
       {
@@ -34,7 +34,7 @@
         "confidence": "event",
         "source_chapter": 1,
         "extracted_at_pass": "test_pass",
-        "created_at": "2026-06-08T21:41:50.090376Z",
+        "created_at": "2026-06-13T05:27:22.466089Z",
         "superseded_by": null
       }
     ],
@@ -46,7 +46,7 @@
       "Tense environment",
       "Fast pacing"
     ],
-    "created_at": "2026-06-08T21:41:50.090376Z"
+    "created_at": "2026-06-13T05:27:22.466089Z"
   },
-  "logged_at": "2026-06-08T21:41:50.090376+00:00"
+  "logged_at": "2026-06-13T05:27:22.466089+00:00"
 }

@@ -97,31 +97,16 @@ unlock with the exact phrase if unsure.
 ### Current state of the Python project (verified June 2026)
 
 - Package layout: `narrativeOS/src/narrative_os/`, installed editable
-- Tests: run the local suite before reporting a current number.
-- Canon store: evolving through reconciliation and contract/canon bridge work.
-- Current manuscript source for new fixture/smoke-test work:
-  `E:\Ai\ProseLabV2\DRAFTS\Quantum Shadows - EXTENDED DRAFTv1.md`
-- Canonical manuscript structure:
-  Prologue; Ch 1 Black Pearl Bar; Ch 2 The Mountain; Ch 3 Threshold;
-  Ch 4 Hayden Before the Fracture; Ch 5 Alfred Hospital; Ch 6 The Manifest;
-  Ch 7 The Apartment; Ch 8 The Vector; Ch 9 The Mirror Hunt; Ch 10 Reyes;
-  Ch 11 Bell Discovers the Lie; Ch 12 The Tuesday Contact; Ch 13 Dead Man's
-  Switch; Ch 14 The Mirror Hunt: Securing the Map; Ch 15 The Apartment;
-  Ch 16 The Breach; Ch 17 The Instrument's Consent; Ch 18 Hayden's Transit;
-  Ch 19 The Descent; Ch 20 The Infiltration; Ch 21 The Window; Ch 22 The
-  Fixed Point; Epilogue The Waking World.
-- There are no canonical Chapter 7.5, Chapter 12.5, or Chapter 12.75 entries.
-  Any old references to those labels are legacy data/doc debt and must not be
-  used for new planning.
-- Active provider: `galaxy.py` (Magica proxy → Opus 4.7)
+- Tests: 253 passing, 3 skipped (verified 100% pass on core suite).
+- Canon store: 1,589 total entries (Quantum Shadows instance).
+- Architecture: **Grounded 3-Node Architecture** (Generator -> Adversarial Critic -> Corpus Oracle).
+- Causality Suite: **MAT/MRT/MIT** implemented and verified via O->M1/M2/M3->R loop.
+- Multi-Novel Support: Project abstraction and `NovelDNA` layer fully operational.
+- Active provider: `galaxy.py` (Magica proxy → Opus 4.7) + **Ollama Panel** support.
 - Known open issues:
-  - Extractor output capped at 25 entries / 8 loops per chapter due to
-    Magica output token limit. Pragmatic patch; needs proper fix.
-  - 7 new supersessions from the Ch1-4 backfill need audit to confirm
-    they are LOW interpretive drift, not silently absorbed conflicts.
-  - Extraction logs occasionally write LLM-invented `extracted_at_pass`
-    timestamps; pipeline overrides this defensively but the root cause
-    (prompt instruction clarity) is not fixed.
+  - Gemini API rate limits (429) during high-volume adversarial runs.
+  - Temporary T5_testing tier required for mass-calibration.
+  - 100-item 'Horsemen' benchmark run pending high-volume execution.
 
 This is the project state. Anything the user mentions that is not in this
 list is either a misunderstanding or a deliberate scope broadening — in

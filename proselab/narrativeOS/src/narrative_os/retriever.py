@@ -45,6 +45,16 @@ RECENT_WINDOW = 3     # last N chapters count as "recent events"
 DEFAULT_LOG_DIR = Path(__file__).parents[2] / "data" / "logs" / "retrieval"
 
 
+def resolve_log_dir(path: Path | str | None = None) -> Path:
+    if path:
+        return Path(path)
+    from .project import get_project
+    try:
+        return get_project().retrieval_logs
+    except RuntimeError:
+        return DEFAULT_LOG_DIR
+
+
 # ---------------------------------------------------------------------------
 # Output schema
 # ---------------------------------------------------------------------------
@@ -353,7 +363,8 @@ def retrieve(
         ContextSlice — see schema above.
     """
     if entries is None:
-        entries = load(store_path) if store_path else load()
+        from .store import resolve_store_path
+        entries = load(resolve_store_path(store_path))
 
     # 1. Detect entities
     mentioned_list, mention_counts = detect_mentioned_entities(
@@ -418,9 +429,7 @@ def _write_log(
     log_dir: Path | str | None,
     pass_id: Optional[str],
 ) -> None:
-    if log_dir is None:
-        log_dir = DEFAULT_LOG_DIR
-    log_dir = Path(log_dir)
+    log_dir = resolve_log_dir(log_dir)
     log_dir.mkdir(parents=True, exist_ok=True)
 
     stamp = pass_id or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")

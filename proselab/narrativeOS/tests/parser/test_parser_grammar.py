@@ -23,16 +23,17 @@ def test_ast_failure_recovery_modes():
             # In pyparsing, we will pass explicit fallback strategies.
             parser = FailureASTParser(recovery_preference=mode)
             result_ast = parser.parse(input_text)
+            actual_structure = result_ast["structure"]
             
             # For testing the fake emitter, we expect exact matches
             # The actual pyparsing output will be matched structurally
-            assert result_ast["type"] == expected_ast["type"], f"Case {case['id']} Mode {mode} failed on type"
-            assert result_ast["clean_text"] == expected_ast["clean_text"], f"Case {case['id']} Mode {mode} failed on clean_text"
-            assert result_ast["recovery_strategy"] == expected_ast["recovery_strategy"], f"Case {case['id']} Mode {mode} failed on recovery_strategy"
+            assert actual_structure["type"] == expected_ast["type"], f"Case {case['id']} Mode {mode} failed on type"
+            assert actual_structure["clean_text"] == expected_ast["clean_text"], f"Case {case['id']} Mode {mode} failed on clean_text"
+            assert actual_structure["recovery_strategy"] == expected_ast["recovery_strategy"], f"Case {case['id']} Mode {mode} failed on recovery_strategy"
             
             # Match recovered nodes
-            assert len(result_ast["recovered_nodes"]) == len(expected_ast["recovered_nodes"])
-            for res_node, exp_node in zip(result_ast["recovered_nodes"], expected_ast["recovered_nodes"]):
+            assert len(actual_structure["recovered_nodes"]) == len(expected_ast["recovered_nodes"])
+            for res_node, exp_node in zip(actual_structure["recovered_nodes"], expected_ast["recovered_nodes"]):
                 assert res_node["route"] == exp_node["route"]
                 assert res_node["note"] == exp_node["note"]
                 

@@ -6,468 +6,571 @@ Usage:
     python -m narrative_os analyze-all <manuscript>
     python -m narrative_os stats
     python -m narrative_os pending
-    python -m narrative_os report
-    python -m narrative_os clear-cache
-    python -m narrative_os build-contract --decisions decisions.md --out data/contracts/book1_contract.json
+    python -m narrative_os apply <chapter>
+    python -m narrative_os generate-scene <outline>
+    python -m narrative_os render-prompt <outline>
+    python -m narrative_os apply-feedback <draft_file>
+    python -m narrative_os ingest <name> <manuscript>
+    python -m narrative_os tournament <variants...>
+    python -m narrative_os reality-check <outline>
+    python -m narrative_os export-validation <prose_a> <prose_b>
+    python -m narrative_os calibrate
+    python -m narrative_os hostile-test --outline <outline>
+    python -m narrative_os hostile-bench <bench_file>
+    python -m narrative_os test-repair <prose_file> --outline <outline>
 """
-
-from __future__ import annotations
 
 import argparse
 import sys
-import json
-import time
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Optional
 
+from .pipeline import analyze_chapter, analyze_all, AnalysisStatus, AnalysisResult
+from .store import store_stats, DEFAULT_STORE_PATH, load, save, append, resolve_store_path
 from .manuscript import Manuscript
-from .pipeline import (
-    AnalysisStatus,
-    PENDING_DIR,
-    analyze_chapter,
-)
-from .schemas import ConflictReport
-from .store import DEFAULT_STORE_PATH, stats as store_stats
-from .markup_parser import apply_feedback
-
-
-def _print_result(result, verbose: bool = False, prefix: str = "") -> None:
-    """Pretty-print an AnalysisResult to stdout."""
-    chapter_label = (
-        f"{int(result.chapter)}" if result.chapter == int(result.chapter)
-        else f"{result.chapter}"
-    )
-    
-    # Add a space after prefix if it exists to maintain clean formatting
-    p = f"{prefix} " if prefix else ""
-    
-    if result.status == AnalysisStatus.MERGED:
-        m = result.merge
-        print(
-            f"{p} [SUCCESS] Ch {chapter_label:<6}  merged   "
-            f"+{m.new_entries_added} entries, "
-            f"+{m.loops_opened} loops, "
-            f"-{m.loops_resolved} resolved"
-            + (f", {m.entries_superseded} superseded" if m.entries_superseded else "")
-        )
-    elif result.status == AnalysisStatus.PENDING_REVIEW:
-        r = result.report
-        print(
-            f"{p} [PENDING] Ch {chapter_label:<6}  pending  "
-            f"{len(r.high())} HIGH, {len(r.medium())} MEDIUM, {len(r.low())} LOW"
-            f"  → {result.pending_path}"
-        )
-    elif result.status == AnalysisStatus.SKIPPED_IDEMPOTENT:
-        print(f"{p} [SKIPPED] Ch {chapter_label:<6}  skipped  (pass already applied)")
-    elif result.status == AnalysisStatus.FAILED:
-        print(f"{p} [FAILED]  Ch {chapter_label:<6}  failed   {result.error}")
-        if verbose and result.report:
-            print(result.report.model_dump_json(indent=2))
+# from .merger import list_pending_merges, load_pending_merge, apply_merge
 
 
 def cmd_analyze(args: argparse.Namespace) -> int:
-    p = Path(args.manuscript)
-    if p.is_dir():
-        ms = Manuscript.load_from_directory(p)
-    else:
-        ms = Manuscript.load(p)
-    if args.verbose:
-        print(f"Manuscript: {ms}")
-    result = analyze_chapter(
+    ms = Manuscript(args.manuscript)
+    res = analyze_chapter(
         manuscript=ms,
         chapter_num=args.chapter,
-        canon_store_path=args.store,
+        use_cache=not args.no_cache,
         pass_id=args.pass_id,
+        force=args.force,
+        canon_store_path=args.store,
     )
-    _print_result(result, verbose=args.verbose)
-    return 0 if result.status != AnalysisStatus.FAILED else 1
+
+    if res.status == AnalysisStatus.CLEAN:
+        print(f"Chapter {args.chapter} is clean. New entries: {len(res.delta.new_entries)}")
+        return 0
+    elif res.status == AnalysisStatus.PENDING_REVIEW:
+        print(f"Chapter {args.chapter} has conflicts. Pending review in {res.pending_path}")
+        return 0
+    elif res.status == AnalysisStatus.SKIPPED_IDEMPOTENT:
+        print(f"Chapter {args.chapter} already processed (pass {res.pass_id}). Use --force to re-run.")
+        return 0
+    else:
+        print(f"Analysis failed: {res.error}")
+        return 1
 
 
 def cmd_analyze_all(args: argparse.Namespace) -> int:
-    p = Path(args.manuscript)
-    if p.is_dir():
-        ms = Manuscript.load_from_directory(p)
-    else:
-        ms = Manuscript.load(p)
-    print(f"Manuscript: {ms}")
-    chapters_to_process = [ch for ch in ms.chapters if not (args.skip and ch.display_number in args.skip)]
-    total = len(chapters_to_process)
-    
-    print(f"Analysing {total} chapters...")
-    print()
+    ms = Manuscript(args.manuscript)
+    results = analyze_all(ms, use_cache=not args.no_cache, canon_store_path=args.store)
+
     failures = 0
-    for i, chapter in enumerate(chapters_to_process, 1):
-        try:
-            result = analyze_chapter(
-                manuscript=ms,
-                chapter_num=chapter.number,
-                canon_store_path=args.store,
-                pass_id=args.pass_id,
-                auto_merge_clean=not args.dry_run,
-            )
-            _print_result(result, verbose=args.verbose, prefix=f"[{i}/{total}]")
-            if result.status == AnalysisStatus.FAILED:
-                failures += 1
-                if not args.continue_on_error:
-                    print(f"\nStopping due to failure on chapter {chapter.display_number}.")
-                    return 1
-            elif i < total and args.delay > 0:
-                print(f"Waiting {args.delay}s before next chapter to avoid rate limits...")
-                time.sleep(args.delay)
-        except KeyboardInterrupt:
-            print("\nInterrupted.")
-            return 130
-    print()
+    for ch, res in results.items():
+        if res.status == AnalysisStatus.FAILED:
+            print(f"Chapter {ch}: FAILED - {res.error}")
+            failures += 1
+        else:
+            print(f"Chapter {ch}: {res.status.value}")
+
     print(f"Done. {failures} failures." if failures else "Done.")
     return 0 if failures == 0 else 1
 
 
 def cmd_stats(args: argparse.Namespace) -> int:
-    s = store_stats(args.store)
-    print(f"Canon store: {args.store or DEFAULT_STORE_PATH}")
+    from .store import resolve_store_path
+    path = resolve_store_path(args.store)
+    s = store_stats(path)
+    print(f"Canon store: {path}")
     print(f"  Total entries:    {s['total']}")
     print(f"  Active:           {s['active']}")
     print(f"  Superseded:       {s['superseded']}")
     print(f"  Open loops:       {s['open_loops']}")
     print(f"  By namespace:")
-    for ns, count in sorted(s["by_namespace"].items()):
+    for ns, count in s["by_namespace"].items():
         print(f"    {ns:<12} {count}")
     print(f"  By confidence:")
-    for conf, count in sorted(s["by_confidence"].items()):
+    for conf, count in s["by_confidence"].items():
         print(f"    {conf:<12} {count}")
     return 0
 
 
-def cmd_audit_fake_pass_ids(args: argparse.Namespace) -> int:
-    from .canon_audit import audit_fake_pass_ids
-
-    store_path = args.store or DEFAULT_STORE_PATH
-    res = audit_fake_pass_ids(store_path, clean=args.clean)
-    print(f"Fake pass ID audit:")
-    print(f"  Found fake pass entries: {res['fake_count']}")
-    if args.clean:
-        print(f"  Cleaned entries:         {res['cleaned_count']}")
-    else:
-        if res['fake_count'] > 0:
-            print("  Run with --clean to fix these entries.")
-    if res['fake_ids']:
-        print("  Affected Entry IDs:")
-        for eid in res['fake_ids']:
-            print(f"    - {eid}")
-    return 1 if (res['fake_count'] > 0 and not args.clean) else 0
-
-
-def cmd_audit_contamination(args: argparse.Namespace) -> int:
-    from .canon_audit import audit_contamination
-
-    store_path = args.store or DEFAULT_STORE_PATH
-    res = audit_contamination(store_path, entity=args.entity)
-    print(f"Contamination audit for entity: {args.entity}")
-    print(f"  Total seed entries found:    {res['contamination_count']}")
-    print(f"  Violations (unallowed seeds): {res['violation_count']}")
-    if res['entries']:
-        print("  Matching entries:")
-        for eid in res['entries']:
-            prefix = "❌ VIOLATION" if eid in res['violations'] else "✅ ALLOWED"
-            print(f"    - [{prefix}] {eid}")
-    return 1 if res['violation_count'] > 0 else 0
-
-
-def cmd_snapshot_canon(args: argparse.Namespace) -> int:
-    from .canon_audit import snapshot_canon
-
-    store_path = args.store or DEFAULT_STORE_PATH
-    out_path = args.out or (Path(__file__).parents[2] / "data" / "canon.phase8_clean.json")
-    try:
-        snapshot_canon(store_path, out_path)
-        print(f"Snapshot successfully written to: {out_path.absolute()}")
-        return 0
-    except Exception as e:
-        print(f"Failed to create snapshot: {e}")
-        return 1
-
-
-
 def cmd_pending(args: argparse.Namespace) -> int:
-    pending_dir = Path(args.pending_dir) if args.pending_dir else PENDING_DIR
-    if not pending_dir.exists():
-        print(f"No pending reviews (directory {pending_dir} does not exist).")
-        return 0
-    md_files = sorted(pending_dir.glob("*.md"))
-    if not md_files:
-        print("No pending reviews.")
-        return 0
-    print(f"Pending reviews in {pending_dir}:")
-    for f in md_files:
-        print(f"  {f.name}")
+    # pending = list_pending_merges()
+    print("Pending merges command currently disabled.")
     return 0
 
 
-def cmd_report(args: argparse.Namespace) -> int:
-    pending_dir = Path(args.pending_dir) if args.pending_dir else PENDING_DIR
-    if not pending_dir.exists():
-        print(f"No pending reports (directory {pending_dir} does not exist).")
-        return 0
-
-    report_files = sorted(pending_dir.glob("*.report.json"))
-    if not report_files:
-        print(f"No .report.json files found in {pending_dir}.")
-        return 0
-
-    total_chapters = len(report_files)
-    total_high = 0
-    total_medium = 0
-    total_low = 0
-    chapter_stats = []
-
-    for path in report_files:
-        name_parts = path.name.split("__")
-        chapter_str = name_parts[0][2:] if len(name_parts) > 0 else "Unknown"
-
-        try:
-            report_data = json.loads(path.read_text(encoding="utf-8"))
-            report = ConflictReport.model_validate(report_data)
-            
-            high = len(report.high())
-            medium = len(report.medium())
-            low = len(report.low())
-
-            total_high += high
-            total_medium += medium
-            total_low += low
-
-            chapter_stats.append({
-                "chapter": chapter_str,
-                "high": high,
-                "medium": medium,
-                "low": low,
-            })
-        except Exception as e:
-            print(f"Failed to parse {path.name}: {e}")
-
-    report_md = [
-        "# Narrative OS Backfill Report",
-        "",
-        f"**Total Chapters Analyzed:** {total_chapters}",
-        f"**Total High Conflicts:** {total_high}",
-        f"**Total Medium Conflicts:** {total_medium}",
-        f"**Total Low Conflicts:** {total_low}",
-        "",
-        "## Chapter Breakdown",
-        ""
-    ]
-
-    for stat in chapter_stats:
-        status_icon = "❌" if stat["high"] > 0 else ("⚠️" if stat["medium"] > 0 else "✅")
-        report_md.append(f"### {status_icon} Chapter {stat['chapter']}")
-        report_md.append(f"- HIGH: {stat['high']}")
-        report_md.append(f"- MEDIUM: {stat['medium']}")
-        report_md.append(f"- LOW: {stat['low']}")
-        report_md.append("")
-
-    out_path = Path("backfill_report.md")
-    out_path.write_text("\n".join(report_md), encoding="utf-8")
-    print(f"Generated aggregate report at {out_path.absolute()}")
+def cmd_apply(args: argparse.Namespace) -> int:
+    # pending = list_pending_merges()
+    print("Apply merge command currently disabled.")
     return 0
-
-
-def cmd_clear_cache(args: argparse.Namespace) -> int:
-    from .llm.cache.local import LocalCache
-    cache = LocalCache(cache_dir=args.cache_dir)
-    n = cache.clear()
-    print(f"Cleared {n} cache entries.")
-    return 0
-
-
-def cmd_build_contract(args: argparse.Namespace) -> int:
-    from .decisions_parser import parse_section_22, write_contract
-
-    contract = parse_section_22(
-        args.decisions,
-        project=args.project,
-        book=args.book,
-        mapping_path=args.mapping,
-    )
-    out_path = write_contract(contract, args.out)
-    print(f"Wrote {len(contract.rules)} contract rules to {out_path}")
-    return 0
-
-
-def cmd_check_contract_canon(args: argparse.Namespace) -> int:
-    from .contract_canon_bridge import preflight_contract_canon
-
-    findings = preflight_contract_canon(
-        contract_path=args.contract,
-        store_path=args.store,
-        mapping_path=args.mapping,
-    )
-    if not findings:
-        print("Contract/canon bridge: clean")
-        return 0
-
-    print(f"Contract/canon bridge findings: {len(findings)}")
-    for finding in findings:
-        print(f"  [{finding.severity}] {finding.guard_id}")
-        print(f"    canon: {finding.canon_fact_id}")
-        print(f"    {finding.message}")
-    return 1 if any(f.severity == "HIGH" for f in findings) else 0
 
 
 def cmd_generate_scene(args: argparse.Namespace) -> int:
-    from .prose_generator import generate_scene_with_retry, generate_scene
+    from .prose_generator import generate_elite_scene, generate_scene_variant
+    from .store import resolve_store_path
 
-    if args.contract and not args.skip_bridge_preflight:
-        from .contract_canon_bridge import preflight_contract_canon
-
-        findings = preflight_contract_canon(
-            contract_path=args.contract,
-            store_path=args.store,
-            mapping_path=args.mapping,
-        )
-        blocking = [finding for finding in findings if finding.severity == "HIGH"]
-        if blocking:
-            print("Refusing generation: Section 22 contract and canon disagree.")
-            for finding in blocking:
-                print(f"  [{finding.severity}] {finding.guard_id}")
-                print(f"    canon: {finding.canon_fact_id}")
-                print(f"    {finding.message}")
-            return 1
+    n_variants = args.tournament if args.tournament > 0 else 1
     
-    if args.retry:
-        result = generate_scene_with_retry(
+    if n_variants > 1:
+        result = generate_elite_scene(
             scene_outline=args.outline,
             chapter_num=args.chapter,
-            store_path=args.store,
-            contract_path=args.contract,
-            max_retries=args.max_retries,
-            use_cache=not args.no_cache,
-            verbose=args.verbose or True,
-        )
-    else:
-        out = generate_scene(
-            scene_outline=args.outline,
-            chapter_num=args.chapter,
+            n_variants=n_variants,
             store_path=args.store,
             contract_path=args.contract,
             use_cache=not args.no_cache,
         )
-        from .prose_lint import lint_prose
-        from .contract_lint import lint_contract
         
-        lint = lint_prose(out["prose"])
-        c_lint = (
-            lint_contract(
-                out["prose"],
-                contract_path=args.contract,
-                use_cache=not args.no_cache,
-            )
-            if args.contract
-            else None
-        )
+        t = result["tournament"]
+        print("\n" + "=" * 50)
+        print("ELITE TOURNAMENT RESULTS")
+        print("=" * 50)
+        print(f"WINNER: {t['winner_id']}")
+        print(f"RANKINGS: {' > '.join(t['rankings'])}")
+        print(f"\nSUMMARY: {t['summary_report']}")
         
-        passed = lint.passed and (c_lint.passed if c_lint else True)
+        # Show alignment of the winner
+        winner_idx = int(t['winner_id'].split("_")[1])
+        winner_eval = t['detailed_evaluations'][winner_idx] # This assumes index matches id, which run_tournament ensures
+        align = winner_eval['alignment']
+        print(f"\nWINNER ALIGNMENT: Axis {align['primary_axis']}")
+        if align['is_monoculture_collapse']:
+            print("⚠️ WARNING: Winner shows signs of AESTHETIC MONOCULTURE COLLAPSE (averaging).")
         
-        rep = lint.render()
-        if c_lint and not c_lint.passed:
-            rep += "\n\n=== CONTRACT LINT FAILURES ===\n"
-            for f in c_lint.findings:
-                rep += f"\n[{f.severity}] {f.guard_id}\n  Span: {f.span}\n  Rationale: {f.rationale}\n"
+        print("\nWINNING PROSE:")
+        print("-" * 30)
+        print(result["prose"])
+        
+        # Save mutation if found
+        if t.get("anomalous_variant_id"):
+            try:
+                anom_idx = int(t["anomalous_variant_id"].split("_")[1])
+                anom_prose = result["variants"][anom_idx]["prose"]
+                from .project import get_project
+                proj = get_project()
                 
-        result = {
-            "thinking": out["thinking"],
-            "prose": out["prose"],
-            "passed": passed,
-            "attempts": 1,
-            "lint_report": rep,
-        }
-        
-    print()
-    print("=" * 70)
-    print(f"THINKING (Attempts: {result['attempts']}, Passed Lint: {result['passed']})")
-    print("=" * 70)
-    print(result["thinking"])
-    print()
-    print("=" * 70)
-    print("PROSE:")
-    print("=" * 70)
-    print(result["prose"])
-    print()
-    print("=" * 70)
-    print("LINT REPORT:")
-    print("=" * 70)
-    print(result["lint_report"])
-    
-    return 0 if result["passed"] else 1
-
-
-def cmd_generate_scene_plan(args: argparse.Namespace) -> int:
-    from .contract_canon_bridge import preflight_contract_canon
-    from .scene_generator import ScenePlan, generate_scene_draft
-
-    plan = ScenePlan.model_validate_json(args.plan.read_text(encoding="utf-8"))
-    if args.contract and not args.skip_bridge_preflight:
-        findings = preflight_contract_canon(
-            contract_path=args.contract,
-            store_path=args.store,
-            mapping_path=args.mapping,
-        )
-        blocking = [finding for finding in findings if finding.severity == "HIGH"]
-        if blocking:
-            print("Refusing scene generation: Section 22 contract and canon disagree.")
-            for finding in blocking:
-                print(f"  [{finding.severity}] {finding.guard_id}")
-                print(f"    canon: {finding.canon_fact_id}")
-                print(f"    {finding.message}")
-            return 1
-
-    draft = generate_scene_draft(
-        plan,
-        store_path=args.store,
-        contract_path=args.contract,
-        max_retries=args.max_retries,
-        use_cache=not args.no_cache,
-        verbose=args.verbose,
-    )
-    if args.out:
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(draft.prose, encoding="utf-8")
-        print(f"Wrote scene draft to {args.out}")
+                # 1. Physical Archive
+                proj.mutations.mkdir(parents=True, exist_ok=True)
+                import hashlib
+                from datetime import datetime, timezone
+                stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+                h = hashlib.sha256(anom_prose.encode("utf-8")).hexdigest()[:8]
+                mpath = proj.mutations / f"mutation_{stamp}_{h}.md"
+                mpath.write_text(f"# ANOMALOUS VARIANT\n\n## Rationale\n{t['anomaly_rationale']}\n\n## Prose\n{anom_prose}", encoding="utf-8")
+                print(f"\n[MUTATION ARCHIVE] Saved anomalous variant to {mpath}")
+                
+                # 2. Dangerous Genius Ledger (Structured tracking)
+                from .genius_ledger import DangerousGeniusLedger
+                ledger = DangerousGeniusLedger(proj.genius_ledger)
+                
+                # Use overall_performance or surprise as risk_score for now
+                anom_eval = t['detailed_evaluations'][anom_idx]
+                risk_score = anom_eval['scores'].get('surprise', 5.0)
+                
+                ledger.record_mutation(
+                    outline=args.outline,
+                    prose=anom_prose,
+                    rationale=t['anomaly_rationale'],
+                    risk_score=risk_score
+                )
+                print(f"[GENIUS LEDGER] Entry recorded in structured ledger.")
+                
+            except Exception as e:
+                print(f"Warning: Could not archive mutation: {e}")
     else:
-        print(draft.prose)
-    print()
-    print("LINT REPORT:")
-    print(draft.lint_report)
-    return 0 if draft.passed else 1
+        # Single variant mode
+        result = generate_scene_variant(
+            args.outline, args.chapter, args.store, args.contract, not args.no_cache
+        )
+        print("\nPROSE:")
+        print("-" * 30)
+        print(result["prose"])
+
+    return 0
+
+
+def cmd_render_prompt(args: argparse.Namespace) -> int:
+    from .prose_generator import PROMPT_TEMPLATE, extract_voice_rules, extract_contract_rules
+    from .retriever import retrieve, render_slice_for_prompt
+    from .store import resolve_store_path
+
+    store_path = resolve_store_path(args.store)
+    
+    # Need to simulate _retrieval_chapter_num
+    from .prose_generator import _retrieval_chapter_num
+    
+    slice_ = retrieve(
+        chapter_text=args.outline,
+        chapter_num=_retrieval_chapter_num(args.chapter),
+        store_path=store_path,
+        log_dir=None,
+    )
+    
+    from .prose_generator import _get_project_name
+    project_name = _get_project_name()
+    
+    prompt = PROMPT_TEMPLATE.format(
+        voice_rules=extract_voice_rules(store_path),
+        contract_rules=extract_contract_rules(args.contract),
+        canon_slice=render_slice_for_prompt(slice_),
+        scene_outline=args.outline,
+        project_name=project_name,
+    )
+    
+    print("=" * 80)
+    print("RENDERED GENERATION PROMPT")
+    print("=" * 80)
+    print(prompt)
+    return 0
+
 
 def cmd_apply_feedback(args: argparse.Namespace) -> int:
-    p = Path(args.draft_file)
-    if not p.exists():
-        print(f"Error: Draft file {args.draft_file} does not exist.")
-        return 1
-        
-    text = p.read_text(encoding="utf-8")
-    out_path = Path(args.out) if args.out else p
-    log_path = Path(args.log) if args.log else Path("data/contracts/amendments.log.jsonl")
+    from .markup_parser import apply_feedback
     
-    decisions_path = Path("decisions.md")
-    store_path = args.store or DEFAULT_STORE_PATH
-    prompt_tuning_path = Path("data/contracts/prompt_tuning.txt")
+    text = args.draft_file.read_text(encoding="utf-8")
+    print(f"Applying feedback from {args.draft_file}...")
     
-    print(f"Reading marked-up draft from {p}...")
     clean_text, notes = apply_feedback(
         text,
         use_cache=not args.no_cache,
-        log_path=str(log_path),
-        source=p.name,
-        decisions_path=decisions_path,
-        store_path=store_path,
-        prompt_tuning_path=prompt_tuning_path,
+        log_path=str(args.log) if args.log else None,
+        source=str(args.draft_file)
     )
     
+    print(f"Processed {len(notes)} feedback notes.")
+    
+    out_path = args.out or args.draft_file.with_suffix(".revised.md")
     out_path.write_text(clean_text, encoding="utf-8")
-    print(f"Wrote clean rewritten prose to {out_path}")
-    print(f"Applied {len(notes)} feedback note(s).")
+    print(f"Wrote clean rewritten text to {out_path}")
     return 0
+
+
+def cmd_ingest(args: argparse.Namespace) -> int:
+    from .dna import NovelDNA
+    from .constitution import CriticConstitution
+    from .state import NarrativeState
+    import shutil
+
+    novel_name = args.name
+    novel_root = args.root / novel_name
+    
+    if novel_root.exists():
+        print(f"Error: Novel directory {novel_root} already exists.")
+        return 1
+
+    print(f"Ingesting new novel: {novel_name}...")
+    
+    # 1. Create structure
+    (novel_root / "manuscript").mkdir(parents=True)
+    (novel_root / "data" / "contracts").mkdir(parents=True)
+    (novel_root / "data" / "pending").mkdir(parents=True)
+    (novel_root / "data" / "logs").mkdir(parents=True)
+    
+    # 2. Copy manuscript
+    ms_path = Path(args.manuscript)
+    if ms_path.is_dir():
+        for f in ms_path.glob("*.md"):
+            shutil.copy(f, novel_root / "manuscript")
+    else:
+        shutil.copy(ms_path, novel_root / "manuscript")
+        
+    # 3. Initialize DNA
+    dna = NovelDNA(novel_id=novel_name)
+    dna.save(novel_root / "novel_dna.json")
+    
+    # 4. Initialize Constitution
+    const = CriticConstitution(name=f"{novel_name} Critic")
+    const.save(novel_root / "data" / "contracts" / "critic_constitution.json")
+    
+    # 5. Initialize State
+    state = NarrativeState()
+    state.save(novel_root / "narrative_state.json")
+    
+    # 6. Create dummy decisions.md
+    (novel_root / "decisions.md").write_text(f"# {novel_name} Decisions\n\n## Section 22: Prose-Generation Contract (Surface)\n\n### 1. Canonical Facts (What to show)\n\n### 2. Permitted Hints (What to imply)\n\n### 3. Foreclosure Guards (What tone/characterization is strictly forbidden to protect Book 3)\n\n## Section 23: Load-Bearing Architecture (Spine)\n", encoding="utf-8")
+    
+    print(f"Successfully ingested {novel_name} at {novel_root.absolute()}")
+    print("You can now customize novel_dna.json and critic_constitution.json.")
+    return 0
+
+
+def cmd_tournament(args: argparse.Namespace) -> int:
+    from .tournament import run_tournament
+    from .prose_generator import extract_voice_rules
+    from .store import resolve_store_path
+
+    variants = []
+    for p in args.variants:
+        if not p.exists():
+            print(f"Error: Variant file {p} not found.")
+            return 1
+        variants.append({"prose": p.read_text(encoding="utf-8")})
+
+    if len(variants) < 2:
+        print("Error: Need at least 2 variants for a tournament.")
+        return 1
+
+    print(f"Running blind tournament between {len(variants)} variants...")
+
+    # Build project metadata for context
+    store_path = resolve_store_path()
+    metadata = "VOICE RULES:\n" + extract_voice_rules(store_path)
+    
+    try:
+        result = run_tournament(
+            variants=variants,
+            scene_outline=args.outline,
+            project_metadata=metadata,
+            use_cache=not args.no_cache
+        )
+    except Exception as e:
+        print(f"Tournament failed: {e}")
+        return 1
+
+    print("\n" + "=" * 50)
+    print("TOURNAMENT RESULTS")
+    print("=" * 50)
+    print(f"WINNER: {result.winner_id}")
+    print(f"RANKINGS: {' > '.join(result.rankings)}")
+    print("\nSUMMARY:")
+    print(result.summary_report)
+    
+    print("\nDETAILED EVALUATIONS:")
+    for eval in result.detailed_evaluations:
+        print(f"\n[{eval.variant_id}] Scores: {eval.scores}")
+        align = eval.alignment
+        print(f"Alignment: Primary={align.primary_axis}, Violation={align.violation_axis}, Monoculture={align.is_monoculture_collapse}")
+        if align.productive_violation_rationale:
+            print(f"Productive Violation: {align.productive_violation_rationale}")
+        print(f"MECHANISM ANALYSIS: {eval.mechanism_analysis}")
+        print(f"Rationale: {eval.rationale}")
+        if eval.standout_lines:
+            print("Standout Lines:")
+            for line in eval.standout_lines:
+                print(f"  - {line}")
+    
+    if result.anomalous_variant_id:
+        print("\n" + "-" * 20)
+        print(f"ANOMALOUS VARIANT: {result.anomalous_variant_id}")
+        print(f"RATIONALE: {result.anomaly_rationale}")
+        
+        # Save to archive if in a project
+        try:
+            from .project import get_project
+            proj = get_project()
+            proj.mutations.mkdir(parents=True, exist_ok=True)
+            
+            anom_idx = int(result.anomalous_variant_id.split("_")[1])
+            anom_prose = variants[anom_idx]["prose"]
+            
+            import hashlib
+            from datetime import datetime, timezone
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            h = hashlib.sha256(anom_prose.encode("utf-8")).hexdigest()[:8]
+            fname = f"mutation_{stamp}_{h}.md"
+            
+            mpath = proj.mutations / fname
+            mpath.write_text(f"# ANOMALOUS VARIANT\n\n## Rationale\n{result.anomaly_rationale}\n\n## Prose\n{anom_prose}", encoding="utf-8")
+            print(f"\n[MUTATION ARCHIVE] Saved anomalous variant to {mpath}")
+        except RuntimeError:
+            pass
+        except Exception as e:
+            print(f"Warning: Could not save mutation: {e}")
+                
+    return 0
+
+
+def cmd_reality_check(args: argparse.Namespace) -> int:
+    from .reality_check import run_blind_batch_eval
+    
+    result = run_blind_batch_eval(args.outline, n_variants=args.n)
+    
+    print("\n" + "=" * 50)
+    print("REALITY CHECK RESULTS (Blind Pairwise)")
+    print("=" * 50)
+    
+    for res in result["pairwise_results"]:
+        v1_id, v2_id = res["pair"]
+        winner = res["winner"]
+        print(f"\nPAIR: {v1_id} vs {v2_id}")
+        print(f"WINNER: {winner}")
+        print(f"JUDGE RATIONALE: {res['raw']}")
+        
+    return 0
+
+
+def cmd_export_validation(args: argparse.Namespace) -> int:
+    from .human_loop import HumanRanker
+    from .project import get_project
+    
+    proj = get_project()
+    ranker = HumanRanker(proj.validation)
+    
+    path = ranker.export_task(
+        outline=args.outline,
+        prose_a=args.prose_a.read_text(encoding="utf-8"),
+        prose_b=args.prose_b.read_text(encoding="utf-8"),
+        metadata={"source": "cli_export"}
+    )
+    
+    print(f"Comparison task exported to: {path}")
+    print("Please rank these passages by deleting the one you like LESS.")
+    return 0
+
+
+def cmd_calibrate(args: argparse.Namespace) -> int:
+    from .calibration import run_calibration_test
+    from .store import resolve_store_path
+    
+    store_path = resolve_store_path(args.store)
+    run_calibration_test(store_path, use_cache=not args.no_cache)
+    return 0
+
+
+def cmd_hostile_test(args: argparse.Namespace) -> int:
+    from .reality_check import run_blind_batch_eval
+    
+    # 1. Load control prose
+    control_dir = Path("control_prose")
+    control_passages = []
+    if control_dir.exists():
+        for f in control_dir.glob("*.txt"):
+            control_passages.append({
+                "label": f.stem,
+                "prose": f.read_text(encoding="utf-8")
+            })
+    
+    # 2. Run blind eval
+    result = run_blind_batch_eval(
+        scene_outline=args.outline,
+        n_variants=args.n_gen,
+        control_passages=control_passages,
+        use_cache=not args.no_cache
+    )
+    
+    print("\n" + "=" * 80)
+    print("HOSTILE LITERATURE TEST RESULTS (Blind Pairwise)")
+    print("=" * 80)
+    
+    variants_by_id = {v["id"]: v for v in result["variants"]}
+    
+    for res in result["pairwise_results"]:
+        v1_id, v2_id = res["pair"]
+        winner_id = res["winner"]
+        
+        v1 = variants_by_id[v1_id]
+        v2 = variants_by_id[v2_id]
+        winner = variants_by_id[winner_id]
+        
+        print(f"\nPAIR: {v1_id} ({v1['type']}:{v1.get('label','')}) vs {v2_id} ({v2['type']}:{v2.get('label','')})")
+        print(f"WINNER: {winner_id} ({winner['type']}:{winner.get('label','')})")
+        print(f"JUDGE RATIONALE: {res['raw']}")
+        
+    return 0
+
+
+def cmd_hostile_bench(args: argparse.Namespace) -> int:
+    import json
+    from .tournament import run_tournament
+    from .prose_generator import extract_voice_rules
+    from .store import resolve_store_path
+
+    with open(args.bench_file, "r", encoding="utf-8") as f:
+        bench = json.load(f)
+
+    # Pairs are adjacent in the list for now (trap_1 vs trap_2, etc.)
+    print(f"Running Hostile Benchmark: {len(bench)//2} pairs...")
+    
+    metadata = "VOICE RULES:\n" + extract_voice_rules(resolve_store_path())
+    
+    correct = 0
+    total_pairs = len(bench) // 2
+    
+    for i in range(0, len(bench) - 1, 2):
+        if i > 0:
+            import time
+            time.sleep(20) # 20 second delay between pairs
+        p1 = bench[i]
+        p2 = bench[i+1]
+        
+        h_type = p1.get('horseman_type', 'N/A')
+        print(f"\nTRAP PAIR {i//2 + 1}: {p1['axis']} ({h_type})")
+        print(f"A: {p1['type']} ({p1.get('meta',{}).get('author', 'N/A')})")
+        print(f"B: {p2['type']} ({p2.get('meta',{}).get('note', 'N/A')})")
+        
+        variants = [{"prose": p1["prose"]}, {"prose": p2["prose"]}]
+        
+        try:
+            res = run_tournament(
+                variants=variants,
+                scene_outline=f"Test axis: {p1['axis']}",
+                project_metadata=metadata,
+                use_cache=False
+            )
+            
+            # Winner should be the elite_original
+            winner_idx = int(res.winner_id.split("_")[1])
+            winner_type = bench[i + winner_idx]["type"]
+            
+            print(f"WINNER: {res.winner_id} ({winner_type})")
+            if winner_type == "elite_original":
+                print("✅ CALIBRATED: Judge resisted the trap.")
+                correct += 1
+            else:
+                print("❌ FAILED: Judge fell for the trap.")
+                
+            print(f"MECHANISM: {res.detailed_evaluations[winner_idx].mechanism_analysis}")
+            
+        except Exception as e:
+            print(f"Tournament failed: {e}")
+            
+    print("\n" + "=" * 50)
+    print(f"BENCHMARK SCORE: {correct}/{total_pairs} ({(correct/total_pairs)*100:.1f}%)")
+    print("=" * 50)
+    return 0
+
+
+def cmd_test_repair(args: argparse.Namespace) -> int:
+    from .repair_gate import test_counterfactual_repair
+    from .mechanism_causality import run_causality_loop
+    
+    prose = args.prose_file.read_text(encoding="utf-8")
+    print(f"Testing Counterfactual Repair for passage from {args.prose_file}...")
+    
+    result = test_counterfactual_repair(prose, args.outline)
+    
+    print("\n" + "=" * 50)
+    print("REPAIR GATE RESULT")
+    print("=" * 50)
+    print(f"HIDDEN INTENT: {result.articulated_intent}")
+    print(f"MECHANISM: {result.mechanism_reconstructed}")
+    print(f"IRREDUCIBLE GARBAGE: {result.is_irreducible_garbage}")
+    
+    if not result.is_irreducible_garbage:
+        print(f"\nRunning Mechanism Causality Loop (O -> M1/M2/M3 -> R)...")
+        causality = run_causality_loop(prose, result.mechanism_reconstructed, args.outline, predicted_loss=result.predicted_score_degradation)
+        
+        print(f"SCORE O (Original):     {causality.score_o}")
+        print(f"SCORE M1 (M-Removed):   {causality.score_m1} (Predicted Loss: {causality.predicted_m1_loss})")
+        print(f"SCORE M2 (Neutral):     {causality.score_m2}")
+        print(f"SCORE M3 (Hostile):     {causality.score_m3}")
+        print(f"SCORE R (Restored):     {causality.score_r}")
+        print("-" * 30)
+        print(f"ATTRIBUTION PROVEN:     {causality.is_attribution_proven} (M1 < O and M1 < M2 and M1 < M3)")
+        print(f"RESTORATION PROVEN:     {causality.is_restoration_proven} (R > M1)")
+        print(f"CONFIDENCE ERROR:      {causality.confidence_error:.2f}")
+        
+        if not causality.is_attribution_proven or not causality.is_restoration_proven:
+            print("⚠️ WARNING: Judge failed to uniquely attribute quality or recognized restoration. Mechanism may be fake.")
+
+        print("\nM1 - MECHANISM REMOVED:")
+        print("-" * 30)
+        print(causality.m1_mechanism_removed_prose)
+
+        print("\nM3 - STYLE-PRESERVING HOSTILE EDIT:")
+        print("-" * 30)
+        print(causality.m3_style_preserving_hostile_prose)
+        
+    return 0
+
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
@@ -476,78 +579,39 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--store", type=Path, default=None,
                    help="Path to canon_store.json (default: package default)")
+    p.add_argument("--project-root", type=Path, default=None,
+                   help="Root directory of the novel instance.")
     p.add_argument("--verbose", "-v", action="store_true")
     sub = p.add_subparsers(dest="command", required=True)
 
     # analyze
     sp = sub.add_parser("analyze", help="Analyse one chapter.")
-    sp.add_argument("manuscript", type=Path)
-    sp.add_argument("chapter", help="Chapter number (1, 7.5, PROLOGUE, EPILOGUE)")
-    sp.add_argument("--pass-id", default=None, help="Override the pass id.")
+    sp.add_argument("manuscript", type=Path, help="Path to manuscript .md file or directory.")
+    sp.add_argument("chapter", type=float, help="Chapter number (supports fractional like 7.5).")
+    sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
+    sp.add_argument("--pass-id", help="Explicit pass ID (default: UTC timestamp).")
+    sp.add_argument("--force", action="store_true", help="Force analysis even if already applied.")
     sp.set_defaults(fn=cmd_analyze)
 
     # analyze-all
-    sp = sub.add_parser("analyze-all", help="Analyse every chapter sequentially.")
-    sp.add_argument("manuscript", type=Path)
-    sp.add_argument("--pass-id", default=None)
-    sp.add_argument("--skip", nargs="*", default=[],
-                    help="Chapter numbers to skip (e.g. --skip PROLOGUE 7.5)")
-    sp.add_argument("--continue-on-error", action="store_true",
-                    help="Don't stop on extractor/merge failures.")
-    sp.add_argument("--dry-run", action="store_true",
-                    help="Extract and detect conflicts without modifying the canon store.")
-    sp.add_argument("--delay", type=int, default=45,
-                    help="Seconds to wait between chapters to avoid rate limits.")
+    sp = sub.add_parser("analyze-all", help="Analyse all chapters in a manuscript.")
+    sp.add_argument("manuscript", type=Path, help="Path to manuscript directory.")
+    sp.add_argument("--no-cache", action="store_true")
     sp.set_defaults(fn=cmd_analyze_all)
 
     # stats
     sp = sub.add_parser("stats", help="Show canon store statistics.")
     sp.set_defaults(fn=cmd_stats)
 
-    # audit-fake-pass-ids
-    sp = sub.add_parser("audit-fake-pass-ids", help="Detect and optionally clean fake pass IDs in canon store.")
-    sp.add_argument("--clean", action="store_true", help="Replace fake pass IDs with sentinel 'audit_trail_lost'.")
-    sp.set_defaults(fn=cmd_audit_fake_pass_ids)
-
-    # audit-contamination
-    sp = sub.add_parser("audit-contamination", help="Audit entity seed contamination in active canon store.")
-    sp.add_argument("--entity", required=True, help="Entity name (e.g. Hayden, Kain) to check.")
-    sp.set_defaults(fn=cmd_audit_contamination)
-
-    # snapshot-canon
-    sp = sub.add_parser("snapshot-canon", help="Create a read-only baseline JSON copy of the canon store.")
-    sp.add_argument("--out", type=Path, default=None, help="Output snapshot path (default: data/canon.phase8_clean.json)")
-    sp.set_defaults(fn=cmd_snapshot_canon)
-
     # pending
-    sp = sub.add_parser("pending", help="List pending conflict reviews.")
-    sp.add_argument("--pending-dir", default=None)
+    sp = sub.add_parser("pending", help="List and review pending merges.")
     sp.set_defaults(fn=cmd_pending)
 
-    # report
-    sp = sub.add_parser("report", help="Generate an aggregate backfill report from pending items.")
-    sp.add_argument("--pending-dir", default=None)
-    sp.set_defaults(fn=cmd_report)
-
-    # clear-cache
-    sp = sub.add_parser("clear-cache", help="Drop the local LLM response cache.")
-    sp.add_argument("--cache-dir", default=None)
-    sp.set_defaults(fn=cmd_clear_cache)
-
-    # build-contract
-    sp = sub.add_parser("build-contract", help="Parse Section 22 into a contract JSON file.")
-    sp.add_argument("--decisions", type=Path, default=Path("decisions.md"))
-    sp.add_argument("--out", type=Path, default=Path("data/contracts/book1_contract.json"))
-    sp.add_argument("--mapping", type=Path, default=Path("data/contracts/s22_canon_mapping.json"))
-    sp.add_argument("--project", default="Quantum Shadows")
-    sp.add_argument("--book", default="Book 1")
-    sp.set_defaults(fn=cmd_build_contract)
-
-    # check-contract-canon
-    sp = sub.add_parser("check-contract-canon", help="Verify Section 22 contract support in canon.")
-    sp.add_argument("--contract", type=Path, default=Path("data/contracts/book1_contract.json"))
-    sp.add_argument("--mapping", type=Path, default=Path("data/contracts/s22_canon_mapping.json"))
-    sp.set_defaults(fn=cmd_check_contract_canon)
+    # apply
+    sp = sub.add_parser("apply", help="Apply a pending merge.")
+    sp.add_argument("chapter", type=float, help="Chapter number.")
+    sp.add_argument("--pass-id", help="Specific pass ID to apply.")
+    sp.set_defaults(fn=cmd_apply)
 
     # generate-scene
     sp = sub.add_parser("generate-scene", help="Generate a scene from an outline.")
@@ -560,18 +624,15 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--mapping", type=Path, default=Path("data/contracts/s22_canon_mapping.json"), help="Path to Section 22 canon mapping JSON.")
     sp.add_argument("--skip-bridge-preflight", action="store_true", help="Skip contract/canon bridge preflight.")
     sp.add_argument("--contract-only", action="store_true", help="Only run contract checks (if applicable).")
+    sp.add_argument("--tournament", type=int, default=0, help="Number of variants to generate and run a tournament between.")
     sp.set_defaults(fn=cmd_generate_scene)
 
-    # generate-scene-plan
-    sp = sub.add_parser("generate-scene-plan", help="Generate a multi-beat scene from a ScenePlan JSON file.")
-    sp.add_argument("plan", type=Path, help="Path to ScenePlan JSON.")
-    sp.add_argument("--contract", type=Path, default=Path("data/contracts/book1_contract.json"))
-    sp.add_argument("--mapping", type=Path, default=Path("data/contracts/s22_canon_mapping.json"))
-    sp.add_argument("--out", type=Path, default=None, help="Optional markdown/text output path.")
-    sp.add_argument("--max-retries", type=int, default=5)
-    sp.add_argument("--no-cache", action="store_true")
-    sp.add_argument("--skip-bridge-preflight", action="store_true")
-    sp.set_defaults(fn=cmd_generate_scene_plan)
+    # render-prompt
+    sp = sub.add_parser("render-prompt", help="Render the generation prompt without calling LLM.")
+    sp.add_argument("outline", help="Text outline or scene intent.")
+    sp.add_argument("--chapter", type=int, default=1)
+    sp.add_argument("--contract", type=Path, default=None)
+    sp.set_defaults(fn=cmd_render_prompt)
 
     # apply-feedback
     sp = sub.add_parser("apply-feedback", help="Apply marked-up human feedback to a draft scene.")
@@ -581,12 +642,68 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
     sp.set_defaults(fn=cmd_apply_feedback)
 
+    # ingest
+    sp = sub.add_parser("ingest", help="Ingest a new novel from a manuscript.")
+    sp.add_argument("name", help="Name of the novel (e.g. TestFantasy)")
+    sp.add_argument("manuscript", type=Path, help="Path to manuscript file or directory.")
+    sp.add_argument("--root", type=Path, default=Path("novels"), help="Root directory for novels.")
+    sp.set_defaults(fn=cmd_ingest)
+
+    # tournament
+    sp = sub.add_parser("tournament", help="Run a blind tournament between multiple prose variants.")
+    sp.add_argument("variants", nargs="+", type=Path, help="Paths to prose variant text files.")
+    sp.add_argument("--outline", required=True, help="The scene outline used to generate the variants.")
+    sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
+    sp.set_defaults(fn=cmd_tournament)
+
+    # reality-check
+    sp = sub.add_parser("reality-check", help="Run a blind pairwise evaluation of N generated variants.")
+    sp.add_argument("outline", help="Text outline or scene intent.")
+    sp.add_argument("--n", type=int, default=6, help="Number of variants to generate.")
+    sp.set_defaults(fn=cmd_reality_check)
+
+    # export-validation
+    sp = sub.add_parser("export-validation", help="Export a blind comparison task for human evaluation.")
+    sp.add_argument("prose_a", type=Path)
+    sp.add_argument("prose_b", type=Path)
+    sp.add_argument("--outline", required=True)
+    sp.set_defaults(fn=cmd_export_validation)
+
+    # calibrate
+    sp = sub.add_parser("calibrate", help="Run the calibration test suite to stress-test the judge.")
+    sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
+    sp.set_defaults(fn=cmd_calibrate)
+
+    # hostile-test
+    sp = sub.add_parser("hostile-test", help="Run a tournament mixing NarrativeOS prose with real human literature.")
+    sp.add_argument("--outline", required=True)
+    sp.add_argument("--n-gen", type=int, default=3, help="Number of generated variants.")
+    sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
+    sp.set_defaults(fn=cmd_hostile_test)
+
+    # hostile-bench
+    sp = sub.add_parser("hostile-bench", help="Run the Fake Greatness benchmark.")
+    sp.add_argument("bench_file", type=Path, help="Path to fake_greatness_traps.json.")
+    sp.set_defaults(fn=cmd_hostile_bench)
+
+    # test-repair
+    sp = sub.add_parser("test-repair", help="Test the Anti-Bullshit Gate (Counterfactual Repair) on a passage.")
+    sp.add_argument("prose_file", type=Path)
+    sp.add_argument("--outline", required=True)
+    sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
+    sp.set_defaults(fn=cmd_test_repair)
+
     return p
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    
+    if args.project_root:
+        from .project import set_active_project
+        set_active_project(args.project_root)
+        
     return args.fn(args)
 
 

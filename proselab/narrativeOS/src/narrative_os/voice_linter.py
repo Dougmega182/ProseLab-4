@@ -50,19 +50,31 @@ class VoiceCriticPayload(BaseModel):
     forbidden_drift: float = Field(ge=0, le=1.0)
     rationale: str
 
-def lint_voice(prose: str, reference_path: str = "data/voice_reference_v1.txt", use_cache: bool = True) -> VoiceScoreResult:
+DEFAULT_VOICE_REF = Path(__file__).parent.parent.parent / "data" / "voice_reference_v1.txt"
+
+def resolve_voice_reference_path(path: Path | str | None = None) -> Path:
+    if path:
+        return Path(path)
+    from .project import get_project
+    try:
+        # If the project has its own voice reference, use it
+        proj_ref = get_project().data / "voice_reference_v1.txt"
+        if proj_ref.exists():
+            return proj_ref
+    except RuntimeError:
+        pass
+    return DEFAULT_VOICE_REF
+
+def lint_voice(prose: str, reference_path: str | None = None, use_cache: bool = True) -> VoiceScoreResult:
     """
     Evaluates generated prose against a known voice baseline using strict, immutable sub-metrics.
     Returns a VoiceScoreResult. Any sub-metric falling below ACTIVE_VOICE_RUBRIC triggers a hard failure.
     """
-    ref_file = Path(reference_path)
+    ref_file = resolve_voice_reference_path(reference_path)
     meta_file = ref_file.with_suffix('.meta.json')
     
     if not ref_file.exists():
-        ref_file = Path(__file__).parent.parent.parent / "data" / "voice_reference_v1.txt"
-        meta_file = ref_file.with_suffix('.meta.json')
-        if not ref_file.exists():
-            return VoiceScoreResult(
+        return VoiceScoreResult(
                 lexical_density=1.0,
                 rhythm_delta=1.0,
                 sentence_variance=1.0,
@@ -110,7 +122,7 @@ def lint_voice(prose: str, reference_path: str = "data/voice_reference_v1.txt", 
         system=system,
         user_message=user,
         use_cache=use_cache,
-        response_schema=VoiceCriticPayload.model_json_schema()
+        schema=VoiceCriticPayload.model_json_schema()
     )
     
     try:

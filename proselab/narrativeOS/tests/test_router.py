@@ -44,8 +44,8 @@ class MockProvider(LLMProvider):
         elif self.name == "google":
             if request.schema and "findings" in request.schema.get("required", []):
                 response = {"text": '{"findings": []}'}
-            elif request.schema and "score" in request.schema.get("required", []):
-                response = {"text": '{"passed": true, "score": 10, "rationale": "mock voice pass"}'}
+            elif request.schema and "lexical_density" in request.schema.get("required", []):
+                response = {"text": '{"lexical_density": 1.0, "rhythm_delta": 1.0, "sentence_variance": 1.0, "forbidden_drift": 1.0, "rationale": "mock voice pass"}'}
             else:
                 response = {"text": '{"findings": []}'}
         else:

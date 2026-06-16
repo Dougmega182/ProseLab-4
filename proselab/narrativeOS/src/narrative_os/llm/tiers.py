@@ -37,6 +37,7 @@ TIERS: dict[str, str] = {
     "T2_premium":   "galaxy:claude-opus-4-6",
     "T3_fast":      "google:gemini-3-flash",
     "T4_reasoning": "openai:gpt-5.5-thinking",
+    "T5_testing":   "ollama:qwen2.5-coder:7b",
 }
 
 
@@ -46,7 +47,7 @@ ROLE_TIERS: dict[str, str] = {
     "world_logic_check":     "T4_reasoning",
     "plot_structure_audit":  "T4_reasoning",
     "character_psychology":  "T2_premium",
-    "prose_rewriting":       "T2_premium",
+    "prose_rewriting":       "T5_testing",
     "fast_iteration":        "T3_fast",
     "continuity_timeline":   "T4_reasoning",
     "prose_critic":          "T1_default",

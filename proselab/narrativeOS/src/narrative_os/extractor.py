@@ -18,6 +18,16 @@ PROMPT_PATH = Path(__file__).parent / "prompts" / "extract_delta.txt"
 EXTRACTION_LOG_DIR = Path(__file__).parents[2] / "data" / "logs" / "extraction"
 
 
+def resolve_extraction_log_dir(path: Path | str | None = None) -> Path:
+    if path:
+        return Path(path)
+    from .project import get_project
+    try:
+        return get_project().extraction_logs
+    except RuntimeError:
+        return EXTRACTION_LOG_DIR
+
+
 class ExtractionError(Exception):
     """Raised when extraction fails after retries."""
 

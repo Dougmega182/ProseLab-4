@@ -87,13 +87,60 @@ CRITIC_SCHEMA = {
 }
 
 
+from .project import get_project
+from .constitution import CriticConstitution
+
+def resolve_constitution() -> Optional[CriticConstitution]:
+    try:
+        project = get_project()
+        const_path = project.contracts / "critic_constitution.json"
+        if const_path.exists():
+            return CriticConstitution.load(const_path)
+    except RuntimeError:
+        pass
+    return None
+
+def _build_critic_prompt(constitution: Optional[CriticConstitution]) -> str:
+    if not constitution:
+        return SEMANTIC_CRITIC_SYSTEM_PROMPT
+    
+    prompt = f"You are an adversarial literary editor reviewing prose for the project \"{constitution.name}\".\n"
+    prompt += "Your job is to identify violations of the Critic Constitution. You must be strict.\n\n"
+    
+    if constitution.legacy_rubric:
+        prompt += "### CORE RUBRIC:\n"
+        prompt += constitution.legacy_rubric + "\n\n"
+        
+    prompt += "### HARD FAILURES (Strict Refusal):\n"
+    for rule in constitution.hard_failures:
+        prompt += f"- **{rule.pattern}**: "
+        if rule.rule:
+            prompt += f"{rule.rule} "
+        if rule.detect:
+            prompt += f"(Detect patterns: {', '.join(rule.detect)}) "
+        prompt += f"[Severity: {rule.severity}]\n"
+        
+    prompt += "\n### SCORING WEIGHTS:\n"
+    prompt += f"- Voice Alignment: {constitution.scoring.voice_alignment}\n"
+    prompt += f"- Specificity: {constitution.scoring.specificity}\n"
+    prompt += f"- Tension: {constitution.scoring.tension}\n"
+    prompt += f"- Rhythm: {constitution.scoring.rhythm}\n\n"
+    
+    prompt += "Evaluate the prose and return a JSON object with a list of findings.\n"
+    prompt += "For each finding, specify rule_name, severity (warning/hard_failure), span, and rationale."
+    
+    return prompt
+
 def call_semantic_critic(prose: str, use_cache: bool = True) -> CriticResult:
     """
-    Calls the Gemini/google T1_default model to review prose against the semantic rubric.
+    Calls the Gemini/google T1_default model to review prose against the constitution.
     """
+    constitution = resolve_constitution()
+    system_prompt = _build_critic_prompt(constitution)
+    
     result = llm_call(
         role="prose_critic",
-        system=SEMANTIC_CRITIC_SYSTEM_PROMPT,
+        system=system_prompt,
         user_message=f"<prose_to_review>\n{prose}\n</prose_to_review>",
         schema=CRITIC_SCHEMA,
         tier_override="T1_default",

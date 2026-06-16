@@ -34,6 +34,9 @@ def get_provider(name: str) -> LLMProvider:
             _PROVIDERS[name] = OpenAIProvider()
         elif name == "google":
             _PROVIDERS[name] = GeminiProvider()
+        elif name == "ollama":
+            from .providers.ollama import OllamaProvider
+            _PROVIDERS[name] = OllamaProvider()
         else:
             raise ValueError(f"Unknown provider: {name!r}")
     return _PROVIDERS[name]

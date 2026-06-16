@@ -36,6 +36,16 @@ DEFAULT_CACHE_DIR = Path(__file__).parents[4] / "data" / ".cache" / "llm_respons
 DEFAULT_MAX_SIZE_BYTES = 1 * 1024 * 1024 * 1024   # 1 GiB
 
 
+def resolve_cache_dir(path: Path | str | None = None) -> Path:
+    if path:
+        return Path(path)
+    from ...project import get_project
+    try:
+        return get_project().cache
+    except RuntimeError:
+        return DEFAULT_CACHE_DIR
+
+
 # ---------------------------------------------------------------------------
 # Data classes
 # ---------------------------------------------------------------------------
@@ -87,7 +97,7 @@ class LocalCache:
         max_size_bytes: int = DEFAULT_MAX_SIZE_BYTES,
         default_ttl_seconds: Optional[float] = None,
     ):
-        self.cache_dir = Path(cache_dir) if cache_dir else DEFAULT_CACHE_DIR
+        self.cache_dir = resolve_cache_dir(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.blob_dir = self.cache_dir / "blobs"
         self.blob_dir.mkdir(exist_ok=True)

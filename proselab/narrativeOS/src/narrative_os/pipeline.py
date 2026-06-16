@@ -49,6 +49,16 @@ PENDING_DIR = Path(__file__).parents[2] / "data" / "pending"
 DEFAULT_PASS_ID_FORMAT = "%Y%m%dT%H%M%SZ"
 
 
+def resolve_pending_dir(path: Path | str | None = None) -> Path:
+    if path:
+        return Path(path)
+    from .project import get_project
+    try:
+        return get_project().pending
+    except RuntimeError:
+        return PENDING_DIR
+
+
 # ---------------------------------------------------------------------------
 # Result types
 # ---------------------------------------------------------------------------
@@ -280,6 +290,23 @@ def _write_pending(
 ExtractorFn = Callable[..., StateDelta]
 
 
+def analyze_all(
+    manuscript: Manuscript,
+    **kwargs
+) -> dict[float, AnalysisResult]:
+    """
+    Run analyze_chapter for every chapter in the manuscript.
+    """
+    results = {}
+    for chapter in manuscript.chapters:
+        results[chapter.number] = analyze_chapter(
+            manuscript=manuscript,
+            chapter_num=chapter.number,
+            **kwargs
+        )
+    return results
+
+
 def analyze_chapter(
     *,
     manuscript: Manuscript,
@@ -309,8 +336,9 @@ def analyze_chapter(
         AnalysisResult with status and all artifacts.
     """
     pass_id = pass_id or datetime.now(timezone.utc).strftime(DEFAULT_PASS_ID_FORMAT)
-    pending_dir = Path(pending_dir) if pending_dir else PENDING_DIR
-    store_path = Path(canon_store_path) if canon_store_path else DEFAULT_STORE_PATH
+    pending_dir = resolve_pending_dir(pending_dir)
+    from .store import resolve_store_path
+    store_path = resolve_store_path(canon_store_path)
 
     chapter = manuscript.chapter_by_number(chapter_num)
     if chapter is None:

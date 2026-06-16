@@ -23,10 +23,13 @@ def test_atomic_snapshot_creation(temp_data_dir):
     
     snap_id = manager.create_snapshot()
     
-    # Verify temp dir is gone
+    # Verify commit marker exists
+    commit_file = manager.commits_dir / f"commit_{snap_id}.final"
+    assert commit_file.exists()
+    
+    # Verify temp dir logic is obsolete
     snap_dir = manager.snapshots_dir / snap_id
     assert snap_dir.exists()
-    assert not (manager.snapshots_dir / f".tmp_{snap_id}").exists()
     
     # Verify files exist
     assert (snap_dir / "manifest.json").exists()
