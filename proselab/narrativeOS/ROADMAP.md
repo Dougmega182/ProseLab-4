@@ -43,12 +43,13 @@ A staged plan from a single-novel continuity tool to a project-agnostic engine f
 
 ---
 
-## Phase 16 — Long-Horizon Preference Validation (Outstanding)
+## Phase 16 — Long-Horizon Preference Validation (Current)
 
-**Goal:** Solve for 'powerful' vs 'popular'.
-- **Temporal Decay Test**: Separate scoring for Immediate Impact (T+0) vs. Meaningful Residue (T+7 days).
-- **Mechanism Adversary Agent**: A dedicated agent whose only job is to attack and attempt to disprove identified mechanisms.
-- **The Dangerous Genius Ledger**: Systematic analysis of 'ahead of taste' masterpieces rejected by human first-pass.
+**Goal:** Solve for 'powerful' vs 'popular' and bridge the gap to artistic understanding.
+- **Discovery**: Hostile prosecution exposed a deep 'Clarity over Power' bias; the system currently prefers explicit delivery of intent over elite ironic paradox (e.g. rejecting Chandler's "nothing was very well-kept" as lazy ambiguity).
+- **Necessity Attack Suite**: Implemented Independent Counterfactual Generation (Model A) and the Hostile Prosecutor (Model C).
+- **Mechanism Hypothesis**: Mandated technical hypothesis articulation before attack to expose shared model bias.
+- **Disagreement Classification**: harvesting deltas between role-based judges to find 'Dangerous Brilliance'.
 
 ---
 

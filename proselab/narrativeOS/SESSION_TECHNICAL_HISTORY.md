@@ -48,8 +48,16 @@
 - **Action**: Created `src/narrative_os/brutal_run.py` with 5 high-stakes traps.
 - **Calibration**: Added `mechanism_confidence` and `alternative_possible` metrics.
 
+### [Turn 10] Hostile Falsification & The Clarity Bias
+- **Goal**: Break shared model bias and prove artistic necessity.
+- **Action**: Implemented `necessity_attack.py` with 3-model separation (A: Generator, B: Judge, C: Prosecutor).
+- **Technique**: Forced **Mechanism Hypotheses** before attack and flipped the **Burden of Proof** for the Prosecutor.
+- **Breakthrough**: The system successfully debunked generic prose (0/10) but also rejected elite prose (Wolfe/Chandler) as "replaceable" or "lazy ambiguity."
+- **Discovery**: This exposed a deep architectural bias toward **EXPLICIT INTENT** over **ARTISTIC POWER.** The machine currently values 'reliable delivery' more than 'unstable brilliance.'
+
 ## Final Benchmark Metrics
 - **Causality Proven**: Yes (via MRT/MIT-2).
 - **Aesthetic Monoculture Detected**: Yes (via Multi-Axis Corpus).
 - **Judge Hallucination Isolated**: Yes (via False Causality traps).
+- **Shared Model Bias Exposed**: Yes (via Hostile Prosecution rejecting elite paradox).
 - **Human-in-the-Loop Active**: Yes (via `export-validation` and `could_not_evaluate`).

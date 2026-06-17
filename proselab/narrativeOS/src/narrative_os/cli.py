@@ -598,6 +598,42 @@ def cmd_test_repair(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_test_necessity(args: argparse.Namespace) -> int:
+    from .necessity_attack import extract_mechanism_hypothesis, generate_independent_counterfactuals, attack_choice_necessity
+    
+    prose = args.prose_file.read_text(encoding="utf-8")
+    
+    # Step 1: Hypothesis
+    print(f"Step 1: Extracting Mechanism Hypothesis for choice: '{args.choice}'...")
+    hyp = extract_mechanism_hypothesis(prose, args.choice)
+    print(f"CLAIMED FUNCTION: {hyp.claimed_function}")
+    print(f"CONFIDENCE:       {hyp.confidence:.2f}")
+    
+    # Step 2: Alternatives
+    print(f"\nStep 2: Generating 10 independent counterfactuals (Model A)...")
+    alternatives = generate_independent_counterfactuals(prose, args.choice, hyp.claimed_function)
+    if not alternatives:
+        print("Error: Failed to generate alternatives.")
+        return 1
+        
+    for i, alt in enumerate(alternatives):
+        print(f"  [{alt.type}] {alt.text[:60]}...")
+        
+    # Step 3: Attack
+    print(f"\nStep 3: Launching Hostile Prosecution (Model C)...")
+    result = attack_choice_necessity(args.choice, hyp, alternatives)
+    
+    print("\n" + "=" * 50)
+    print("NECESSITY ATTACK RESULT")
+    print("=" * 50)
+    print(f"CHOICE: {args.choice}")
+    print(f"VERDICT: {'VULNERABLE' if result.is_choice_vulnerable else 'SECURE'}")
+    print(f"ADVANTAGE BAND: {result.advantage_band.upper()}")
+    print(f"CONSTRAINT ADVANTAGE: {result.constraint_advantage_score}/10")
+    print(f"\nPROSECUTOR RATIONALE:\n{result.attack_rationale}")
+    
+    return 0
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="narrative_os",
@@ -723,6 +759,13 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--outline", required=True)
     sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
     sp.set_defaults(fn=cmd_test_repair)
+
+    # test-necessity
+    sp = sub.add_parser("test-necessity", help="Run the Necessity Attack Test (Independent Counterfactuals).")
+    sp.add_argument("prose_file", type=Path)
+    sp.add_argument("--choice", required=True, help="The specific authorial choice to attack.")
+    sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
+    sp.set_defaults(fn=cmd_test_necessity)
 
     return p
 

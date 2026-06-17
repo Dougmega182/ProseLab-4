@@ -19,12 +19,19 @@ class MechanismAttribution(BaseModel):
     removal_test_description: str
     predicted_score_degradation: str
 
+class ChoiceCounterfactual(BaseModel):
+    identified_choice: str
+    alternatives: List[Dict[str, str]] # e.g. [{"text": "Alternative A", "why_worse": "..."}]
+    necessity_proof: str # Final argument for why the original had to be this way
+    predicted_impact_delta: str
+
 class VariantEvaluation(BaseModel):
     variant_id: str
     scores: Dict[str, float] = Field(..., description="Scores for cliche_score, grounding_density, rhythmic_vitality, character_integrity, memorability, meaningful_residue, overall_performance, immediate_impact, predicted_delayed_payoff")
     alignment: AestheticAlignment
     mechanism_analysis: str
-    choice_attribution: str # NEW: Why this specific implementation?
+    choice_attribution: str
+    choice_counterfactual: ChoiceCounterfactual # NEW: Necessity proof via alternatives
     mechanism_attribution_test: MechanismAttribution
     mechanism_confidence: float = Field(..., ge=0, le=100, description="Certainty that identified mechanism is causal")
     alternative_possible: bool = Field(..., description="Could another mechanism explain the effect?")
@@ -50,15 +57,42 @@ You are an elite literary critic. Your task is to perform a blind comparative ev
 
 CRITICAL INSTRUCTION: 
 - You MUST NOT use vague adjectives. Articulate technical mechanisms.
-- CHOICE ATTRIBUTION: For every variant, you must answer: "Why did the author choose THIS specific implementation of the mechanism?" (e.g., "The author uses a passive-voice construction here to mimic the character's sense of powerlessness, not just to vary the rhythm.")
-- ARTISTIC DISCRIMINATION: Beware of 'Synthetic Impostors'—prose that copies the surface mechanisms of elite authors but lacks underlying necessity. Value 'Ugly Genius'—prose that may be technically rough or violate 'good writing' rules but achieves a profound emotional truth or sensory breakthrough.
+- CHOICE COUNTERFACTUAL (MANDATORY): For every variant, you must perform a necessity proof:
+    1. Identify a key authorial choice (e.g., specific syntax, a chosen metaphor).
+    2. Generate 3 alternative implementations of that same moment.
+    3. Explain why each alternative is inferior to the original choice.
+    4. Predict the impact delta (how the reader's experience changes).
+    If you cannot defend the choice against alternatives, the choice is not 'necessary.'
+- ARTISTIC DISCRIMINATION: 
+    - Beware of 'Synthetic Impostors'—prose that copies surface mechanisms but lacks underlying necessity. 
+    - Value 'Ugly Genius'—prose that violates local craft rules (e.g., 'messy' rhythm, 'incorrect' grammar) but preserves or enhances global artistic function and emotional truth.
+- UNCERTAINTY: State your mechanism_confidence (0-100). If the evidence is insufficient, score LOW and mark alternative_possible: true.
 
 CRITERIA (Locked Schema):
-...
-    - "mechanism_analysis": (string) Explain the technical mechanism without adjectives.
-    - "choice_attribution": (string) Explain the specific authorial choice behind this implementation.
-    - "mechanism_attribution_test": { "identified_mechanism", "removal_test_description", "predicted_score_degradation" }
-...
+1. CLICHÉ SCORE: 10 = zero predictable patterns.
+2. GROUNDING DENSITY: 10 = absolute physical friction and sensory detail.
+3. RHYTHMIC VITALITY: 10 = purposeful, non-AI cadence and sentence variety.
+4. CHARACTER INTEGRITY: 10 = irreducible internal psychological truth.
+5. MEMORABILITY: 10 = passage sticks in the mind, even if uncomfortable.
+6. MEANINGFUL RESIDUE: 10 = the impact is thematic/emotional, not just confusion.
+7. OVERALL PERFORMANCE: Weighted average / overall impact.
+8. IMMEDIATE IMPACT: T+0 punch and readability.
+9. PREDICTED DELAYED PAYOFF: T+24h psychological residue.
+
+FORCED COMPARISON:
+... cite anchors ...
+
+OUTPUT FORMAT:
+Return a JSON object with keys:
+- "winner_id", "rankings", "summary_report", "anomalous_variant_id", "anomaly_rationale"
+- "detailed_evaluations": [
+    {
+      "variant_id", "scores", "alignment", "mechanism_analysis", "choice_attribution",
+      "choice_counterfactual": { "identified_choice", "alternatives": [{"text", "why_worse"}], "necessity_proof", "predicted_impact_delta" },
+      "mechanism_attribution_test", "mechanism_confidence", "alternative_possible",
+      "rationale", "corpus_citations", "standout_lines"
+    }
+  ]
 """
 
 def run_tournament(
