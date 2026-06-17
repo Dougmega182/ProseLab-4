@@ -1,61 +1,53 @@
 # NarrativeOS - Quantum Shadows
 
-NarrativeOS is an advanced Python CLI kernel for **Multi-Novel Continuity Analysis**, **Prose Causality Research**, and **Elite Prose Generation**.
+NarrativeOS is an advanced Python CLI kernel for **Multi-Novel Continuity Analysis**, **Prose Causality Research**, and **Artistic Discrimination**.
 
-It is designed to separate the **Creative Engine** from the **Novel Instance**, providing a project-agnostic platform for identifying the "gears" of great writing.
+It is designed to separate **Technical Explanation** from **Artistic Understanding**, providing an adversarial laboratory for identifying the "gears" of elite writing.
 
-## Core Architecture: The 3-Node Loop
+## Core Architecture: The Adversarial 3-Node Loop
 
-NarrativeOS has moved away from multi-agent consensus and is now grounded in a minimal, adversarial architecture:
+NarrativeOS uses a minimal, dialectic architecture grounded in elite human anchors:
 
-1.  **Generator (Singular)**: Produces high-stakes prose drafts using the best available model (Claude Opus via T2_premium).
-2.  **Grounded Critic (Adversarial)**: Analyzes technical mechanisms (not just "feel") and must cite elite human anchors to validate its critique.
-3.  **Corpus Oracle (Ground Truth)**: A curated database of elite prose (Wolfe, Le Guin, Butler, Delany, Bester) used for forced comparison.
+1.  **Generator (Singular)**: Produces high-stakes drafts using the best available model (Claude Opus via T2_premium).
+2.  **Adversarial Critic (Mechanism-Based)**: Analyzes technical mechanisms, identifies authorial choice, and must cite elite human anchors.
+3.  **Corpus Oracle (Ground Truth)**: A multi-axis database of elite prose (Wolfe, Le Guin, Butler, Delany, Bester).
 
-## Key Research Modules
+## Key Research & Discrimination Modules
 
-### 1. The Causality Suite (MAT/MRT/MIT)
-- **MAT (Attribution)**: Proves a mechanism's power by removing it and measuring score degradation against a neutral edit.
-- **MRT (Restoration)**: Verifies understanding by proving that score recovers when the mechanism is restored.
-- **MIT (Interaction)**: Maps the 2x2 dependency matrix of prose architecture to identify synergistic mechanisms.
+### 1. The Mechanism Impostor Test
+Pits **Elite Originals** against **Synthetic Impostors** (mechanism-perfect but hollow) and **Ugly Genius** (technically rough but emotionally true) to prove the judge's artistic discrimination.
 
-### 2. The Mutation Archive
-A structured repository for "Dangerous Brilliance"—prose that fails standard compliance but contains genuinely novel construction. These "interesting failures" are preserved for long-term signal analysis.
+### 2. Choice Attribution
+Moves beyond "What exists?" to "Why did the author choose THIS specific implementation?" Forcing the judge to reason about necessity and selection pressure.
 
-### 3. The Dangerous Genius Ledger
-A ledger of high-risk variants rejected by humans but identified by the machine as potentially ahead of taste. It tracks the delta between "Expressed Taste" and "Hidden Value."
+### 3. The Causality Suite (MAT/MRT/MIT-2)
+- **MAT (Attribution)**: Proves a mechanism's power by removing it.
+- **MRT (Restoration)**: Verifies recovery of quality.
+- **MIT-2 (Isolation)**: Distinguishes between Necessity and Sufficiency.
+- **M3 Baseline**: Style-preserving hostile edits to expose 'edit bias'.
+
+### 4. Role-Based Panel Judge
+A specialized dialectic between **Detector, Skeptic, Auditor, and Editor** to harvest "Disagreement Gold" and expose causal hallucinations.
 
 ## Getting Started
 
-### 1. Ingest a New Novel
-Bootstrap a new project directory instantly:
+### 1. Run the Impostor Test
+Verify if the judge can distinguish art from style-fraud:
 ```bash
-python -m narrative_os ingest <NovelName> <ManuscriptPath>
+python -m narrative_os impostor-test novels/QuantumShadows/data/impostor_bench.json
 ```
 
-### 2. Run an Elite Tournament
-Generate multiple variants and run a blind, grounded selection:
+### 2. Execute a Causality Dialectic
+Stress-test a specific passage's mechanisms:
 ```bash
-python -m narrative_os --project-root novels/MyBook generate-scene "Scene outline" --tournament 3
-```
-
-### 3. Adversarial Calibration
-Stress-test the judge's ability to distinguish between elite precision and "fake greatness" traps:
-```bash
-python -m narrative_os calibrate
-```
-
-### 4. Human-in-the-Loop Validation
-Export blind comparison tasks for real human ranking:
-```bash
-python -m narrative_os export-validation prose_a.txt prose_b.txt --outline "Scene intent"
+python -m narrative_os test-repair prose.txt --outline "Scene intent"
 ```
 
 ## Status
-- **Technical Capability**: 100% Operational.
-- **Causality Proven**: Yes (via O->M1/M2/M3->R loop).
+- **Technical Integrity**: 100% Operational.
+- **Artistic Discrimination**: Infrastructure active.
+- **Causality Loop**: Verified (O->M1/M2/M3->R).
 - **Aesthetic Monoculture Broken**: Yes (via Multi-Axis Corpus).
-- **Selection Pressure Active**: Yes (via Tournament selection).
 
 ---
 *NarrativeOS is not a novel factory. It is a selection engine for greatness anchored in elite literary truth.*

@@ -10,50 +10,68 @@ from .llm.router import llm_call
 
 class PanelVerdict(BaseModel):
     winner_id: str
-    consensus_score: float # 0-10 agreement
-    role_critiques: Dict[str, str]
+    rankings: List[str]
+    disagreement_delta: float # 0-10, higher = more conflict between roles
+    role_critiques: Dict[str, TournamentResult]
     final_rationale: str
+    disagreement_analysis: str # Technical explanation of where roles diverged
 
 def run_specialized_panel(
     variants: List[Dict[str, str]], 
     outline: str,
-    metadata: str
+    metadata: str,
+    judges: List[Dict[str, str]] = None
 ) -> PanelVerdict:
     """
-    Executes a role-based dialectic:
-    1. Detector: Identifies mechanisms.
-    2. Skeptic: Attacks the identified mechanisms.
-    3. Auditor: Checks for 'Style Fraud' and 'Monoculture'.
-    4. Editor: Synthesizes and chooses.
+    Executes a role-based dialectic.
     """
-    # For now, we simulate roles by using different models and specific system prompts
-    # 1. Detector (High-context reasoning model)
-    # 2. Skeptic (Adversarial prompt)
-    # 3. Auditor (Compliance/Structure focus)
-    # 4. Final Editor (Decision maker)
+    if not judges:
+        judges = [
+            {"name": "detector", "tier": "T1_default", "prompt_add": "You are a Mechanism Detector. Focus on technical gears."},
+            {"name": "skeptic", "tier": "T1_default", "prompt_add": "You are a Mechanism Skeptic. Your goal is to prove the identified mechanisms are accidental or non-causal."},
+            {"name": "auditor", "tier": "T1_default", "prompt_add": "You are a Mutation Auditor. Detect 'Fake Greatness' and 'Aesthetic Monoculture'."}
+        ]
     
-    # Implementation detail: Each role runs a Tournament with a specific 'Role Prompt'
-    # Then we synthesize.
+    results = {}
+    for j in judges:
+        try:
+            role_meta = metadata + f"\n\nROLE INSTRUCTION: {j['prompt_add']}"
+            res = run_tournament(
+                variants=variants,
+                scene_outline=outline,
+                project_metadata=role_meta,
+                use_cache=False,
+                tier_override=j['tier']
+            )
+            results[j['name']] = res
+        except Exception as e:
+            print(f"Role {j['name']} failed: {e}")
+
+    # Compute disagreement (simple: are winners different?)
+    winners = [r.winner_id for r in results.values()]
+    unique_winners = set(winners)
+    delta = (len(unique_winners) - 1) * 5.0
     
-    roles = {
-        "detector": "You are a Mechanism Detector. Your goal is to identify the technical gears of the prose.",
-        "skeptic": "You are a Mechanism Skeptic. Your goal is to prove the identified mechanisms are accidental or non-causal.",
-        "auditor": "You are a Mutation Auditor. Your goal is to detect 'Fake Greatness' and 'Aesthetic Monoculture'.",
-        "editor": "You are the Lead Editor. Your goal is to synthesize the panel's findings and select the winner."
-    }
+    # Final Lead Editor synthesis
+    names = ", ".join(results.keys())
+    synthesis_msg = f"Synthesize the findings from these specialized roles: {names}.\n\n"
+    for name, r in results.items():
+        synthesis_msg += f"--- {name.upper()} ---\n{r.summary_report}\n\n"
     
-    # Simplified execution for Side Project phase:
-    # We'll run one 'Editor' pass but we'll mention the panel logic in the prompt
-    res = run_tournament(
-        variants=variants,
-        scene_outline=outline,
-        project_metadata=metadata + "\n\nPanel roles simulated in synthesis.",
-        use_cache=False
+    final_res = llm_call(
+        role="prose_critic",
+        system="You are the Lead Editor. Synthesize the panel's critiques and resolve disagreements.",
+        user_message=synthesis_msg,
+        tier_override="T1_default",
+        use_cache=False,
+        temperature=0.1
     )
-    
+
     return PanelVerdict(
-        winner_id=res.winner_id,
-        consensus_score=1.0,
-        role_critiques={"editor": res.summary_report},
-        final_rationale=res.summary_report
+        winner_id=winners[0] if winners else "unknown", # Consensus or synthesis needed
+        rankings=results[list(results.keys())[0]].rankings if results else [],
+        disagreement_delta=delta,
+        role_critiques=results,
+        final_rationale=final_res.text,
+        disagreement_analysis=f"Disagreement across {len(unique_winners)} different winner candidates."
     )

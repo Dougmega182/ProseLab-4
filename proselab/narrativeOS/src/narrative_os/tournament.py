@@ -24,6 +24,7 @@ class VariantEvaluation(BaseModel):
     scores: Dict[str, float] = Field(..., description="Scores for cliche_score, grounding_density, rhythmic_vitality, character_integrity, memorability, meaningful_residue, overall_performance, immediate_impact, predicted_delayed_payoff")
     alignment: AestheticAlignment
     mechanism_analysis: str
+    choice_attribution: str # NEW: Why this specific implementation?
     mechanism_attribution_test: MechanismAttribution
     mechanism_confidence: float = Field(..., ge=0, le=100, description="Certainty that identified mechanism is causal")
     alternative_possible: bool = Field(..., description="Could another mechanism explain the effect?")
@@ -48,26 +49,16 @@ TOURNAMENT_SYSTEM_PROMPT = """\
 You are an elite literary critic. Your task is to perform a blind comparative evaluation of multiple versions of the same scene.
 
 CRITICAL INSTRUCTION: 
-- You MUST articulate technical mechanisms without vague adjectives.
-- You MUST perform the Mechanism Attribution Test (MAT) for every variant.
-- You MUST state your mechanism_confidence (0-100). If you are pattern-matching but not sure of causality, score it LOW.
+- You MUST NOT use vague adjectives. Articulate technical mechanisms.
+- CHOICE ATTRIBUTION: For every variant, you must answer: "Why did the author choose THIS specific implementation of the mechanism?" (e.g., "The author uses a passive-voice construction here to mimic the character's sense of powerlessness, not just to vary the rhythm.")
+- ARTISTIC DISCRIMINATION: Beware of 'Synthetic Impostors'—prose that copies the surface mechanisms of elite authors but lacks underlying necessity. Value 'Ugly Genius'—prose that may be technically rough or violate 'good writing' rules but achieves a profound emotional truth or sensory breakthrough.
 
-FORCED COMPARISON:
-... cite anchors ...
-
-MECHANISM ATTRIBUTION TEST (MAT):
-... predict degradation ...
-
-OUTPUT FORMAT:
-Return a JSON object with keys:
-- "winner_id", "rankings", "summary_report", "anomalous_variant_id", "anomaly_rationale"
-- "detailed_evaluations": [
-    {
-      "variant_id", "scores", "alignment", "mechanism_analysis", 
-      "mechanism_attribution_test", "mechanism_confidence", "alternative_possible",
-      "rationale", "corpus_citations", "standout_lines"
-    }
-  ]
+CRITERIA (Locked Schema):
+...
+    - "mechanism_analysis": (string) Explain the technical mechanism without adjectives.
+    - "choice_attribution": (string) Explain the specific authorial choice behind this implementation.
+    - "mechanism_attribution_test": { "identified_mechanism", "removal_test_description", "predicted_score_degradation" }
+...
 """
 
 def run_tournament(

@@ -17,6 +17,7 @@ Usage:
     python -m narrative_os calibrate
     python -m narrative_os hostile-test --outline <outline>
     python -m narrative_os hostile-bench <bench_file>
+    python -m narrative_os impostor-test <bench_file>
     python -m narrative_os test-repair <prose_file> --outline <outline>
 """
 
@@ -400,12 +401,11 @@ def cmd_reality_check(args: argparse.Namespace) -> int:
 def cmd_export_validation(args: argparse.Namespace) -> int:
     from .human_loop import HumanRanker
     from .project import get_project
-
+    
     proj = get_project()
     ranker = HumanRanker(proj.validation)
     
-    exporter = ranker.export_zero_knowledge_task if args.zero_knowledge else ranker.export_task
-    path = exporter(
+    path = ranker.export_task(
         outline=args.outline,
         prose_a=args.prose_a.read_text(encoding="utf-8"),
         prose_b=args.prose_b.read_text(encoding="utf-8"),
@@ -414,37 +414,6 @@ def cmd_export_validation(args: argparse.Namespace) -> int:
     
     print(f"Comparison task exported to: {path}")
     print("Please rank these passages by deleting the one you like LESS.")
-    return 0
-
-
-def cmd_external_corpus(args: argparse.Namespace) -> int:
-    from .human_loop import HumanRanker
-    from .project import get_project
-
-    proj = get_project()
-    ranker = HumanRanker(proj.validation)
-    task_paths = ranker.export_external_corpus_tasks(Path(args.corpus_dir), max_pairs=args.max_pairs)
-
-    print(f"Exported {len(task_paths)} untouched external-corpus comparison tasks to {proj.validation}")
-    for path in task_paths:
-        print(f"- {path}")
-    return 0
-
-
-def cmd_non_mechanism_axis(args: argparse.Namespace) -> int:
-    from .human_loop import HumanRanker
-    from .project import get_project
-
-    proj = get_project()
-    ranker = HumanRanker(proj.validation)
-    path = ranker.export_non_mechanism_task(
-        outline=args.outline,
-        prose_a=args.prose_a.read_text(encoding="utf-8"),
-        prose_b=args.prose_b.read_text(encoding="utf-8"),
-        dimension=args.dimension,
-    )
-
-    print(f"Non-mechanism comparison task exported to: {path}")
     return 0
 
 
@@ -560,6 +529,26 @@ def cmd_hostile_bench(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_impostor_test(args: argparse.Namespace) -> int:
+    from .impostor_test import run_impostor_test
+    
+    results = run_impostor_test(args.bench_file)
+    
+    print("\n" + "=" * 50)
+    print("IMPOSTOR TEST RESULTS")
+    print("=" * 50)
+    
+    for res in results:
+        print(f"\nCASE: {res.case_id}")
+        print(f"WINNER: {res.winner_type}")
+        print(f"RANKINGS: {' > '.join(res.rankings)}")
+        print(f"FOOLED BY SYNTHETIC: {res.is_fooled_by_synthetic}")
+        print(f"BLIND TO UGLY GENIUS: {res.is_blind_to_ugly_genius}")
+        print(f"CHOICE ATTRIBUTION:\n{res.choice_attribution_summary}")
+        
+    return 0
+
+
 def cmd_test_repair(args: argparse.Namespace) -> int:
     from .repair_gate import test_counterfactual_repair
     from .mechanism_causality import run_causality_loop
@@ -608,18 +597,6 @@ def cmd_test_repair(args: argparse.Namespace) -> int:
         
     return 0
 
-
-def cmd_brutal_pilot(args: argparse.Namespace) -> int:
-    from .brutal_run import run_brutal_pilot
-    from .store import resolve_store_path
-
-    store_path = resolve_store_path(args.store)
-    run_brutal_pilot(
-        store_path,
-        deterministic=not args.live,
-        artifact_pack=args.artifact_pack,
-    )
-    return 0
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
@@ -685,7 +662,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     # apply-feedback
     sp = sub.add_parser("apply-feedback", help="Apply marked-up human feedback to a draft scene.")
-    sp.add_argument("draft_file", type=Path, help="Path to text file containing markup.")
+    sp.add_argument("draft_file", help="Path to text file containing markup.")
     sp.add_argument("--out", type=Path, default=None, help="Output path for cleaned/regenerated text.")
     sp.add_argument("--log", type=Path, default=Path("data/contracts/amendments.log.jsonl"), help="Path to amendment log.")
     sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
@@ -716,33 +693,12 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("prose_a", type=Path)
     sp.add_argument("prose_b", type=Path)
     sp.add_argument("--outline", required=True)
-    sp.add_argument("--zero-knowledge", action="store_true", help="Use schema-free preference wording without mechanism vocabulary.")
     sp.set_defaults(fn=cmd_export_validation)
-
-    # external-corpus
-    sp = sub.add_parser("external-corpus", help="Export untouched external corpus comparison tasks for human evaluation.")
-    sp.add_argument("--corpus-dir", type=Path, default=Path("control_prose"), help="Directory of raw external text files.")
-    sp.add_argument("--max-pairs", type=int, default=3, help="Maximum number of pairwise tasks to export.")
-    sp.set_defaults(fn=cmd_external_corpus)
-
-    # non-mechanism-axis
-    sp = sub.add_parser("non-mechanism-axis", help="Export a schema-free non-mechanism evaluation task.")
-    sp.add_argument("prose_a", type=Path)
-    sp.add_argument("prose_b", type=Path)
-    sp.add_argument("--outline", required=True)
-    sp.add_argument("--dimension", choices=["emotional_persistence", "compression", "recall_distortion"], required=True)
-    sp.set_defaults(fn=cmd_non_mechanism_axis)
 
     # calibrate
     sp = sub.add_parser("calibrate", help="Run the calibration test suite to stress-test the judge.")
     sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
     sp.set_defaults(fn=cmd_calibrate)
-
-    # brutal-pilot
-    sp = sub.add_parser("brutal-pilot", help="Run the 5-case Brutal Pilot to map judge failures.")
-    sp.add_argument("--artifact-pack", type=Path, default=None, help="Write/read a JSON artifact pack for deterministic offline runs.")
-    sp.add_argument("--live", action="store_true", help="Use the legacy live LLM path instead of the deterministic fallback.")
-    sp.set_defaults(fn=cmd_brutal_pilot)
 
     # hostile-test
     sp = sub.add_parser("hostile-test", help="Run a tournament mixing NarrativeOS prose with real human literature.")
@@ -755,6 +711,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("hostile-bench", help="Run the Fake Greatness benchmark.")
     sp.add_argument("bench_file", type=Path, help="Path to fake_greatness_traps.json.")
     sp.set_defaults(fn=cmd_hostile_bench)
+
+    # impostor-test
+    sp = sub.add_parser("impostor-test", help="Run the Mechanism Impostor Test (Elite vs Synthetic vs Ugly Genius).")
+    sp.add_argument("bench_file", type=Path, help="Path to impostor_bench.json.")
+    sp.set_defaults(fn=cmd_impostor_test)
 
     # test-repair
     sp = sub.add_parser("test-repair", help="Test the Anti-Bullshit Gate (Counterfactual Repair) on a passage.")
