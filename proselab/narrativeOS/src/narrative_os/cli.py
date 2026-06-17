@@ -623,6 +623,12 @@ def cmd_test_necessity(args: argparse.Namespace) -> int:
     print(f"\nStep 3: Launching Hostile Prosecution (Model C)...")
     result = attack_choice_necessity(args.choice, hyp, alternatives)
     
+    # Step 4: Inversion
+    from .mechanism_dependency import run_mechanism_dependency_test, generate_evil_rewrite
+    print(f"\nStep 4: Running Mechanism Dependency (Inversion) Test...")
+    dependency = run_mechanism_dependency_test(prose, args.choice)
+    evil = generate_evil_rewrite(prose, args.choice)
+
     print("\n" + "=" * 50)
     print("NECESSITY ATTACK RESULT")
     print("=" * 50)
@@ -630,7 +636,21 @@ def cmd_test_necessity(args: argparse.Namespace) -> int:
     print(f"VERDICT: {'VULNERABLE' if result.is_choice_vulnerable else 'SECURE'}")
     print(f"ADVANTAGE BAND: {result.advantage_band.upper()}")
     print(f"CONSTRAINT ADVANTAGE: {result.constraint_advantage_score}/10")
-    print(f"\nPROSECUTOR RATIONALE:\n{result.attack_rationale}")
+    
+    print("\n" + "=" * 50)
+    print("INVERSION ANALYSIS (Dependency on Flaws)")
+    print("=" * 50)
+    print(f"SURFACE WEAKNESS:  {dependency.surface_weakness}")
+    print(f"HIDDEN DEPENDENCY: {dependency.hidden_dependency}")
+    print(f"REMOVAL DAMAGE:    {dependency.removal_damage}")
+    print(f"INVERSION PROVEN:  {dependency.inversion_proven}")
+    print(f"\n'EVIL' REWRITE (Conventionally Perfect):")
+    print(f"  {evil}")
+    
+    print("\n" + "=" * 50)
+    print("PROSECUTOR RATIONALE")
+    print("=" * 50)
+    print(result.attack_rationale)
     
     return 0
 

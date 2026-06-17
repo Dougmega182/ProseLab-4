@@ -25,7 +25,15 @@ Transitioned NarrativeOS from technical causal evaluation to **Artistic Discrimi
 - **JSON Parsing**: Enhanced robust parsing to handle chatty LLM outputs and varying nesting patterns.
 - **Rate Limit Resilience**: Added cooldown logic and detailed error separation (API vs. Literary).
 
+### [Turn 11] Inversion Analysis & The 'Evil Rewrite'
+- **Goal**: Detect when a 'flaw' (ambiguity, paradox) is actually the load-bearing mechanism.
+- **Action**: Implemented `mechanism_dependency.py`.
+- **Technique**: Added **Mechanism Dependency Test (Inversion)** and the **'Evil' Conventional Rewrite**.
+- **Impact**: Forces the judge to defend 'weirdness' by proving that a clean, conventionally perfect rewrite destroys the psychological payload.
+
 ## Files Created
+- `src/narrative_os/mechanism_dependency.py`
+
 - `src/narrative_os/impostor_test.py`
 - `novels/QuantumShadows/data/impostor_bench.json`
 
