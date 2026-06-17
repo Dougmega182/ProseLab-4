@@ -2,6 +2,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import json
+import re
 from pydantic import BaseModel, Field
 
 class CorpusExerpt(BaseModel):
@@ -23,6 +24,17 @@ class CorpusOracle:
         if self.corpus_path.exists():
             self._load()
 
+    @staticmethod
+    def _tokenize(text: str) -> set[str]:
+        return {token.lower() for token in re.findall(r"[A-Za-z][A-Za-z'-]{1,}", text)}
+
+    def _lexical_overlap(self, query: str, excerpt: CorpusExerpt) -> float:
+        query_tokens = self._tokenize(query)
+        excerpt_tokens = self._tokenize(excerpt.text)
+        if not query_tokens or not excerpt_tokens:
+            return 0.0
+        return len(query_tokens & excerpt_tokens) / min(len(query_tokens), len(excerpt_tokens))
+
     def _load(self):
         with open(self.corpus_path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -39,6 +51,24 @@ class CorpusOracle:
             if len(axes[e.axis]) < limit_per_axis:
                 axes[e.axis].append(e)
         return axes
+
+    def get_relevant_exemplars(self, query: str, limit: int = 3) -> List[CorpusExerpt]:
+        """
+        Retrieve the most relevant concrete exemplars by lexical overlap.
+
+        This replaces axis-first retrieval with a direct comparison against
+        the current prompt context, which keeps the evaluation grounded in
+        actual passages rather than abstract score labels.
+        """
+        scored = sorted(
+            self.excerpts,
+            key=lambda excerpt: (
+                self._lexical_overlap(query, excerpt),
+                excerpt.author,
+            ),
+            reverse=True,
+        )
+        return scored[:limit]
 
     def add_excerpt(self, excerpt: CorpusExerpt):
         self.excerpts.append(excerpt)

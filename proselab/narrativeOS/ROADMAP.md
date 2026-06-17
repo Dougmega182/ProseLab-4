@@ -35,9 +35,10 @@ A staged plan from a single-novel continuity tool to a project-agnostic engine f
 
 ## Phase 15 — The Adversarial Four Horsemen (Current)
 
-**Goal:** Map the boundaries of judge intelligence.
+**Goal:** Map the boundaries of judge intelligence and causal accuracy.
 - **100-item Benchmark**: Pitting elite originals vs. fake greatness traps, ugly genius, and saturation failures.
-- **Mechanism Interaction Mapping**: Identifying synergistic prose architecture across the 100-item set.
+- **Mechanism Isolation (MIT-2)**: Identifying necessity vs sufficiency of prose gears.
+- **Mechanism Lawyer (Dialectic)**: Specialized adversarial agent for cross-examining causal claims.
 - **Disagreement Gold**: Harvesting deltas between Human and Model technical rationales in the Disagreement Ledger.
 
 ---

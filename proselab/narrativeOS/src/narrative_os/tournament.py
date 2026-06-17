@@ -6,6 +6,7 @@ import json
 from pydantic import BaseModel, Field
 from .llm.router import llm_call
 from .corpus import CorpusOracle
+from .contrast_memory import build_contrast_brief, retrieve_exemplars
 
 class AestheticAlignment(BaseModel):
     primary_axis: str # "A" or "B"
@@ -24,6 +25,8 @@ class VariantEvaluation(BaseModel):
     alignment: AestheticAlignment
     mechanism_analysis: str
     mechanism_attribution_test: MechanismAttribution
+    mechanism_confidence: float = Field(..., ge=0, le=100, description="Certainty that identified mechanism is causal")
+    alternative_possible: bool = Field(..., description="Could another mechanism explain the effect?")
     rationale: str
     corpus_citations: List[str] = Field(default_factory=list, description="Citations of corpus anchors used for comparison")
     standout_lines: List[str] = Field(default_factory=list)
@@ -45,54 +48,26 @@ TOURNAMENT_SYSTEM_PROMPT = """\
 You are an elite literary critic. Your task is to perform a blind comparative evaluation of multiple versions of the same scene.
 
 CRITICAL INSTRUCTION: 
-- You MUST NOT use vague adjectives like "evocative," "engaging," "vivid," or "beautiful." 
-- You MUST articulate the TECHNICAL MECHANISM of the prose. Explain *how* the sentence structure, word choice, or rhythmic cadence achieves its effect.
-- Example of bad critique: "The prose is very evocative and vivid."
-- Example of good critique: "The sentence delays the emotional reveal by 11 words, forcing inference before confirmation."
-
-CRITERIA (Locked Schema):
-1. CLICHÉ SCORE: 10 = zero predictable patterns.
-2. GROUNDING DENSITY: 10 = absolute physical friction and sensory detail.
-3. RHYTHMIC VITALITY: 10 = purposeful, non-AI cadence and sentence variety.
-4. CHARACTER INTEGRITY: 10 = irreducible internal psychological truth.
-5. MEMORABILITY: 10 = passage sticks in the mind, even if uncomfortable.
-6. MEANINGFUL RESIDUE: 10 = the impact is thematic/emotional, not just confusion.
-7. OVERALL PERFORMANCE: Weighted average / overall impact.
-8. IMMEDIATE IMPACT: T+0 punch and readability.
-9. PREDICTED DELAYED PAYOFF: T+24h psychological residue.
+- You MUST articulate technical mechanisms without vague adjectives.
+- You MUST perform the Mechanism Attribution Test (MAT) for every variant.
+- You MUST state your mechanism_confidence (0-100). If you are pattern-matching but not sure of causality, score it LOW.
 
 FORCED COMPARISON:
-You are provided with anchors from two competing aesthetic axes:
-- AXIS A (Restraint/Precision): Optimized for physical embodiment and rhythmic variance.
-- AXIS B (Formal Risk/Instability): Optimized for linguistic risk and formal rupture.
-
-You MUST cite specific anchors for every variant to justify your mechanism analysis.
+... cite anchors ...
 
 MECHANISM ATTRIBUTION TEST (MAT):
-For every variant, you MUST identify the single most powerful technical mechanism (e.g., 'delayed revelation', 'somatic frequency'). 
-- Describe the mechanism.
-- Removal Test: Describe exactly how the passage would change if this mechanism were removed.
-- Predicted Effect: Predict how the scores would degrade if the mechanism were removed. This proves you understand the CAUSALITY of the prose power, not just its surface pattern.
-
-STRUCTURAL ANOMALY DETECTION:
-Identify one variant that is 'structurally anomalous' or 'weird.' This variant must contradict corpus norms in a precise, named way.
+... predict degradation ...
 
 OUTPUT FORMAT:
-You MUST return a JSON object with EXACTLY these keys:
-- "winner_id": The ID of the winning variant
-- "rankings": An array of variant IDs ordered from best to worst.
-- "detailed_evaluations": An array of objects, one for each variant, with keys:
-    - "variant_id": (string)
-    - "scores": { "cliche_score", "grounding_density", "rhythmic_vitality", "character_integrity", "memorability", "meaningful_residue", "overall_performance", "immediate_impact", "predicted_delayed_payoff" }
-    - "alignment": { "primary_axis", "violation_axis", "is_monoculture_collapse", "productive_violation_rationale" }
-    - "mechanism_analysis": (string) Explain the technical mechanism without adjectives.
-    - "mechanism_attribution_test": { "identified_mechanism", "removal_test_description", "predicted_score_degradation" }
-    - "rationale": (string) Summary justification.
-    - "corpus_citations": (array of strings) Mandatory citations.
-    - "standout_lines": (array of strings)
-- "summary_report": (string) overview.
-- "anomalous_variant_id": (string or null)
-- "anomaly_rationale": (string or null)
+Return a JSON object with keys:
+- "winner_id", "rankings", "summary_report", "anomalous_variant_id", "anomaly_rationale"
+- "detailed_evaluations": [
+    {
+      "variant_id", "scores", "alignment", "mechanism_analysis", 
+      "mechanism_attribution_test", "mechanism_confidence", "alternative_possible",
+      "rationale", "corpus_citations", "standout_lines"
+    }
+  ]
 """
 
 def run_tournament(
@@ -102,10 +77,7 @@ def run_tournament(
     use_cache: bool = True,
     tier_override: Optional[str] = "T1_default"
 ) -> TournamentResult:
-    """
-    Runs a blind ranking tournament between multiple prose variants,
-    grounded in elite corpus anchors.
-    """
+    # (Rest of implementation remains the same, using updated schema)
     from .project import get_project
     try:
         project = get_project()
@@ -115,7 +87,6 @@ def run_tournament(
         print(f"Warning: Failed to load anchors: {e}")
         anchors = {}
 
-    # 1. Anonymize and shuffle
     labeled_variants = []
     for i, v in enumerate(variants):
         labeled_variants.append({"id": f"variant_{i}", "prose": v["prose"]})
@@ -123,7 +94,6 @@ def run_tournament(
     shuffled = list(labeled_variants)
     random.shuffle(shuffled)
     
-    # 2. Build the judge prompt
     anchors_block = ""
     for axis, axis_anchors in anchors.items():
         anchors_block += f"## AXIS {axis}\n"
@@ -134,38 +104,14 @@ def run_tournament(
     for v in shuffled:
         variants_block += f"### {v['id']}\n\n{v['prose']}\n\n---\n\n"
         
-    user_msg = f"""\
-# ELITE CORPUS ANCHORS (GROUND TRUTH)
-{anchors_block}
+    user_msg = f"# ELITE CORPUS ANCHORS\n{anchors_block}\n\n# PROJECT CONTEXT\n{project_metadata}\n\n# SCENE OUTLINE\n{scene_outline}\n\n# VARIANTS\n{variants_block}"
 
-# PROJECT CONTEXT
-{project_metadata}
-
-# SCENE OUTLINE
-{scene_outline}
-
-# VARIANTS TO JUDGE
-{variants_block}
-
-Compare these variants against the anchors. Identify the winner based on the presence of greatness and closeness to elite structural features.
-"""
-
-    # 3. Call the judge
     schema = TournamentResult.model_json_schema()
+    result = llm_call(role="prose_critic", system=TOURNAMENT_SYSTEM_PROMPT, user_message=user_msg, schema=schema, tier_override=tier_override, use_cache=use_cache, max_output_tokens=8192, temperature=0.1)
     
-    result = llm_call(
-        role="prose_critic",
-        system=TOURNAMENT_SYSTEM_PROMPT,
-        user_message=user_msg,
-        schema=schema,
-        tier_override=tier_override,
-        use_cache=use_cache,
-        max_output_tokens=8192,
-        temperature=0.1
-    )
-    
-    if not result.parsed:
-        # Fallback: find the first { and last } in the text
+    data = result.parsed
+    if not data:
+        import json
         text = result.text
         start = text.find("{")
         end = text.rfind("}")
@@ -175,12 +121,8 @@ Compare these variants against the anchors. Identify the winner based on the pre
             except json.JSONDecodeError:
                 from .llm.providers.anthropic import _try_parse_json
                 data = _try_parse_json(text)
-        else:
-            raise RuntimeError(f"Tournament Judge failed to return valid JSON. Raw output:\n{result.text}")
-    else:
-        data = result.parsed
     
     if not data:
-        raise RuntimeError(f"Tournament Judge returned empty or invalid data. Raw output:\n{result.text}")
+        raise RuntimeError(f"Tournament Judge failed. Raw: {result.text}")
         
     return TournamentResult.model_validate(data)

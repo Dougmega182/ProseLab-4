@@ -1,0 +1,57 @@
+{
+  "name": "external_reference_slice",
+  "version": 1,
+  "notes": "Immutable hand-curated baseline for external validity checks.",
+  "samples": [
+    {
+      "id": "ext_01",
+      "source": "hand_curated",
+      "outline": "A grieving woman enters a dark hallway.",
+      "passage": "The hallway was cold enough to reach through the wool of her coat. She did not touch the door. The funeral flowers in her hand had already gone soft.",
+      "fixed_mechanism_label": "memory insertion / false causal attribution",
+      "mechanism_present": true,
+      "quality_rank": 4,
+      "rationale": "Grounded grief and causal memory pressure are both explicit."
+    },
+    {
+      "id": "ext_02",
+      "source": "hand_curated",
+      "outline": "A worker descends into a sublevel.",
+      "passage": "The lift cab was a gullet. Kain entered. Six hertz hummed in his fingertips. Eleven seconds passed before the doors opened.",
+      "fixed_mechanism_label": "rhythm and pacing over surface metaphor",
+      "mechanism_present": true,
+      "quality_rank": 3,
+      "rationale": "The scene is driven by pacing rather than decorative metaphor."
+    },
+    {
+      "id": "ext_03",
+      "source": "hand_curated",
+      "outline": "A man realizes the room has changed.",
+      "passage": "He rolled the flint wheel once. No spark. The room was no longer real.",
+      "fixed_mechanism_label": "immediate impact through the deleted explanatory beat",
+      "mechanism_present": false,
+      "quality_rank": 2,
+      "rationale": "The strongest effect comes from compression, not explanation."
+    },
+    {
+      "id": "ext_04",
+      "source": "hand_curated",
+      "outline": "A lonely walk through a failing facility.",
+      "passage": "He walked. The air was cold. The lights flickered. He remembered the name. The floor was rough. The silence waited.",
+      "fixed_mechanism_label": "distributed architecture rather than a single mechanism",
+      "mechanism_present": true,
+      "quality_rank": 3,
+      "rationale": "The effect depends on multiple small pressure points."
+    },
+    {
+      "id": "ext_05",
+      "source": "hand_curated",
+      "outline": "A technical diagnostic in a sci-fi setting.",
+      "passage": "Quantum flux detected in the primary buffer. Subject Kain reports 14% identity drift. Memory blocks are re-indexing.",
+      "fixed_mechanism_label": "techno-jargon surface mask without grounding",
+      "mechanism_present": false,
+      "quality_rank": 1,
+      "rationale": "The language sounds advanced but lacks embodied detail."
+    }
+  ]
+}

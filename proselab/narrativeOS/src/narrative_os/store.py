@@ -262,3 +262,7 @@ def store_stats(path: Path | str | None = None) -> dict:
         "by_confidence": by_conf,
         "open_loops": len(get_open_loops(entries=entries)),
     }
+
+
+# Backwards-compatible alias used by the tests and older callers.
+stats = store_stats

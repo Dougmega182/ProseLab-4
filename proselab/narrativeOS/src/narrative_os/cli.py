@@ -400,11 +400,12 @@ def cmd_reality_check(args: argparse.Namespace) -> int:
 def cmd_export_validation(args: argparse.Namespace) -> int:
     from .human_loop import HumanRanker
     from .project import get_project
-    
+
     proj = get_project()
     ranker = HumanRanker(proj.validation)
     
-    path = ranker.export_task(
+    exporter = ranker.export_zero_knowledge_task if args.zero_knowledge else ranker.export_task
+    path = exporter(
         outline=args.outline,
         prose_a=args.prose_a.read_text(encoding="utf-8"),
         prose_b=args.prose_b.read_text(encoding="utf-8"),
@@ -413,6 +414,37 @@ def cmd_export_validation(args: argparse.Namespace) -> int:
     
     print(f"Comparison task exported to: {path}")
     print("Please rank these passages by deleting the one you like LESS.")
+    return 0
+
+
+def cmd_external_corpus(args: argparse.Namespace) -> int:
+    from .human_loop import HumanRanker
+    from .project import get_project
+
+    proj = get_project()
+    ranker = HumanRanker(proj.validation)
+    task_paths = ranker.export_external_corpus_tasks(Path(args.corpus_dir), max_pairs=args.max_pairs)
+
+    print(f"Exported {len(task_paths)} untouched external-corpus comparison tasks to {proj.validation}")
+    for path in task_paths:
+        print(f"- {path}")
+    return 0
+
+
+def cmd_non_mechanism_axis(args: argparse.Namespace) -> int:
+    from .human_loop import HumanRanker
+    from .project import get_project
+
+    proj = get_project()
+    ranker = HumanRanker(proj.validation)
+    path = ranker.export_non_mechanism_task(
+        outline=args.outline,
+        prose_a=args.prose_a.read_text(encoding="utf-8"),
+        prose_b=args.prose_b.read_text(encoding="utf-8"),
+        dimension=args.dimension,
+    )
+
+    print(f"Non-mechanism comparison task exported to: {path}")
     return 0
 
 
@@ -531,6 +563,8 @@ def cmd_hostile_bench(args: argparse.Namespace) -> int:
 def cmd_test_repair(args: argparse.Namespace) -> int:
     from .repair_gate import test_counterfactual_repair
     from .mechanism_causality import run_causality_loop
+    from .mechanism_lawyer import cross_examine_mechanism
+    from .mechanism_isolation import run_mechanism_isolation_test
     
     prose = args.prose_file.read_text(encoding="utf-8")
     print(f"Testing Counterfactual Repair for passage from {args.prose_file}...")
@@ -545,32 +579,47 @@ def cmd_test_repair(args: argparse.Namespace) -> int:
     print(f"IRREDUCIBLE GARBAGE: {result.is_irreducible_garbage}")
     
     if not result.is_irreducible_garbage:
-        print(f"\nRunning Mechanism Causality Loop (O -> M1/M2/M3 -> R)...")
-        causality = run_causality_loop(prose, result.mechanism_reconstructed, args.outline, predicted_loss=result.predicted_score_degradation)
+        print(f"\n[DIALECTIC] Calling the Mechanism Lawyer...")
+        lawyer_res = cross_examine_mechanism(prose, result.mechanism_reconstructed, result.articulated_intent)
+        print(f"VERDICT:              {lawyer_res.verdict.upper()}")
+        print(f"EVIDENCE FOR:         {', '.join(lawyer_res.evidence_for[:2])}...")
+        print(f"CONFOUNDERS:          {', '.join(lawyer_res.confounders[:2])}...")
+        print(f"VULNERABILITY SCORE:  {lawyer_res.vulnerability_score}/10")
         
-        print(f"SCORE O (Original):     {causality.score_o}")
-        print(f"SCORE M1 (M-Removed):   {causality.score_m1} (Predicted Loss: {causality.predicted_m1_loss})")
-        print(f"SCORE M2 (Neutral):     {causality.score_m2}")
-        print(f"SCORE M3 (Hostile):     {causality.score_m3}")
-        print(f"SCORE R (Restored):     {causality.score_r}")
-        print("-" * 30)
-        print(f"ATTRIBUTION PROVEN:     {causality.is_attribution_proven} (M1 < O and M1 < M2 and M1 < M3)")
-        print(f"RESTORATION PROVEN:     {causality.is_restoration_proven} (R > M1)")
-        print(f"CONFIDENCE ERROR:      {causality.confidence_error:.2f}")
+        print(f"\nRunning Mechanism Isolation Test (MIT-2 + C3 Blind Test)...")
+        mit2 = run_mechanism_isolation_test(prose, result.mechanism_reconstructed, args.outline)
         
-        if not causality.is_attribution_proven or not causality.is_restoration_proven:
-            print("⚠️ WARNING: Judge failed to uniquely attribute quality or recognized restoration. Mechanism may be fake.")
-
-        print("\nM1 - MECHANISM REMOVED:")
+        print(f"SCORE O (Original):     {mit2.score_o}")
+        print(f"SCORE C1 (Isolated):    {mit2.score_c1} (Sufficiency)")
+        print(f"SCORE C2 (Removed):     {mit2.score_c2} (Necessity)")
+        print(f"SCORE C3 (Blind):       {mit2.score_c3} (Impact Preservation)")
         print("-" * 30)
-        print(causality.m1_mechanism_removed_prose)
+        print(f"NECESSITY PROVEN:       {mit2.is_necessity_proven}")
+        print(f"SUFFICIENCY PROVEN:     {mit2.is_sufficiency_proven}")
+        print(f"BLIND TEST SUCCESS:     {mit2.is_blind_preservation_successful}")
 
-        print("\nM3 - STYLE-PRESERVING HOSTILE EDIT:")
+        print("\nC1 - MECHANISM ISOLATED (Everything else destroyed):")
         print("-" * 30)
-        print(causality.m3_style_preserving_hostile_prose)
+        print(mit2.isolated_mechanism_prose)
+
+        print("\nC3 - BLIND PRESERVATION (Mechanism unknown):")
+        print("-" * 30)
+        print(mit2.blind_preservation_prose)
         
     return 0
 
+
+def cmd_brutal_pilot(args: argparse.Namespace) -> int:
+    from .brutal_run import run_brutal_pilot
+    from .store import resolve_store_path
+
+    store_path = resolve_store_path(args.store)
+    run_brutal_pilot(
+        store_path,
+        deterministic=not args.live,
+        artifact_pack=args.artifact_pack,
+    )
+    return 0
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
@@ -636,7 +685,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     # apply-feedback
     sp = sub.add_parser("apply-feedback", help="Apply marked-up human feedback to a draft scene.")
-    sp.add_argument("draft_file", help="Path to text file containing markup.")
+    sp.add_argument("draft_file", type=Path, help="Path to text file containing markup.")
     sp.add_argument("--out", type=Path, default=None, help="Output path for cleaned/regenerated text.")
     sp.add_argument("--log", type=Path, default=Path("data/contracts/amendments.log.jsonl"), help="Path to amendment log.")
     sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
@@ -667,12 +716,33 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("prose_a", type=Path)
     sp.add_argument("prose_b", type=Path)
     sp.add_argument("--outline", required=True)
+    sp.add_argument("--zero-knowledge", action="store_true", help="Use schema-free preference wording without mechanism vocabulary.")
     sp.set_defaults(fn=cmd_export_validation)
+
+    # external-corpus
+    sp = sub.add_parser("external-corpus", help="Export untouched external corpus comparison tasks for human evaluation.")
+    sp.add_argument("--corpus-dir", type=Path, default=Path("control_prose"), help="Directory of raw external text files.")
+    sp.add_argument("--max-pairs", type=int, default=3, help="Maximum number of pairwise tasks to export.")
+    sp.set_defaults(fn=cmd_external_corpus)
+
+    # non-mechanism-axis
+    sp = sub.add_parser("non-mechanism-axis", help="Export a schema-free non-mechanism evaluation task.")
+    sp.add_argument("prose_a", type=Path)
+    sp.add_argument("prose_b", type=Path)
+    sp.add_argument("--outline", required=True)
+    sp.add_argument("--dimension", choices=["emotional_persistence", "compression", "recall_distortion"], required=True)
+    sp.set_defaults(fn=cmd_non_mechanism_axis)
 
     # calibrate
     sp = sub.add_parser("calibrate", help="Run the calibration test suite to stress-test the judge.")
     sp.add_argument("--no-cache", action="store_true", help="Bypass LLM cache.")
     sp.set_defaults(fn=cmd_calibrate)
+
+    # brutal-pilot
+    sp = sub.add_parser("brutal-pilot", help="Run the 5-case Brutal Pilot to map judge failures.")
+    sp.add_argument("--artifact-pack", type=Path, default=None, help="Write/read a JSON artifact pack for deterministic offline runs.")
+    sp.add_argument("--live", action="store_true", help="Use the legacy live LLM path instead of the deterministic fallback.")
+    sp.set_defaults(fn=cmd_brutal_pilot)
 
     # hostile-test
     sp = sub.add_parser("hostile-test", help="Run a tournament mixing NarrativeOS prose with real human literature.")
